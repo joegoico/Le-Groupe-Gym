@@ -1,0 +1,11 @@
+# Local environment variables
+.env
+.env.local
+
+# Supabase temp files
+.supabase/
+supabase/.temp/
+
+# Deno/Node temp files
+node_modules/
+.vscode/
