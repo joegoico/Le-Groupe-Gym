@@ -1,0 +1,8 @@
+{
+  "Template": {
+    "TemplateName": "PagoRegistradoConfirmacion",
+    "SubjectPart": "✅ Pago Registrado: {{mesPagado}} - Le Groupe Gym",
+    "HtmlPart": "<html><body><div style='font-family: sans-serif; color: #333;'><h2>¡Hola {{nombre}}!</h2><p>Hemos registrado tu pago para el mes de <b>{{mesPagado}}</b>.</p><table style='border: 1px solid #ddd; border-collapse: collapse; width: 100%; max-width: 300px;'><tr><td style='padding:8px; border-bottom:1px solid #ddd;'>📅 Fecha de Pago:</td><td style='padding:8px; border-bottom:1px solid #ddd;'>{{fechaPago}}</td></tr><tr><td style='padding:8px; border-bottom:1px solid #ddd;'>🏋️ Plan:</td><td style='padding:8px; border-bottom:1px solid #ddd;'>{{dias}} x Semana</td></tr><tr><td style='padding:8px;'>💰 Monto:</td><td style='padding:8px;'><b>{{monto}}</b></td></tr></table><br><p>¡Gracias por cumplir! Nos vemos en el gym. 💪</p></div></body></html>",
+    "TextPart": "Hola {{nombre}}, hemos registrado tu pago de {{monto}} para el mes de {{mesPagado}}. ¡Gracias!"
+  }
+}
