@@ -1,0 +1,9 @@
+
+{
+  "Template": {
+    "TemplateName": "RecordatorioPagoVencido",
+    "SubjectPart": "Recordatorio de pago - Le Groupe Gym",
+    "HtmlPart": "<html><body><p>👋 <b>Hola {{nombre}},</b></p><p>Nos gustaría recordarte que tu pago se encuentra vencido desde hace <b>{{dias_vencidos}} días</b>.</p><p>Podés abonar en efectivo en el <b>GYM</b> o realizar la <b>transferencia</b> 🤝</p><h4>💰 Valores actualizados:</h4><ul><li>{{precio2x}} → hasta 2 veces por semana</li><li>{{precio3x}} → hasta 3 veces por semana</li><li>{{precio4x}} → hasta 4 veces por semana</li><li>{{precio5x}} → hasta 5 veces por semana</li></ul><p><i>⚠️ Si sos estudiante o jubilado, tenés un descuento de {{descuento}}.</i></p><hr><p><b>Datos para transferencia:</b><br>Alias: <b>gimnasio.roca</b><br>CVU: 0000003100070806571826<br>Nombre: <b>Julian Diego</b><br>Banco: Mercado Pago</p><hr><p>🙌 <b>Gracias por ser parte</b><br>💪 Te esperamos para seguir entrenando 🤗</p><p><small>Si recibiste este mail pero ya pagaste, simplemente ignoranos; ya te vamos a cargar en el sistema.<br>Si querés darte de baja, respondé este mail indicándolo.</small></p></body></html>",
+    "TextPart": "Hola {{nombre}}, tu pago está vencido hace {{dias_vencidos}} días. Si ya pagaste, ignorá este mensaje."
+  }
+}
