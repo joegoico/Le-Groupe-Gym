@@ -1,22 +1,4 @@
-class CategoriaEjercicio {
-  final int idCategoria;
-  final String nombre;
-  final String tipo;
-
-  CategoriaEjercicio({
-    required this.idCategoria,
-    required this.nombre,
-    required this.tipo,
-  });
-
-  factory CategoriaEjercicio.fromJson(Map<String, dynamic> json) {
-    return CategoriaEjercicio(
-      idCategoria: json['id_categoria'] as int,
-      nombre: json['nombre'] as String,
-      tipo: json['tipo'] as String,
-    );
-  }
-}
+import 'category_exercise_model.dart';
 
 class Ejercicio {
   final int idEjercicio;
@@ -44,5 +26,27 @@ class Ejercicio {
       nombre: json['nombre'] as String,
       categorias: cats,
     );
+  }
+
+  // Clona la instancia para mutar estados en la UI de forma segura
+  Ejercicio copyWith({
+    int? idEjercicio,
+    String? nombre,
+    List<CategoriaEjercicio>? categorias,
+  }) {
+    return Ejercicio(
+      idEjercicio: idEjercicio ?? this.idEjercicio,
+      nombre: nombre ?? this.nombre,
+      categorias: categorias ?? this.categorias,
+    );
+  }
+
+  // Exporta solo la data del ejercicio para la tabla principal en Supabase
+  Map<String, dynamic> toMap() {
+    return {
+      'id_ejercicio': idEjercicio,
+      'nombre': nombre,
+      // No incluimos 'categorias' porque eso se gestiona insertando en Rel_Ejercicio_Categoria
+    };
   }
 }

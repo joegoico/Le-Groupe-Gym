@@ -1,55 +1,85 @@
 import 'package:flutter_test/flutter_test.dart';
-// Importaremos el modelo real de rutina cuando lo creemos en el paso siguiente:
+import 'package:le_groupe_gym/data/models/exercise_model.dart';
+import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
+import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 
 void main() {
-  group('Rutina Model Tests', () {
-    test('Debe parsear un JSON de rutina con sus ejercicios cargados y mantener el orden', () {
-      // 1. ARRANGEMENT
-      final Map<String, dynamic> routineJsonMock = {
-        'id_rutina': 101,
-        'nombre_rutina': 'Fuerza - Mes 1',
-        'alumno_id': 'alumno-uuid-123',
-        'fecha_creacion': '2026-05-22T10:00:00Z',
-        'Rutina_Ejercicios': [
-          {
-            'id_rutina_ejercicio': 501,
-            'orden': 1,
-            'series': 4,
-            'repeticiones': '8-10',
-            'descanso_segundos': 90,
-            'notas': 'Controlar la fase excéntrica',
-            'Ejercicios': {
-              'id_ejercicio': 42,
-              'nombre': 'Sentadilla profunda con barra'
-            }
-          }
-        ]
+  group('Rutina Model Tests - Completo', () {
+    late EjercicioRutina mockEjercicioRutina;
+
+    setUp(() {
+      // 1. Preparamos los datos base para componer una rutina
+      final mockEjercicio = Ejercicio(
+        idEjercicio: 1,
+        nombre: 'Press de Banca Plano',
+        categorias: [
+          CategoriaEjercicio(idCategoria: 1, nombre: 'Pecho', tipo: 'grupo_muscular'),
+        ],
+      );
+      
+      mockEjercicioRutina = EjercicioRutina(
+        ejercicio: mockEjercicio, 
+        series: 4, 
+        repeticiones: '10'
+      );
+    });
+
+    test('Debe instanciar una Rutina completa correctamente', () {
+      final rutina = Rutina(
+        idRutina: 100,
+        nombre: 'Día 1 - Fuerza Pecho y Triceps',
+        ejercicios: [mockEjercicioRutina],
+      );
+
+      expect(rutina.idRutina, 100);
+      expect(rutina.nombre, 'Día 1 - Fuerza Pecho y Triceps');
+      expect(rutina.ejercicios.length, 1);
+      expect(rutina.ejercicios.first.ejercicio.nombre, 'Press de Banca Plano');
+    });
+
+    test('toMap debe exportar la estructura correcta para la tabla de rutinas en Supabase', () {
+      final rutina = Rutina(
+        idRutina: 10,
+        nombre: 'Día 1 - Empuje',
+        ejercicios: [mockEjercicioRutina],
+      );
+
+      final mapa = rutina.toMap();
+
+      expect(mapa['id_rutina'], 10);
+      expect(mapa['nombre'], 'Día 1 - Empuje');
+      // No debe exportar la lista de ejercicios porque eso se maneja en la tabla relacional intermedia
+      expect(mapa.containsKey('ejercicios'), isFalse); 
+    });
+
+    test('fromMap debe reconstruir la Rutina desde la cabecera de la BD', () {
+      final jsonMock = {
+        'id_rutina': 42,
+        'nombre': 'Circuito de Piernas',
       };
 
-      // 2. ACT
-      final rutina = Rutina.fromJson(routineJsonMock);
+      // Simulamos que le inyectamos los ejercicios que trajimos de la tabla intermedia
+      final resultado = Rutina.fromMap(jsonMock, ejercicios: [mockEjercicioRutina]);
 
-      // 3. ASSERT
-      expect(rutina.idRutina, 101);
-      expect(rutina.nombreRutina, 'Fuerza - Mes 1');
-      expect(rutina.alumnoId, 'alumno-uuid-123');
-      expect(rutina.fechaCreacion, DateTime.parse('2026-05-22T10:00:00Z'));
+      expect(resultado.idRutina, 42);
+      expect(resultado.nombre, 'Circuito de Piernas');
+      expect(resultado.ejercicios.length, 1);
+      expect(resultado.ejercicios.first.series, 4);
+    });
+
+    test('copyWith debe permitir clonar modificando atributos específicos', () {
+      final original = Rutina(
+        idRutina: 1, 
+        nombre: 'Rutina A', 
+        ejercicios: [mockEjercicioRutina]
+      );
       
-      // Validamos la lista interna de ejercicios asignados a la rutina
-      expect(rutina.ejerciciosAsignados.length, 1);
-      
-      final ejercicioAsignado = rutina.ejerciciosAsignados.first;
-      expect(ejercicioAsignado.idRutinaEjercicio, 501);
-      expect(ejercicioAsignado.orden, 1);
-      expect(ejercicioAsignado.series, 4);
-      expect(ejercicioAsignado.repeticiones, '8-10');
-      expect(ejercicioAsignado.descansoSegundos, 90);
-      expect(ejercicioAsignado.notas, 'Controlar la fase excéntrica');
-      
-      // Validamos que arrastre los datos base del ejercicio interno
-      expect(ejercicioAsignado.nombreEjercicio, 'Sentadilla profunda con barra');
-      expect(ejercicioAsignado.idEjercicio, 42);
+      final clon = original.copyWith(nombre: 'Rutina B (Actualizada)');
+
+      expect(clon.idRutina, 1); // Se mantiene intacto
+      expect(clon.nombre, 'Rutina B (Actualizada)'); // Se actualizó
+      expect(clon.ejercicios.length, 1); // Se mantiene intacto
     });
   });
 }

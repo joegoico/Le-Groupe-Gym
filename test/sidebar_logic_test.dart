@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
+import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/sidebar_controller.dart';
 
 void main() {

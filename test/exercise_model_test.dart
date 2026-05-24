@@ -1,49 +1,57 @@
 import 'package:flutter_test/flutter_test.dart';
-// Importamos tu nuevo modelo de producción
-import 'package:le_groupe_gym/data/models/exercise_model.dart'; 
+import 'package:le_groupe_gym/data/models/exercise_model.dart';
 
 void main() {
-  group('Ejercicio Model Tests', () {
-    test('Debe parsear correctamente el JSON de Supabase a objeto Ejercicio', () {
-      // 1. ARRANGEMENT
-      final Map<String, dynamic> jsonMock = {
-        'id_ejercicio': 42,
-        'nombre': 'Sentadilla profunda con barra',
+  group('Ejercicio Model Tests - Dependencia Intermedia', () {
+    test('Debe instanciar correctamente desde el constructor base', () {
+      final ejercicio = Ejercicio(idEjercicio: 1, nombre: 'Dominadas', categorias: []);
+      
+      expect(ejercicio.idEjercicio, 1);
+      expect(ejercicio.nombre, 'Dominadas');
+      expect(ejercicio.categorias, isEmpty);
+    });
+
+    test('fromJson debe mapear correctamente la estructura relacional anidada de Supabase', () {
+      // Simulamos la respuesta exacta de un JOIN de Supabase
+      final jsonMock = {
+        'id_ejercicio': 10,
+        'nombre': 'Press Militar',
         'Rel_Ejercicio_Categoria': [
           {
             'Categorias_Ejercicio': {
               'id_categoria': 3,
-              'nombre': 'Piernas',
+              'nombre': 'Hombros',
               'tipo': 'grupo_muscular'
-            }
-          },
-          {
-            'Categorias_Ejercicio': {
-              'id_categoria': 15,
-              'nombre': 'Cuádriceps',
-              'tipo': 'subgrupo'
             }
           }
         ]
       };
 
-      // 2. ACT
       final ejercicio = Ejercicio.fromJson(jsonMock);
 
-      // 3. ASSERT
-      expect(ejercicio.idEjercicio, 42);
-      expect(ejercicio.nombre, 'Sentadilla profunda con barra');
-      expect(ejercicio.categorias.length, 2);
-      
-      // Validamos el primer mapeo de categoría anidada
-      expect(ejercicio.categorias[0].idCategoria, 3);
-      expect(ejercicio.categorias[0].nombre, 'Piernas');
-      expect(ejercicio.categorias[0].tipo, 'grupo_muscular');
+      expect(ejercicio.idEjercicio, 10);
+      expect(ejercicio.nombre, 'Press Militar');
+      expect(ejercicio.categorias.length, 1);
+      expect(ejercicio.categorias.first.nombre, 'Hombros');
+    });
 
-      // Validamos el segundo mapeo
-      expect(ejercicio.categorias[1].idCategoria, 15);
-      expect(ejercicio.categorias[1].nombre, 'Cuádriceps');
-      expect(ejercicio.categorias[1].tipo, 'subgrupo');
+    test('copyWith debe permitir clonar modificando atributos específicos', () {
+      final original = Ejercicio(idEjercicio: 1, nombre: 'Remo', categorias: []);
+      
+      final clon = original.copyWith(nombre: 'Remo en Polea');
+
+      expect(clon.idEjercicio, 1);
+      expect(clon.nombre, 'Remo en Polea');
+    });
+
+    test('toMap debe exportar solo la tabla base para inserciones', () {
+      final ejercicio = Ejercicio(idEjercicio: 5, nombre: 'Vuelos Laterales', categorias: []);
+      
+      final mapa = ejercicio.toMap();
+
+      expect(mapa['id_ejercicio'], 5);
+      expect(mapa['nombre'], 'Vuelos Laterales');
+      expect(mapa.containsKey('categorias'), isFalse); // Las relaciones van en otra tabla
     });
   });
 }

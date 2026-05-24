@@ -1,68 +1,48 @@
-class RutinaEjercicio {
-  final int idRutinaEjercicio;
-  final int orden;
-  final int series;
-  final String repeticiones;
-  final int descansoSegundos;
-  final String notas;
-  final int idEjercicio;
-  final String nombreEjercicio;
-
-  RutinaEjercicio({
-    required this.idRutinaEjercicio,
-    required this.orden,
-    required this.series,
-    required this.repeticiones,
-    required this.descansoSegundos,
-    required this.notas,
-    required this.idEjercicio,
-    required this.nombreEjercicio,
-  });
-
-  factory RutinaEjercicio.fromJson(Map<String, dynamic> json) {
-    final ejercicioJson = json['Ejercicios'] as Map<String, dynamic>? ?? {};
-    
-    return RutinaEjercicio(
-      idRutinaEjercicio: json['id_rutina_ejercicio'] as int,
-      orden: json['orden'] as int,
-      series: json['series'] as int,
-      repeticiones: json['repeticiones'] as String? ?? '',
-      descansoSegundos: json['descanso_segundos'] as int? ?? 0,
-      notas: json['notas'] as String? ?? '', // Defensivo por si viene null
-      idEjercicio: ejercicioJson['id_ejercicio'] as int? ?? 0,
-      nombreEjercicio: ejercicioJson['nombre'] as String? ?? 'Ejercicio sin nombre',
-    );
-  }
-}
+import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 
 class Rutina {
-  final int idRutina;
-  final String nombreRutina;
-  final String alumnoId;
-  final DateTime fechaCreacion;
-  final List<RutinaEjercicio> ejerciciosAsignados;
+  final int? idRutina; // Puede ser null si la rutina todavía no se guardó en la base de datos
+  final String nombre;
+  final List<EjercicioRutina> ejercicios;
 
   Rutina({
-    required this.idRutina,
-    required this.nombreRutina,
-    required this.alumnoId,
-    required this.fechaCreacion,
-    required this.ejerciciosAsignados,
+    this.idRutina,
+    required this.nombre,
+    required this.ejercicios,
   });
 
-  factory Rutina.fromJson(Map<String, dynamic> json) {
-    final ejerciciosJsonList = json['Rutina_Ejercicios'] as List? ?? [];
-    
-    final List<RutinaEjercicio> ejerciciosAsignados = ejerciciosJsonList.map((ejJson) {
-      return RutinaEjercicio.fromJson(ejJson as Map<String, dynamic>);
-    }).toList();
-
+  // Clona la instancia controlando la mutación de estados en Flutter
+  Rutina copyWith({
+    int? idRutina,
+    String? nombre,
+    List<EjercicioRutina>? ejercicios,
+  }) {
     return Rutina(
-      idRutina: json['id_rutina'] as int,
-      nombreRutina: json['nombre_rutina'] as String,
-      alumnoId: json['alumno_id'] as String,
-      fechaCreacion: DateTime.parse(json['fecha_creacion'] as String),
-      ejerciciosAsignados: ejerciciosAsignados,
+      idRutina: idRutina ?? this.idRutina,
+      nombre: nombre ?? this.nombre,
+      ejercicios: ejercicios ?? this.ejercicios,
     );
+  }
+
+  // Reconstruye la cabecera desde la base de datos de Supabase
+  factory Rutina.fromMap(Map<String, dynamic> map, {List<EjercicioRutina> ejercicios = const []}) {
+    return Rutina(
+      idRutina: map['id_rutina'] as int?,
+      nombre: map['nombre'] as String,
+      ejercicios: ejercicios,
+    );
+  }
+
+  // Exporta la cabecera para insertar o actualizar en la tabla 'rutinas'
+  Map<String, dynamic> toMap() {
+    final map = <String, dynamic>{
+      'nombre': nombre,
+    };
+    
+    if (idRutina != null) {
+      map['id_rutina'] = idRutina;
+    }
+    
+    return map;
   }
 }

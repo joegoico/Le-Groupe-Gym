@@ -64,18 +64,23 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Librería de Ejercicios',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                // ==========================================
+                // FIX: ENVOLVEMOS EN EXPANDED CON ELLIPSIS
+                // ==========================================
+                const Expanded(
+                  child: Text(
+                    'Librería de Ejercicios',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis, // Evita que rompa si el sidebar se achica
                   ),
                 ),
               ],
             ),
           ),
-
           // 2. BUSCADOR
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
