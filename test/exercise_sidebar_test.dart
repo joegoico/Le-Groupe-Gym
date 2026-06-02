@@ -3,14 +3,21 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/exercise_sidebar.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/routine_builder_controller.dart';
 
 void main() {
   group('ExcerciseSidebar Widget Tests - Patrón AAA Estricto', () {
     late List<Ejercicio> mockExercises;
     late Ejercicio? selectedExercise;
     late bool addCallbackCalled;
+    late RoutineBuilderController controller;
+
+    setUpAll(() {
+      // nada acá
+    });
 
     setUp(() {
+      controller = RoutineBuilderController();
       mockExercises = [
         Ejercicio(
           idEjercicio: 1,
@@ -39,8 +46,10 @@ void main() {
             children: [
               SizedBox(
                 width: 320,
+                height: 800,
                 child: ExcerciseSidebar(
                   allExercises: mockExercises,
+                  controller: controller,
                   onAddExercise: (ejercicio) {
                     addCallbackCalled = true;
                     selectedExercise = ejercicio;

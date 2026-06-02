@@ -1,40 +1,68 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
+import 'mocks/mock_exercise_repository.dart';
+
+// Mock del cliente de Supabase con mocktail
+class MockSupabaseClient extends Mock implements SupabaseClient {}
+class MockPostgrestFilterBuilder extends Mock
+    implements PostgrestFilterBuilder<dynamic> {}
 
 void main() {
-  group('ExerciseRepository Tests - Mock Implementation', () {
-    // Declaramos la variable usando el contrato (clase abstracta)
+  // --- Tests del contrato (via Mock simple) ---
+  group('ExerciseRepository - contrato', () {
     late ExerciseRepository repository;
 
     setUp(() {
-      // Pero le inyectamos la implementación de prueba
       repository = MockExerciseRepository();
     });
 
-    test('getExercises debe retornar una lista completa de ejercicios simulados', () async {
-      // Act
-      final exercises = await repository.getExercises();
-
-      // Assert
-      expect(exercises, isNotEmpty);
-      expect(exercises.length, 12); // Ahora sabemos que nuestro mock devuelve exactamente 12 ejercicios
+    test('retorna lista no vacía', () async {
+      final result = await repository.getExercises();
+      expect(result, isNotEmpty);
     });
 
-    test('getExercises debe incluir ejercicios específicos y sus categorías bien mapeadas', () async {
-      // Act
-      final exercises = await repository.getExercises();
+    test('cada ejercicio tiene al menos una categoría', () async {
+      final result = await repository.getExercises();
+      for (final e in result) {
+        expect(e.categorias, isNotEmpty,
+            reason: 'El ejercicio "${e.nombre}" no tiene categorías');
+      }
+    });
 
-      // Assert: Verificamos que contenga los nuevos ejercicios que agregaste
-      final tienePesoMuerto = exercises.any((e) => e.nombre == 'Peso Muerto Rumano');
-      final tieneVuelos = exercises.any((e) => e.nombre == 'Vuelos Laterales');
+    test('retorna ejercicio con categorías correctamente mapeadas', () async {
+      final result = await repository.getExercises();
+      final dominadas = result.firstWhere((e) => e.nombre == 'Dominadas');
 
-      expect(tienePesoMuerto, isTrue);
-      expect(tieneVuelos, isTrue);
+      expect(dominadas.categorias.first.nombre, equals('Espalda'));
+      expect(dominadas.categorias.first.tipo, equals('grupo_muscular'));
+    });
+  });
 
-      // Verificamos que la estructura relacional (Categorías) esté intacta
-      final dominadas = exercises.firstWhere((e) => e.nombre == 'Dominadas');
-      expect(dominadas.categorias.isNotEmpty, isTrue);
-      expect(dominadas.categorias.first.nombre, 'Espalda');
+  // --- Tests de SupabaseExerciseRepository ---
+  group('SupabaseExerciseRepository', () {
+    late MockSupabaseClient mockClient;
+    late SupabaseExerciseRepository repository;
+
+    setUp(() {
+      mockClient = MockSupabaseClient();
+      repository = SupabaseExerciseRepository(supabaseClient: mockClient);
+    });
+
+    test('lanza excepción cuando Supabase tira PostgrestException', () async {
+      when(() => mockClient.from('Ejercicios')).thenThrow(
+        PostgrestException(message: 'relation does not exist'),
+      );
+
+      expect(
+        () => repository.getExercises(),
+        throwsA(isA<Exception>().having(
+          (e) => e.toString(),
+          'message',
+          contains('Error al obtener ejercicios'),
+        )),
+      );
     });
   });
 }

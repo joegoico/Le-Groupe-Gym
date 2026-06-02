@@ -1,144 +1,228 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/exercise_model.dart';
-import '../../data/repositories/exercise_repository.dart'; // Importamos el repositorio
-import '../builder/widgets/exercise_sidebar.dart'; 
+import '../../data/models/alumno_model.dart';
+import '../builder/widgets/exercise_sidebar.dart';
 import '../builder/widgets/routine_builder_controller.dart';
+import '../builder/widgets/routine_workspace.dart';
+import '../builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
-import '../builder/widgets/routine_workspace.dart'; 
-import 'package:le_groupe_gym/data/repositories/routine_repository.dart'; // Importamos el repositorio de rutinas para el guardado
+import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/services/pdf_generator.dart';
+import 'package:le_groupe_gym/services/service_storage.dart';
+import 'package:le_groupe_gym/services/email_service.dart';
 
-class MainPanelPage extends StatefulWidget {
+class MainPanelPage extends ConsumerStatefulWidget {
   const MainPanelPage({super.key});
 
   @override
-  State<MainPanelPage> createState() => _MainPanelPageState();
+  ConsumerState<MainPanelPage> createState() => _MainPanelPageState();
 }
 
-class _MainPanelPageState extends State<MainPanelPage> {
-  final RoutineBuilderController _routineController = RoutineBuilderController();
-  
-  // 1. Instanciamos el contrato usando el Mock
-  final ExerciseRepository _repository = MockExerciseRepository();
-  final RoutineRepository _routineRepository = MockRoutineRepository();
+class _MainPanelPageState extends ConsumerState<MainPanelPage> {
+  final RoutineBuilderController _routineController =
+      RoutineBuilderController();
 
-  // 2. Variables para manejar el estado de la asincronía
   List<Ejercicio> _loadedExercises = [];
-  bool _isLoading = true; // Arranca en true porque apenas abrimos la app, está cargando
-  bool _isSaving = false; // Para manejar el estado de guardado de la rutina
+  List<Alumno> _loadedAlumnos = []; // 👈 agregado
+  Alumno? _alumnoSeleccionado; // 👈 agregado
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  // Agregá esto junto a las otras variables de estado
+  final TextEditingController _routineNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _routineNameController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
-    // 3. Disparamos la búsqueda a la base de datos apenas nace el widget
-    _loadExercises();
+    _loadData();
   }
 
-  // Función asíncrona para desenvolver el Future
-  Future<void> _loadExercises() async {
+  Future<void> _loadData() async {
+    final exerciseRepo = ref.read(exerciseRepositoryProvider);
+    final alumnoRepo = ref.read(alumnoRepositoryProvider); // 👈 agregado
     try {
-      // Acá "abrimos" el Future. El código pausa acá hasta que el repo responda
-      final exercises = await _repository.getExercises();
-      
-      // Una vez que llegan, actualizamos el estado para repintar la UI
+      final results = await Future.wait([
+        exerciseRepo.getExercises(),
+        alumnoRepo.getAlumnos(),
+      ]);
       setState(() {
-        _loadedExercises = exercises;
-        _isLoading = false; // Apagamos el loader
-      });
-    } catch (e) {
-      // Si falla la base de datos, apagamos el loader igual para no dejar clavado al usuario
-      setState(() {
+        _loadedExercises = results[0] as List<Ejercicio>;
+        _loadedAlumnos = results[1] as List<Alumno>; // 👈 agregado
         _isLoading = false;
       });
-      debugPrint('Error al cargar la librería: $e');
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Error al cargar datos: $e');
+    }
+  }
+
+  Future<String> _savePDfInSupabase(Rutina nuevaRutina) async {
+    final routineRepo = ref.read(routineRepositoryProvider);
+
+    // Paso 1 — Guardar rutina y obtener id
+    final idRutina = await routineRepo.saveRoutine(nuevaRutina);
+
+    // Paso 2 — Generar PDF
+    final pdfBytes = await PdfGenerator().generate(
+      rutina: nuevaRutina.copyWith(idRutina: idRutina),
+      alumno: _alumnoSeleccionado!,
+    );
+
+    // Paso 3 — Subir PDF a Storage
+    final storageService = StorageService();
+    final pdfUrl = await storageService.uploadPdf(
+      bytes: pdfBytes,
+      idRutina: idRutina,
+      idAlumno: _alumnoSeleccionado!.idAlumno,
+    );
+
+    await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
+
+    debugPrint('PDF subido: $pdfUrl');
+    return pdfUrl;
+  }
+
+  Future<void> _sendRoutineViaMail(Rutina nuevaRutina, String pdfUrl) async {
+    if (_alumnoSeleccionado!.mail != null &&
+        _alumnoSeleccionado!.mail!.isNotEmpty) {
+      await EmailService().enviarRutina(
+        pdfUrl: pdfUrl,
+        mailAlumno: _alumnoSeleccionado!.mail!,
+        nombreAlumno: _alumnoSeleccionado!.nombreCompleto,
+        nombreRutina: nuevaRutina.nombre,
+      );
     }
   }
 
   Future<void> _saveRoutine() async {
-    final ejerciciosActuales = _routineController.currentRoutine;
-    
-    // Validamos por las dudas, aunque el botón debería estar deshabilitado
-    if (ejerciciosActuales.isEmpty) return;
+    if (_routineController.isEmpty || _alumnoSeleccionado == null) return;
 
     setState(() => _isSaving = true);
 
-    // Ensamblamos el objeto de negocio
-    final nuevaRutina = Rutina(
-      nombre: 'Rutina Personalizada (Desde Panel)', 
-      ejercicios: ejerciciosActuales,
+    final nombreRutina = _routineNameController.text.trim().isEmpty
+        ? 'Rutina de ${_alumnoSeleccionado!.nombreCompleto}'
+        : _routineNameController.text.trim();
+
+    final nuevaRutina = _routineController.buildRutina(
+      nombre: nombreRutina,
+      idAlumno: _alumnoSeleccionado!.idAlumno,
     );
 
-    // Mostramos feedback al usuario
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Guardando rutina en el sistema...'), duration: Duration(seconds: 1)),
+      const SnackBar(
+        content: Text('Guardando rutina en el sistema...'),
+        duration: Duration(seconds: 1),
+      ),
     );
 
     try {
-      final exito = await _routineRepository.saveRoutine(nuevaRutina);
+      final String url = await _savePDfInSupabase(nuevaRutina);
 
-      if (exito && mounted) {
+      await _sendRoutineViaMail(nuevaRutina, url);
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('¡Rutina guardada con éxito!'), 
+            content: Text('¡Rutina guardada y PDF generado!'),
             backgroundColor: Colors.green,
           ),
         );
-        // Limpiamos la pizarra para la siguiente
         _routineController.clearRoutine();
+        _routineNameController.clear();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error al guardar: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoading 
-        ? const Center(
-            child: CircularProgressIndicator(color: Colors.blueAccent),
-          )
-        : Stack(
-            children: [
-              Row(
-                children: [
-                  ExcerciseSidebar(
-                    allExercises: _loadedExercises,
-                    onAddExercise: (ejercicio) {
-                      setState(() {
-                        _routineController.addExercise(ejercicio);
-                      });
-                    },
-                  ),
-                  Expanded(
-                    child: RoutineWorkspace(
-                      controller: _routineController,
-                      onRefresh: () {
-                        setState(() {}); 
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.blueAccent),
+            )
+          : Stack(
+              children: [
+                Column(
+                  children: [
+                    // Barra superior
+                    TopBar(
+                      onBack:
+                          () {}, // por ahora vacío — se conecta cuando haya navegación
+                      alumnos: _loadedAlumnos,
+                      alumnoSeleccionado: _alumnoSeleccionado,
+                      onAlumnoChanged: (alumno) {
+                        setState(() => _alumnoSeleccionado = alumno);
                       },
-                      onSave: _saveRoutine, // Conectamos el callback al método
+                      routineNameController: _routineNameController,
+                      onGuardar: _alumnoSeleccionado != null
+                          ? _saveRoutine
+                          : null,
+                    ),
+                    // 👇 Sidebar y Workspace en un Row con Expanded
+                    Expanded(
+                      child: Row(
+                        children: [
+                          ExcerciseSidebar(
+                            allExercises: _loadedExercises,
+                            controller: _routineController,
+                            onAddExercise: (ejercicio) {
+                              final agregado = _routineController
+                                  .handleExerciseFromSidebar(ejercicio);
+                              if (!agregado && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Ese ejercicio ya está en el bloque activo.',
+                                    ),
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          Expanded(
+                            child: RoutineWorkspace(
+                              controller: _routineController,
+                              onShowMessage: (msg) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(
+                                  context,
+                                ).showSnackBar(SnackBar(content: Text(msg)));
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (_isSaving)
+                  Container(
+                    color: Colors.black54,
+                    child: const Center(
+                      child: CircularProgressIndicator(color: Colors.green),
                     ),
                   ),
-                ],
-              ),
-              
-              // Overlay semitransparente si está guardando
-              if (_isSaving)
-                Container(
-                  color: Colors.black54,
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.green),
-                  ),
-                ),
-            ],
-          ),
+              ],
+            ),
     );
   }
 }

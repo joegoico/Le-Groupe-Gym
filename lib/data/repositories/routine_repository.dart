@@ -1,27 +1,54 @@
-import '../models/routine_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:le_groupe_gym/data/models/routine_model.dart';
 
 abstract class RoutineRepository {
-  Future<bool> saveRoutine(Rutina rutina);
+  Future<int> saveRoutine(Rutina rutina);
+  Future<void> updatePdfUrl({required int idRutina, required String url});
 }
 
-class MockRoutineRepository implements RoutineRepository {
-  @override
-  Future<bool> saveRoutine(Rutina rutina) async {
-	// 1. IMPRIMIMOS LO QUE LLEGA DESDE LA PANTALLA
-    print('====================================');
-    print('💾 SIMULANDO GUARDADO DE RUTINA 💾');
-    print('Nombre: ${rutina.nombre}');
-    print('Cantidad de ejercicios: ${rutina.ejercicios.length}');
-    
-    for (var i = 0; i < rutina.ejercicios.length; i++) {
-      final ej = rutina.ejercicios[i];
-      print('  [${i + 1}] ${ej.ejercicio.nombre} - ${ej.series} series x ${ej.repeticiones} reps');
+class SupabaseRoutineRepository implements RoutineRepository {
+  final SupabaseClient supabaseClient;
+
+  SupabaseRoutineRepository({required this.supabaseClient});
+  
+ @override
+  Future<void> updatePdfUrl({required int idRutina, required String url}) async {
+    try {
+      await supabaseClient
+          .from('Rutinas')
+          .update({'url_pdf': url})
+          .eq('id_rutina', idRutina);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al actualizar url_pdf: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al actualizar url_pdf: $e');
     }
-    print('====================================');
-    // Simulamos el tiempo de inserción en Supabase
-    await Future.delayed(const Duration(milliseconds: 800));
-    
-    // Acá iría el insert real. Por ahora, asumimos éxito rotundo.
-    return true;
+  }
+
+  @override
+  Future<int> saveRoutine(Rutina rutina) async {
+    try {
+      // Paso 1: insertar cabecera en Rutinas y recuperar el id generado
+      final rutinaResponse = await supabaseClient
+          .from('Rutinas')
+          .insert(rutina.toMap())
+          .select('id_rutina')
+          .single();
+
+      final idRutina = rutinaResponse['id_rutina'] as int;
+
+      // Paso 2: insertar cada miembro (superserie = 2 filas con el mismo id_combo)
+      final ejerciciosData = rutina.buildEjerciciosInsertPayload(idRutina);
+
+      if (ejerciciosData.isNotEmpty) {
+        await supabaseClient.from('Rutina_Ejercicios').insert(ejerciciosData);
+      }
+
+      return idRutina;
+    } on PostgrestException catch (e) {
+      throw Exception('Error al guardar rutina: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al guardar: $e');
+    }
   }
 }

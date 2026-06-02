@@ -61,16 +61,30 @@ void main() {
     });
 
     test('getSubgroupsForSelected debe retornar los subgrupos correctos al activar un grupo', () {
+      // Arrange — el mock de Piernas solo tiene Cuádriceps
       final controller = SidebarController(allExercises: listaMock);
-      
+
+      // Act
       controller.toggleMuscleGroup('Piernas');
-      
       final subgrupos = controller.getSubgroupsForSelected();
+
+      // Assert — dinámico: solo lo que existe en los ejercicios del mock
       expect(subgrupos, contains('Cuádriceps'));
-      expect(subgrupos, contains('Isquiotibiales'));
-      expect(subgrupos.length, 4); 
+      expect(subgrupos.length, 1); // solo Cuádriceps en el mock
     });
 
+    // Nuevo test para availableMuscleGroups dinámico
+    test('availableMuscleGroups debe retornar los grupos derivados de los ejercicios', () {
+      // Arrange
+      final controller = SidebarController(allExercises: listaMock);
+
+      // Act
+      final grupos = controller.availableMuscleGroups;
+
+      // Assert
+      expect(grupos, containsAll(['Pecho', 'Piernas']));
+      expect(grupos.length, 2);
+    });
     test('Debe filtrar en cascada combinando buscador, grupo y subgrupo', () {
       final controller = SidebarController(allExercises: listaMock);
       

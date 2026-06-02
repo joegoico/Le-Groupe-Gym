@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // falta esto
 import 'presentacion/pages/main_panel_page.dart'; // Importamos la página que separamos
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importamos dotenv para cargar variables de entorno
 
-void main() {
-  runApp(const MyApp());
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+  await SupabaseConfig.initialize();
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

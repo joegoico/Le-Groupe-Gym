@@ -1,15 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
-import 'package:le_groupe_gym/data/models/routine_model.dart';
 
 void main() {
   group('Rutina Model Tests - Completo', () {
     late EjercicioRutina mockEjercicioRutina;
 
     setUp(() {
-      // 1. Preparamos los datos base para componer una rutina
       final mockEjercicio = Ejercicio(
         idEjercicio: 1,
         nombre: 'Press de Banca Plano',
@@ -17,12 +16,40 @@ void main() {
           CategoriaEjercicio(idCategoria: 1, nombre: 'Pecho', tipo: 'grupo_muscular'),
         ],
       );
-      
       mockEjercicioRutina = EjercicioRutina(
-        ejercicio: mockEjercicio, 
-        series: 4, 
-        repeticiones: '10'
+        ejercicio: mockEjercicio,
+        series: 4,
+        repeticiones: '10',
       );
+    });
+    test('toMap debe incluir id_alumno cuando está presente', () {
+  // Arrange
+      final rutina = Rutina(
+        nombre: 'Día 1 - Empuje',
+        idAlumno: 'abc-123',
+        ejercicios: [],
+      );
+
+      // Act
+      final mapa = rutina.toMap();
+
+      // Assert
+      expect(mapa['id_alumno'], 'abc-123');
+    });
+
+    test('toMap no debe incluir id_alumno cuando es nulo', () {
+      // Arrange
+      final rutina = Rutina(
+        nombre: 'Día 1 - Empuje',
+        // idAlumno no se pasa → queda null
+        ejercicios: [],
+      );
+
+      // Act
+      final mapa = rutina.toMap();
+
+      // Assert
+      expect(mapa.containsKey('id_alumno'), isFalse);
     });
 
     test('Debe instanciar una Rutina completa correctamente', () {
@@ -38,30 +65,35 @@ void main() {
       expect(rutina.ejercicios.first.ejercicio.nombre, 'Press de Banca Plano');
     });
 
-    test('toMap debe exportar la estructura correcta para la tabla de rutinas en Supabase', () {
+    test('toMap debe exportar con la clave nombre_rutina que usa la tabla de Supabase', () {
+      // Arrange
       final rutina = Rutina(
         idRutina: 10,
         nombre: 'Día 1 - Empuje',
         ejercicios: [mockEjercicioRutina],
       );
 
+      // Act
       final mapa = rutina.toMap();
 
+      // Assert
       expect(mapa['id_rutina'], 10);
-      expect(mapa['nombre'], 'Día 1 - Empuje');
-      // No debe exportar la lista de ejercicios porque eso se maneja en la tabla relacional intermedia
-      expect(mapa.containsKey('ejercicios'), isFalse); 
+      expect(mapa['nombre_rutina'], 'Día 1 - Empuje'); // ✅ clave real de la BD
+      expect(mapa.containsKey('nombre'), isFalse);      // ✅ la clave vieja no debe existir
+      expect(mapa.containsKey('ejercicios'), isFalse);  // se maneja en tabla intermedia
     });
 
     test('fromMap debe reconstruir la Rutina desde la cabecera de la BD', () {
+      // Arrange — el JSON refleja exactamente lo que devuelve Supabase
       final jsonMock = {
         'id_rutina': 42,
-        'nombre': 'Circuito de Piernas',
+        'nombre_rutina': 'Circuito de Piernas', // ✅ clave real de la BD
       };
 
-      // Simulamos que le inyectamos los ejercicios que trajimos de la tabla intermedia
+      // Act
       final resultado = Rutina.fromMap(jsonMock, ejercicios: [mockEjercicioRutina]);
 
+      // Assert
       expect(resultado.idRutina, 42);
       expect(resultado.nombre, 'Circuito de Piernas');
       expect(resultado.ejercicios.length, 1);
@@ -69,17 +101,20 @@ void main() {
     });
 
     test('copyWith debe permitir clonar modificando atributos específicos', () {
+      // Arrange
       final original = Rutina(
-        idRutina: 1, 
-        nombre: 'Rutina A', 
-        ejercicios: [mockEjercicioRutina]
+        idRutina: 1,
+        nombre: 'Rutina A',
+        ejercicios: [mockEjercicioRutina],
       );
-      
+
+      // Act
       final clon = original.copyWith(nombre: 'Rutina B (Actualizada)');
 
-      expect(clon.idRutina, 1); // Se mantiene intacto
-      expect(clon.nombre, 'Rutina B (Actualizada)'); // Se actualizó
-      expect(clon.ejercicios.length, 1); // Se mantiene intacto
+      // Assert
+      expect(clon.idRutina, 1);
+      expect(clon.nombre, 'Rutina B (Actualizada)');
+      expect(clon.ejercicios.length, 1);
     });
   });
 }
