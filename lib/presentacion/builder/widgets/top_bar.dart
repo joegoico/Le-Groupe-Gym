@@ -25,7 +25,7 @@ class TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 56,
+      height: 64,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
@@ -67,7 +67,7 @@ class TopBar extends StatelessWidget {
           // Selector alumno
           Flexible(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
+              constraints: const BoxConstraints(maxWidth: 300),
               child: AlumnoSelector(
                 alumnos: alumnos,
                 alumnoSeleccionado: alumnoSeleccionado,
@@ -80,7 +80,7 @@ class TopBar extends StatelessWidget {
           // Nombre rutina
           Flexible(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 220),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: TextField(
                 key: const Key('routine_name_field'),
                 controller: routineNameController,
@@ -97,8 +97,8 @@ class TopBar extends StatelessWidget {
                   filled: true,
                   fillColor: AppColors.surfaceContainer,
                   contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
+                    horizontal: 14,
+                    vertical: 12,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.all(AppRadius.md),
@@ -117,7 +117,7 @@ class TopBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: AppSpacing.lg),
 
           // Botón guardar
           ElevatedButton.icon(
@@ -126,7 +126,7 @@ class TopBar extends StatelessWidget {
             label: Text(
               'Guardar Rutina',
               style: GoogleFonts.inter(
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -141,7 +141,7 @@ class TopBar extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
-                vertical: 10,
+                vertical: 14,
               ),
             ),
           ),

@@ -70,6 +70,7 @@ class RoutineWorkspace extends StatelessWidget {
     );
   }
 
+  // En _buildRoutineWorkspace() — cabecera:
   Widget _buildRoutineWorkspace() {
     final bloques = controller.bloques;
     final total = controller.totalEjercicios;
@@ -84,56 +85,45 @@ class RoutineWorkspace extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Nueva Rutina de Entrenamiento',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.headlineLg,
                   ),
                   Text(
                     '${bloques.length} bloques · $total ejercicios',
-                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    style: AppTextStyles.titleMd,
                   ),
                 ],
               ),
             ),
             OutlinedButton.icon(
-              onPressed: () {
-                controller.addBlock();
-              },
-              icon: const Icon(Icons.view_agenda_outlined, size: 16),
-              label: const Text('Bloque'),
+              onPressed: () => controller.addBlock(),
+              icon: const Icon(Icons.add, size: 14, color: AppColors.primary),
+              label: Text('Bloque', style: AppTextStyles.titleMd),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.blueAccent,
-                side: BorderSide(color: Colors.blueAccent.withOpacity(0.5)),
+                side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.md),
+                ),
               ),
             ),
-            const SizedBox(width: 8),
-            ElevatedButton.icon(
-              onPressed: () {
-                controller.clearRoutine();
-              },
+            const SizedBox(width: AppSpacing.sm),
+            TextButton.icon(
+              onPressed: () => controller.clearRoutine(),
               icon: const Icon(
                 Icons.delete_outline,
-                size: 16,
-                color: Colors.redAccent,
+                size: 14,
+                color: AppColors.error,
               ),
-              label: const Text(
-                'Limpiar Todo',
-                style: TextStyle(color: Colors.redAccent),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent.withOpacity(0.1),
-                shadowColor: Colors.transparent,
-                side: BorderSide(color: Colors.redAccent.withOpacity(0.3)),
-              ),
+              label: Text('Limpiar Todo', style: AppTextStyles.titleMd),
             ),
           ],
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppSpacing.md),
         Expanded(
           child: ListView.builder(
             itemCount: bloques.length,
@@ -167,118 +157,123 @@ class _RoutineBlockSection extends StatelessWidget {
     this.onShowMessage,
   });
 
+  // _RoutineBlockSection — rediseñado:
   @override
   Widget build(BuildContext context) {
     final isActive = controller.activeBlockIndex == blockIndex;
     final canDeleteBlock = controller.bloques.length > 1;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFF161616),
-        borderRadius: BorderRadius.circular(10),
+        color: AppColors.surfaceContainerLow,
+        borderRadius: const BorderRadius.all(AppRadius.lg),
         border: Border.all(
           color: isActive
-              ? Colors.blueAccent.withOpacity(0.6)
-              : Colors.grey[850]!,
-          width: isActive ? 1.5 : 1,
+              ? AppColors.primary.withOpacity(0.4)
+              : Colors.white.withOpacity(0.05),
+          width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: InkWell(
-                  onTap: () {
-                    controller.selectBlock(blockIndex);
-                  },
-                  child: Row(
-                    children: [
-                      Icon(
-                        isActive
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
-                        color: isActive ? Colors.blueAccent : Colors.grey,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          bloque.nombre,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isActive)
-                        Text(
-                          'activo',
-                          style: TextStyle(
-                            color: Colors.blueAccent.withOpacity(0.9),
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+          // Header del bloque
+          InkWell(
+            onTap: () => controller.selectBlock(blockIndex),
+            borderRadius: const BorderRadius.vertical(top: AppRadius.lg),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: 10,
               ),
-              if (canDeleteBlock)
-                IconButton(
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Colors.grey,
-                    size: 20,
+              child: Row(
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant.withOpacity(0.3),
+                    ),
                   ),
-                  tooltip: 'Eliminar bloque vacío',
-                  onPressed: () {
-                    final ok = controller.removeBlock(blockIndex);
-                    if (!ok) {
-                      onShowMessage?.call('No se pudo eliminar el bloque.');
-                    }
-                  },
-                ),
-            ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(bloque.nombre, style: AppTextStyles.titleMd),
+                  ),
+                  if (isActive)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        borderRadius: const BorderRadius.all(AppRadius.full),
+                      ),
+                      child: Text('activo', style: AppTextStyles.labelCaps),
+                    ),
+                  if (canDeleteBlock)
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline,
+                        color: AppColors.onSurfaceVariant.withOpacity(0.5),
+                        size: 16,
+                      ),
+                      onPressed: () {
+                        final ok = controller.removeBlock(blockIndex);
+                        if (!ok) onShowMessage?.call('No se pudo eliminar.');
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                ],
+              ),
+            ),
           ),
+          Divider(height: 1, color: Colors.white.withOpacity(0.05)),
+
+          // Contenido del bloque
           if (bloque.estaVacio)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(
-                isActive
-                    ? 'Bloque activo — agregá ejercicios con + en la librería'
-                    : 'Sin ejercicios — seleccioná el bloque para agregar',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Center(
+                child: Text(
+                  isActive
+                      ? 'Bloque activo — agregá ejercicios con + en la librería'
+                      : 'Sin ejercicios — seleccioná el bloque para agregar',
+                  style: AppTextStyles.titleMd,
+                ),
               ),
             )
           else
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              onReorder: (oldIndex, newIndex) {
-                controller.reorderExerciseInBlock(
-                  blockIndex,
-                  oldIndex,
-                  newIndex,
-                );
-              },
-              itemCount: bloque.ejercicios.length,
-              itemBuilder: (context, exerciseIndex) {
-                return _RoutineExerciseCard(
-                  key: ValueKey('card_${blockIndex}_$exerciseIndex'),
-                  blockIndex: blockIndex,
-                  exerciseIndex: exerciseIndex,
-                  item: bloque.ejercicios[exerciseIndex],
-                  controller: controller,
-                  onShowMessage: onShowMessage,
-                );
-              },
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              child: ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                onReorder: (oldIndex, newIndex) {
+                  controller.reorderExerciseInBlock(
+                    blockIndex,
+                    oldIndex,
+                    newIndex,
+                  );
+                },
+                itemCount: bloque.ejercicios.length,
+                itemBuilder: (context, exerciseIndex) {
+                  return _RoutineExerciseCard(
+                    key: ValueKey('card_${blockIndex}_$exerciseIndex'),
+                    blockIndex: blockIndex,
+                    exerciseIndex: exerciseIndex,
+                    item: bloque.ejercicios[exerciseIndex],
+                    controller: controller,
+                    onShowMessage: onShowMessage,
+                  );
+                },
+              ),
             ),
         ],
       ),
@@ -308,6 +303,7 @@ class _RoutineExerciseCard extends StatelessWidget {
     categorias: [],
   );
 
+  // _RoutineExerciseCard — rediseñado:
   @override
   Widget build(BuildContext context) {
     final isCombining = controller.isCombiningAt(blockIndex, exerciseIndex);
@@ -322,34 +318,48 @@ class _RoutineExerciseCard extends StatelessWidget {
           ]
         : item.miembros;
 
-    return Card(
-      color: const Color(0xFF1E1E1E),
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer,
+        borderRadius: const BorderRadius.all(AppRadius.md),
+        border: Border.all(
           color: item.esSuperserie
-              ? Colors.blueAccent.withOpacity(0.4)
+              ? AppColors.tertiary.withOpacity(0.3)
               : isCombining
-              ? Colors.blueAccent.withOpacity(0.55)
-              : Colors.grey[850]!,
-          width: isCombining ? 1.5 : 1,
+              ? AppColors.primary.withOpacity(0.3)
+              : Colors.white.withOpacity(0.05),
+          width: 1,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ReorderableDragStartListener(
               index: exerciseIndex,
-              child: const Padding(
-                padding: EdgeInsets.only(top: 4, right: 8),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2, right: AppSpacing.sm),
                 child: Icon(
-                  Icons.drag_handle_outlined,
-                  color: Colors.grey,
-                  size: 20,
+                  Icons.drag_handle,
+                  color: AppColors.onSurfaceVariant.withOpacity(0.3),
+                  size: 18,
                 ),
+              ),
+            ),
+            Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.only(right: AppSpacing.sm, top: 2),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerHigh,
+                borderRadius: const BorderRadius.all(AppRadius.sm),
+              ),
+              child: const Icon(
+                Icons.fitness_center,
+                color: AppColors.primary,
+                size: 30,
               ),
             ),
             Expanded(
@@ -358,46 +368,30 @@ class _RoutineExerciseCard extends StatelessWidget {
                 children: [
                   if (item.esSuperserie)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        'SUPERSERIE',
-                        style: TextStyle(
-                          color: Colors.blueAccent.withOpacity(0.9),
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text('SUPERSERIE', style: AppTextStyles.labelCaps),
                     ),
-                  for (
-                    var slotIndex = 0;
-                    slotIndex < slotsToShow.length;
-                    slotIndex++
-                  )
+                  for (var i = 0; i < slotsToShow.length; i++)
                     _buildSlotRow(
-                      slotIndex: slotIndex,
-                      detalle: slotsToShow[slotIndex],
+                      slotIndex: i,
+                      detalle: slotsToShow[i],
                       isPendingSlot:
-                          isCombining && !item.esSuperserie && slotIndex == 1,
+                          isCombining && !item.esSuperserie && i == 1,
                     ),
                   if (isCombining && !item.esSuperserie) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
                         Icon(
                           Icons.arrow_back,
-                          size: 14,
-                          color: Colors.blueAccent.withOpacity(0.8),
+                          size: 12,
+                          color: AppColors.primary.withOpacity(0.8),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
                             'Elegí el ejercicio acoplado con + en la librería',
-                            style: TextStyle(
-                              color: Colors.blueAccent.withOpacity(0.85),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: AppTextStyles.titleMd,
                           ),
                         ),
                       ],
@@ -405,36 +399,24 @@ class _RoutineExerciseCard extends StatelessWidget {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                          controller.cancelCombining();
-                        },
-                        child: const Text(
-                          'Cancelar',
-                          style: TextStyle(color: Colors.grey),
-                        ),
+                        onPressed: () => controller.cancelCombining(),
+                        child: Text('Cancelar', style: AppTextStyles.titleMd),
                       ),
                     ),
                   ],
                   if (!item.esSuperserie && !isCombining)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        onPressed: () {
-                          controller.startCombining(blockIndex, exerciseIndex);
-                        },
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 0),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Combinar',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                    TextButton(
+                      onPressed: () =>
+                          controller.startCombining(blockIndex, exerciseIndex),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        'Combinar',
+                        style: AppTextStyles.titleMd,
+                        selectionColor: AppColors.primaryDim,
                       ),
                     ),
                 ],
@@ -442,49 +424,91 @@ class _RoutineExerciseCard extends StatelessWidget {
             ),
             if (controller.bloques.length > 1)
               PopupMenuButton<int>(
-                icon: const Icon(
+                icon: Icon(
                   Icons.swap_horiz,
-                  color: Colors.grey,
-                  size: 20,
+                  color: AppColors.onSurfaceVariant.withOpacity(0.5),
+                  size: 16,
                 ),
-                tooltip: 'Mover a otro bloque',
+                color: AppColors.surfaceContainerHigh,
                 onSelected: (targetBlock) {
                   final ok = controller.moveExercise(
                     fromBlockIndex: blockIndex,
                     fromExerciseIndex: exerciseIndex,
                     toBlockIndex: targetBlock,
                   );
-                  if (!ok) {
-                    onShowMessage?.call(
-                      'No se pudo mover: cada bloque debe conservar al menos un ejercicio.',
-                    );
-                  }
+                  if (!ok) onShowMessage?.call('No se pudo mover.');
                 },
-                itemBuilder: (context) {
-                  return [
-                    for (var i = 0; i < controller.bloques.length; i++)
-                      if (i != blockIndex)
-                        PopupMenuItem(
-                          value: i,
-                          child: Text(controller.bloques[i].nombre),
+                itemBuilder: (context) => [
+                  for (var i = 0; i < controller.bloques.length; i++)
+                    if (i != blockIndex)
+                      PopupMenuItem(
+                        value: i,
+                        child: Text(
+                          controller.bloques[i].nombre,
+                          style: AppTextStyles.titleMd,
                         ),
-                  ];
-                },
+                      ),
+                ],
               ),
             IconButton(
-              icon: const Icon(Icons.remove_circle_outline, color: Colors.grey),
+              icon: Icon(
+                Icons.close,
+                color: AppColors.onSurfaceVariant.withOpacity(0.5),
+                size: 16,
+              ),
               onPressed: () {
                 final ok = controller.removeExercise(blockIndex, exerciseIndex);
                 if (!ok) {
                   onShowMessage?.call(
-                    'Cada bloque debe tener al menos un ejercicio.',
+                    'Cada bloque necesita al menos un ejercicio.',
                   );
                 }
               },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMiniInputField({
+    required Key key,
+    required String label,
+    required String value,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.titleMd),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: 56,
+          height: 30,
+          child: TextFormField(
+            initialValue: value,
+            onChanged: onChanged,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.labelCaps,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.surfaceContainerHigh,
+              contentPadding: EdgeInsets.zero,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: const BorderRadius.all(AppRadius.sm),
+                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: const BorderRadius.all(AppRadius.sm),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -511,7 +535,7 @@ class _RoutineExerciseCard extends StatelessWidget {
                   nombreVisible,
                   style: TextStyle(
                     color: esPlaceholder ? Colors.grey : Colors.white,
-                    fontSize: 15,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     fontStyle: esPlaceholder
                         ? FontStyle.italic
@@ -527,7 +551,7 @@ class _RoutineExerciseCard extends StatelessWidget {
                         : 'General',
                     style: const TextStyle(
                       color: Colors.blueAccent,
-                      fontSize: 11,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -574,52 +598,6 @@ class _RoutineExerciseCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMiniInputField({
-    required Key key,
-    required String label,
-    required String value,
-    required ValueChanged<String> onChanged,
-  }) {
-    return Column(
-      key: key,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        SizedBox(
-          width: 60,
-          height: 32,
-          child: TextFormField(
-            initialValue: value,
-            onChanged: onChanged,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 13),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFF222222),
-              contentPadding: EdgeInsets.zero,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: BorderSide(color: Colors.grey[800]!),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(4),
-                borderSide: const BorderSide(color: Colors.blueAccent),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

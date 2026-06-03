@@ -48,7 +48,7 @@ serve(async (req) => {
     const resultados = await Promise.allSettled(
       deudores.map(async (deudor) => {
         const command = new SendTemplatedEmailCommand({
-          Source: "recordatorios@legroupegym.com",
+          Source: "contacto@legroupegym.com",
           Destination: { ToAddresses: [deudor.Alumno.Mail] },
           Template: "RecordatorioPagoVencido",
           TemplateData: JSON.stringify({

@@ -80,3 +80,7 @@ vendor/
 android/key.properties
 *.jks
 *.keystore
+
+# Instalador y binarios locales de AWS CLI
+aws/
+awscliv2.zip
