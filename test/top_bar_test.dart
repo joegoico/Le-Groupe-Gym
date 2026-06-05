@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
+import 'package:le_groupe_gym/presentacion/builder/top_bar.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 void main() {

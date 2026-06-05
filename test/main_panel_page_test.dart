@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/presentacion/pages/main_panel_page.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/exercise_sidebar.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/routine_workspace.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/alumno_selector.dart';
+import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
+import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
+import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'mocks/mock_exercise_repository.dart';
 import 'mocks/mock_routine_repository.dart';
@@ -76,9 +76,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 500));
 
         // Act — agregamos el mismo ejercicio dos veces via el botón +
-        await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+        await tester.tap(find.byIcon(Icons.add).first);
         await tester.pump();
-        await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+        await tester.tap(find.byIcon(Icons.add).first);
         await tester.pump();
 
         // Assert

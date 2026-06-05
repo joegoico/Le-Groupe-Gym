@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/exercise_sidebar.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/routine_builder_controller.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/routine_workspace.dart';
+import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
+import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
+import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
+import 'mocks/mock_category_exercise_repository.dart';
+import 'mocks/mock_exercise_repository.dart';
 
 void main() {
   group('RoutineWorkspace Widget Tests - Patrón AAA', () {
@@ -38,6 +40,9 @@ void main() {
                     onAddExercise: (ejercicio) {
                       controller.handleExerciseFromSidebar(ejercicio);
                     },
+                    exerciseRepository: MockExerciseRepository(),
+                    categoryExerciseRepository:
+                        MockCategoryExerciseRepository(),
                   ),
                   Expanded(child: RoutineWorkspace(controller: controller)),
                 ],

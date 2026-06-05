@@ -21,7 +21,7 @@ class RoutineWorkspace extends StatelessWidget {
       listenable: controller,
       builder: (context, _) {
         return Container(
-          color: const Color(0xFF111111),
+          color: AppColors.surfaceContainerLow,
           padding: const EdgeInsets.all(24.0),
           child: controller.bloques.isEmpty
               ? _buildEmptyState()
@@ -126,6 +126,7 @@ class RoutineWorkspace extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Expanded(
           child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 100),
             itemCount: bloques.length,
             itemBuilder: (context, blockIndex) {
               return _RoutineBlockSection(
@@ -164,7 +165,7 @@ class _RoutineBlockSection extends StatelessWidget {
     final canDeleteBlock = controller.bloques.length > 1;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: const BorderRadius.all(AppRadius.lg),
@@ -175,8 +176,9 @@ class _RoutineBlockSection extends StatelessWidget {
           width: 1,
         ),
       ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Header del bloque
           InkWell(
@@ -333,9 +335,12 @@ class _RoutineExerciseCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ReorderableDragStartListener(
               index: exerciseIndex,
@@ -405,19 +410,28 @@ class _RoutineExerciseCard extends StatelessWidget {
                     ),
                   ],
                   if (!item.esSuperserie && !isCombining)
-                    TextButton(
+                    OutlinedButton(
                       onPressed: () =>
                           controller.startCombining(blockIndex, exerciseIndex),
+
                       style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                        ),
+                        backgroundColor: AppColors.surfaceContainerLow,
+                        foregroundColor: AppColors.primary,
+                        disabledBackgroundColor: AppColors.surfaceContainerHigh,
+                        disabledForegroundColor: AppColors.onSurfaceVariant,
+                        elevation: 0,
+                        textStyle: AppTextStyles.titleMd,
                         minimumSize: Size.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                        ),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.comfortable,
                       ),
-                      child: Text(
-                        'Combinar',
-                        style: AppTextStyles.titleMd,
-                        selectionColor: AppColors.primaryDim,
-                      ),
+                      child: const Text('Combinar'),
                     ),
                 ],
               ),
@@ -473,6 +487,107 @@ class _RoutineExerciseCard extends StatelessWidget {
     );
   }
 
+  Widget _buildSlotRow({
+    required int slotIndex,
+    required DetalleEjercicioRutina detalle,
+    required bool isPendingSlot,
+  }) {
+    final esPlaceholder = detalle.ejercicio.nombre.isEmpty;
+    final nombreVisible = esPlaceholder
+        ? 'Pendiente — elegí en la librería'
+        : detalle.ejercicio.nombre;
+    final categoria = detalle.ejercicio.categorias.isNotEmpty
+        ? detalle.ejercicio.categorias
+              .firstWhere(
+                (c) => c.tipo == 'grupo_muscular',
+                orElse: () => detalle.ejercicio.categorias.first,
+              )
+              .nombre
+        : '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Info del ejercicio
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  nombreVisible,
+                  style: AppTextStyles.titleMd,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (!esPlaceholder && categoria.isNotEmpty)
+                  Text(categoria, style: AppTextStyles.subtittles),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+
+          // Series
+          _buildMiniInputField(
+            key: Key('slot_series_${blockIndex}_${exerciseIndex}_$slotIndex'),
+            label: 'SERIES',
+            value: detalle.series.toString(),
+            onChanged: (val) {
+              final parsed = int.tryParse(val);
+              if (parsed == null) return;
+              if (isPendingSlot) {
+                controller.updatePendingCombineParams(series: parsed);
+              } else {
+                controller.updateMemberParams(
+                  blockIndex: blockIndex,
+                  exerciseIndex: exerciseIndex,
+                  slotIndex: slotIndex,
+                  series: parsed,
+                );
+              }
+            },
+          ),
+          const SizedBox(width: AppSpacing.xs),
+
+          // Reps
+          _buildMiniInputField(
+            key: Key('slot_reps_${blockIndex}_${exerciseIndex}_$slotIndex'),
+            label: 'REPS',
+            value: detalle.repeticiones,
+            onChanged: (val) {
+              if (isPendingSlot) {
+                controller.updatePendingCombineParams(repeticiones: val);
+              } else {
+                controller.updateMemberParams(
+                  blockIndex: blockIndex,
+                  exerciseIndex: exerciseIndex,
+                  slotIndex: slotIndex,
+                  repeticiones: val,
+                );
+              }
+            },
+          ),
+          const SizedBox(width: AppSpacing.xs),
+
+          // Peso
+          _buildMiniInputField(
+            key: Key('slot_peso_${blockIndex}_${exerciseIndex}_$slotIndex'),
+            label: 'KG',
+            value: detalle.peso,
+            onChanged: (val) {
+              controller.updateMemberParams(
+                blockIndex: blockIndex,
+                exerciseIndex: exerciseIndex,
+                slotIndex: slotIndex,
+                peso: val,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMiniInputField({
     required Key key,
     required String label,
@@ -481,13 +596,13 @@ class _RoutineExerciseCard extends StatelessWidget {
   }) {
     return Column(
       key: key,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(label, style: AppTextStyles.titleMd),
+        Text(label, style: AppTextStyles.labelCaps),
         const SizedBox(height: 4),
         SizedBox(
-          width: 56,
-          height: 30,
+          width: 48,
+          height: 28,
           child: TextFormField(
             initialValue: value,
             onChanged: onChanged,
@@ -509,95 +624,6 @@ class _RoutineExerciseCard extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSlotRow({
-    required int slotIndex,
-    required DetalleEjercicioRutina detalle,
-    required bool isPendingSlot,
-  }) {
-    final esPlaceholder = detalle.ejercicio.nombre.isEmpty;
-    final nombreVisible = esPlaceholder
-        ? 'Pendiente — elegí en la librería'
-        : detalle.ejercicio.nombre;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  nombreVisible,
-                  style: TextStyle(
-                    color: esPlaceholder ? Colors.grey : Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: esPlaceholder
-                        ? FontStyle.italic
-                        : FontStyle.normal,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (!esPlaceholder) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    detalle.ejercicio.categorias.isNotEmpty
-                        ? detalle.ejercicio.categorias.first.nombre
-                        : 'General',
-                    style: const TextStyle(
-                      color: Colors.blueAccent,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          _buildMiniInputField(
-            key: Key('slot_series_${blockIndex}_${exerciseIndex}_$slotIndex'),
-            label: 'Series',
-            value: detalle.series.toString(),
-            onChanged: (val) {
-              final parsed = int.tryParse(val);
-              if (parsed == null) return;
-              if (isPendingSlot) {
-                controller.updatePendingCombineParams(series: parsed);
-              } else {
-                controller.updateMemberParams(
-                  blockIndex: blockIndex,
-                  exerciseIndex: exerciseIndex,
-                  slotIndex: slotIndex,
-                  series: parsed,
-                );
-              }
-            },
-          ),
-          const SizedBox(width: 12),
-          _buildMiniInputField(
-            key: Key('slot_reps_${blockIndex}_${exerciseIndex}_$slotIndex'),
-            label: 'Reps',
-            value: detalle.repeticiones,
-            onChanged: (val) {
-              if (isPendingSlot) {
-                controller.updatePendingCombineParams(repeticiones: val);
-              } else {
-                controller.updateMemberParams(
-                  blockIndex: blockIndex,
-                  exerciseIndex: exerciseIndex,
-                  slotIndex: slotIndex,
-                  repeticiones: val,
-                );
-              }
-            },
-          ),
-        ],
-      ),
     );
   }
 }

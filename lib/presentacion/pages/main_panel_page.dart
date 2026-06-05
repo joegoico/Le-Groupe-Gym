@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/alumno_model.dart';
-import '../builder/widgets/exercise_sidebar.dart';
-import '../builder/widgets/routine_builder_controller.dart';
-import '../builder/widgets/routine_workspace.dart';
-import '../builder/widgets/top_bar.dart';
+import '../builder/exercise_sidebar.dart';
+import '../builder/routine_builder_controller.dart';
+import '../builder/routine_workspace.dart';
+import '../builder/top_bar.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
@@ -180,23 +180,38 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                     Expanded(
                       child: Row(
                         children: [
-                          ExcerciseSidebar(
-                            allExercises: _loadedExercises,
-                            controller: _routineController,
-                            onAddExercise: (ejercicio) {
-                              final agregado = _routineController
-                                  .handleExerciseFromSidebar(ejercicio);
-                              if (!agregado && mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Ese ejercicio ya está en el bloque activo.',
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              border: Border(
+                                right: BorderSide(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            child: ExcerciseSidebar(
+                              allExercises: _loadedExercises,
+                              controller: _routineController,
+                              exerciseRepository: ref.read(
+                                exerciseRepositoryProvider,
+                              ),
+                              categoryExerciseRepository: ref.read(
+                                categoryExerciseRepositoryProvider,
+                              ),
+                              onAddExercise: (ejercicio) {
+                                final agregado = _routineController
+                                    .handleExerciseFromSidebar(ejercicio);
+                                if (!agregado && mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Ese ejercicio ya está en el bloque activo.',
+                                      ),
                                     ),
-                                    duration: Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            },
+                                  );
+                                }
+                              },
+                            ),
                           ),
                           Expanded(
                             child: RoutineWorkspace(

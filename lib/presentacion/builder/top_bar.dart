@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/alumno_selector.dart';
+import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 
 class TopBar extends StatelessWidget {
   final VoidCallback onBack;
@@ -48,14 +48,14 @@ class TopBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
 
           // Logo
-          Image.asset('assets/logo.png', height: 28, width: 28),
+          Image.asset('assets/logo.png', height: 38, width: 38),
           const SizedBox(width: AppSpacing.sm),
 
           // Nombre
           Text(
             'Le Groupe Gym',
             style: GoogleFonts.hankenGrotesk(
-              fontSize: 15,
+              fontSize: 25,
               fontWeight: FontWeight.w700,
               color: AppColors.onSurface,
               letterSpacing: -0.3,
@@ -123,13 +123,7 @@ class TopBar extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onGuardar,
             icon: const Icon(Icons.save_outlined, size: 15),
-            label: Text(
-              'Guardar Rutina',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            label: Text('Guardar Rutina', style: AppTextStyles.buttonText),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
@@ -140,7 +134,7 @@ class TopBar extends StatelessWidget {
                 borderRadius: BorderRadius.all(AppRadius.md),
               ),
               padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
+                horizontal: AppSpacing.lg,
                 vertical: 14,
               ),
             ),

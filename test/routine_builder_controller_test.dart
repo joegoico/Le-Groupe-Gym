@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/routine_builder_controller.dart';
+import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:mocktail/mocktail.dart';
 
 void main() {

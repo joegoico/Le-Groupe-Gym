@@ -246,6 +246,7 @@ class RoutineBuilderController extends ChangeNotifier {
     int? series,
     String? repeticiones,
     String? notas,
+    String? peso,
   }) {
     if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return;
     _bloques[blockIndex].ejercicios[exerciseIndex].actualizarMiembro(

@@ -1,4 +1,5 @@
-import '../../../data/models/exercise_model.dart';
+import '../../data/models/exercise_model.dart';
+import '../../data/models/category_exercise_model.dart';
 
 class SidebarController {
   final List<Ejercicio> allExercises;
@@ -12,28 +13,39 @@ class SidebarController {
   // ✅ Dinámico — deriva grupos desde los ejercicios
   List<String> get availableMuscleGroups {
     return allExercises
-        .expand((e) => e.categorias
-            .where((c) => c.tipo == 'grupo_muscular')
-            .map((c) => c.nombre))
+        .expand(
+          (e) => e.categorias
+              .where((c) => c.tipo == 'grupo_muscular')
+              .map((c) => c.nombre),
+        )
         .toSet()
         .toList()
       ..sort();
   }
 
+  List<CategoriaEjercicio> get categoriasDisponibles {
+    return allExercises.expand((e) => e.categorias).toSet().toList();
+  }
+
   List<Ejercicio> get filteredExercises {
     return allExercises.where((exercise) {
-      final matchesSearch = exercise.nombre
-          .toLowerCase()
-          .contains(searchQuery.toLowerCase());
+      final matchesSearch = exercise.nombre.toLowerCase().contains(
+        searchQuery.toLowerCase(),
+      );
 
-      final matchesMuscleGroup = selectedMuscleGroups.isEmpty ||
-          exercise.categorias.any((c) =>
-              c.tipo == 'grupo_muscular' &&
-              selectedMuscleGroups.contains(c.nombre));
+      final matchesMuscleGroup =
+          selectedMuscleGroups.isEmpty ||
+          exercise.categorias.any(
+            (c) =>
+                c.tipo == 'grupo_muscular' &&
+                selectedMuscleGroups.contains(c.nombre),
+          );
 
-      final matchesSubgroup = selectedSubgroups.isEmpty ||
-          exercise.categorias.any((c) =>
-              c.tipo == 'subgrupo' && selectedSubgroups.contains(c.nombre));
+      final matchesSubgroup =
+          selectedSubgroups.isEmpty ||
+          exercise.categorias.any(
+            (c) => c.tipo == 'subgrupo' && selectedSubgroups.contains(c.nombre),
+          );
 
       return matchesSearch && matchesMuscleGroup && matchesSubgroup;
     }).toList();
@@ -65,12 +77,18 @@ class SidebarController {
     if (selectedMuscleGroups.isEmpty) return [];
 
     return allExercises
-        .where((e) => e.categorias.any((c) =>
-            c.tipo == 'grupo_muscular' &&
-            selectedMuscleGroups.contains(c.nombre)))
-        .expand((e) => e.categorias
-            .where((c) => c.tipo == 'subgrupo')
-            .map((c) => c.nombre))
+        .where(
+          (e) => e.categorias.any(
+            (c) =>
+                c.tipo == 'grupo_muscular' &&
+                selectedMuscleGroups.contains(c.nombre),
+          ),
+        )
+        .expand(
+          (e) => e.categorias
+              .where((c) => c.tipo == 'subgrupo')
+              .map((c) => c.nombre),
+        )
         .toSet()
         .toList()
       ..sort();
@@ -79,10 +97,16 @@ class SidebarController {
   // ✅ Dinámico — limpia subgrupos del grupo deseleccionado
   void _cleanSubgroupsFor(String groupName) {
     final subgruposDelGrupo = allExercises
-        .where((e) => e.categorias.any(
-            (c) => c.tipo == 'grupo_muscular' && c.nombre == groupName))
-        .expand((e) =>
-            e.categorias.where((c) => c.tipo == 'subgrupo').map((c) => c.nombre))
+        .where(
+          (e) => e.categorias.any(
+            (c) => c.tipo == 'grupo_muscular' && c.nombre == groupName,
+          ),
+        )
+        .expand(
+          (e) => e.categorias
+              .where((c) => c.tipo == 'subgrupo')
+              .map((c) => c.nombre),
+        )
         .toSet();
 
     selectedSubgroups.removeAll(subgruposDelGrupo);

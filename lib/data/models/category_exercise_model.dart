@@ -2,18 +2,27 @@ class CategoriaEjercicio {
   final int idCategoria;
   final String nombre;
   final String tipo;
+  final int? idCategoriaPadre;
 
   CategoriaEjercicio({
     required this.idCategoria,
     required this.nombre,
     required this.tipo,
+    this.idCategoriaPadre,
   });
+  @override
+  bool operator ==(Object other) =>
+      other is CategoriaEjercicio && other.idCategoria == idCategoria;
+
+  @override
+  int get hashCode => idCategoria.hashCode;
 
   factory CategoriaEjercicio.fromJson(Map<String, dynamic> json) {
     return CategoriaEjercicio(
       idCategoria: json['id_categoria'] as int,
       nombre: json['nombre'] as String,
       tipo: json['tipo'] as String,
+      idCategoriaPadre: json['id_categoria_padre'] as int?,
     );
   }
 
@@ -22,11 +31,13 @@ class CategoriaEjercicio {
     int? idCategoria,
     String? nombre,
     String? tipo,
+    int? idCategoriaPadre,
   }) {
     return CategoriaEjercicio(
       idCategoria: idCategoria ?? this.idCategoria,
       nombre: nombre ?? this.nombre,
       tipo: tipo ?? this.tipo,
+      idCategoriaPadre: idCategoriaPadre ?? this.idCategoriaPadre,
     );
   }
 
@@ -36,6 +47,7 @@ class CategoriaEjercicio {
       'id_categoria': idCategoria,
       'nombre': nombre,
       'tipo': tipo,
+      if (idCategoriaPadre != null) 'id_categoria_padre': idCategoriaPadre,
     };
   }
 }

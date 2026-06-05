@@ -19,6 +19,7 @@ class AppColors {
   // Text
   static const onSurface = Color(0xFFE5E1E4);
   static const onSurfaceVariant = Color(0xFFC4C9AC);
+  static const onPrimaryFixed = Color(0xFF161e00);
 
   // Outline
   static const outline = Color(0xFF8E9379);
@@ -63,10 +64,22 @@ class AppTextStyles {
     color: AppColors.onSurface,
   );
 
+  static TextStyle get buttonText => GoogleFonts.inter(
+    fontSize: 15,
+    fontWeight: FontWeight.w600,
+    color: AppColors.onPrimaryFixed,
+  );
+
   static TextStyle get labelCaps => GoogleFonts.robotoMono(
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.05,
     color: AppColors.onSurfaceVariant,
+  );
+
+  static TextStyle get subtittles => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w200,
+    color: AppColors.onSurface,
   );
 }
