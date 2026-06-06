@@ -17,6 +17,7 @@ class ExcerciseSidebar extends StatefulWidget {
   final VoidCallback? onCreateExercise;
   final ExerciseRepository exerciseRepository;
   final ICategoryExerciseRepository categoryExerciseRepository;
+  final VoidCallback? onCreateEjercicio;
 
   const ExcerciseSidebar({
     super.key,
@@ -26,6 +27,7 @@ class ExcerciseSidebar extends StatefulWidget {
     this.onCreateExercise,
     required this.exerciseRepository,
     required this.categoryExerciseRepository,
+    this.onCreateEjercicio,
   });
 
   @override
@@ -162,11 +164,16 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: MuscleCategorySelector(
-                  categorias: _categories,
+                  categorias: widget.allExercises
+                      .expand((e) => e.categorias)
+                      .toSet()
+                      .toList(), // 👈 deriva categorías desde los ejercicios
                   selectedGroups: _controller.selectedMuscleGroups,
                   selectedSubgroups: _controller.selectedSubgroups,
-                  onToggleGroup: _controller.toggleMuscleGroup,
-                  onToggleSubgroup: _controller.toggleSubgroup,
+                  onToggleGroup: (grupo) =>
+                      setState(() => _controller.toggleMuscleGroup(grupo)),
+                  onToggleSubgroup: (sub) =>
+                      setState(() => _controller.toggleSubgroup(sub)),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -325,12 +332,16 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                         context: context,
                         isScrollControlled: true,
                         builder: (_) => AddExerciseForm(
-                          categorias: _categories,
+                          categorias: widget.allExercises
+                              .expand((e) => e.categorias)
+                              .toSet()
+                              .toList(), // 👈 deriva categorías
+                          exerciseRepository: widget.exerciseRepository,
                           onCancelar: () => Navigator.pop(context),
                           onGuardar: (data) {
                             Navigator.pop(context);
+                            widget.onCreateEjercicio?.call(); // 👈
                           },
-                          exerciseRepository: widget.exerciseRepository,
                         ),
                       );
                     },

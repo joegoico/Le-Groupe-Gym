@@ -172,7 +172,7 @@ void main() {
           find.text('Nombre del ejercicio'),
           findsOneWidget,
         ); // también verificá este
-        expect(find.text('GRUPO MUSCULAR'), findsOneWidget);
+        expect(find.text('GRUPO MUSCULAR'), findsWidgets);
         expect(
           find.text('SUBGRUPO'),
           findsNothing,

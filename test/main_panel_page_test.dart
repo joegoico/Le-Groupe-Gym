@@ -9,6 +9,7 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'mocks/mock_exercise_repository.dart';
 import 'mocks/mock_routine_repository.dart';
 import 'mocks/mock_alumno_repository.dart';
+import 'mocks/mock_category_exercise_repository.dart';
 
 void main() {
   group('MainPanelPage Widget Tests - Flujo Asíncrono AAA', () {
@@ -20,6 +21,9 @@ void main() {
           ),
           routineRepositoryProvider.overrideWithValue(MockRoutineRepository()),
           alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
+          categoryExerciseRepositoryProvider.overrideWithValue(
+            MockCategoryExerciseRepository(),
+          ), // 👈
         ],
         child: const MaterialApp(
           debugShowCheckedModeBanner: false,

@@ -151,6 +151,16 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
+  Future<void> _reloadExercises() async {
+    final exerciseRepo = ref.read(exerciseRepositoryProvider);
+    try {
+      final exercises = await exerciseRepo.getExercises();
+      setState(() => _loadedExercises = exercises);
+    } catch (e) {
+      debugPrint('Error al recargar ejercicios: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -211,6 +221,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                   );
                                 }
                               },
+                              onCreateEjercicio: _reloadExercises,
                             ),
                           ),
                           Expanded(

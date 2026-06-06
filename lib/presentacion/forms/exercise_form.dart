@@ -55,17 +55,31 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
 
   Future<void> _guardarEjercicio() async {
     final categoriaIds = getCategoriaIds();
+    try {
+      await widget.exerciseRepository.createExercise(
+        nombre: _nombreController.text.trim(),
+        categoriaIds: categoriaIds,
+      );
 
-    await widget.exerciseRepository.createExercise(
-      nombre: _nombreController.text.trim(),
-      categoriaIds: categoriaIds,
-    );
-
-    widget.onGuardar({
-      'nombre': _nombreController.text.trim(),
-      'grupos': _selectedGroups.toList(),
-      'subgrupos': _selectedSubgroups.toList(),
-    });
+      widget.onGuardar({
+        'nombre': _nombreController.text.trim(),
+        'grupos': _selectedGroups.toList(),
+        'subgrupos': _selectedSubgroups.toList(),
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("El ejercicio fue creado correctamente"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Ocurrió el error ${e}"),
+          backgroundColor: AppColors.errorContainer,
+        ),
+      );
+    }
   }
 
   @override
@@ -229,10 +243,7 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
                   icon: const Icon(Icons.check, size: 16),
                   label: Text(
                     'Guardar Ejercicio',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: AppTextStyles.buttonText,
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,

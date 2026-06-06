@@ -30,8 +30,21 @@ class MuscleCategorySelector extends StatelessWidget {
   // 👇 solo subgrupos de ejercicios que pertenecen al grupo seleccionado
   List<String> get _subgruposDisponibles {
     if (selectedGroups.isEmpty) return [];
+
+    final idsPadresSeleccionados = categorias
+        .where(
+          (c) =>
+              c.tipo == 'grupo_muscular' && selectedGroups.contains(c.nombre),
+        )
+        .map((c) => c.idCategoria)
+        .toSet();
+
     return categorias
-        .where((c) => c.tipo == 'subgrupo')
+        .where(
+          (c) =>
+              c.tipo == 'subgrupo' &&
+              idsPadresSeleccionados.contains(c.idCategoriaPadre),
+        )
         .map((c) => c.nombre)
         .toSet()
         .toList()

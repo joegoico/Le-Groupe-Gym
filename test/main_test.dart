@@ -7,10 +7,10 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'mocks/mock_exercise_repository.dart';
 import 'mocks/mock_routine_repository.dart';
 import 'mocks/mock_alumno_repository.dart';
+import 'mocks/mock_category_exercise_repository.dart';
 
 void main() {
   group('Inicialización de Entorno (main.dart)', () {
-
     setUpAll(() async {
       await dotenv.load(fileName: '.env');
     });
@@ -25,19 +25,31 @@ void main() {
       // Assert
       expect(dotenv.isInitialized, isTrue);
       expect(tieneUrl, isTrue, reason: 'Falta SUPABASE_URL en el archivo .env');
-      expect(tieneKey, isTrue, reason: 'Falta SUPABASE_ANON_KEY en el archivo .env');
+      expect(
+        tieneKey,
+        isTrue,
+        reason: 'Falta SUPABASE_ANON_KEY en el archivo .env',
+      );
     });
 
-    testWidgets('MyApp debe montar correctamente con dependencias mockeadas',
-        (WidgetTester tester) async {
+    testWidgets('MyApp debe montar correctamente con dependencias mockeadas', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       final widget = ProviderScope(
         overrides: [
-          exerciseRepositoryProvider.overrideWithValue(MockExerciseRepository()),
+          exerciseRepositoryProvider.overrideWithValue(
+            MockExerciseRepository(),
+          ),
           routineRepositoryProvider.overrideWithValue(MockRoutineRepository()),
-          alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()), // ✅
+          alumnoRepositoryProvider.overrideWithValue(
+            MockAlumnoRepository(),
+          ), // ✅
+          categoryExerciseRepositoryProvider.overrideWithValue(
+            MockCategoryExerciseRepository(),
+          ),
         ],
         child: const MyApp(),
       );

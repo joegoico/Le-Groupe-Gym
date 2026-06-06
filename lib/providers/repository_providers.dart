@@ -17,8 +17,9 @@ final alumnoRepositoryProvider = Provider<AlumnoRepository>((ref) {
   return SupabaseAlumnoRepository(supabaseClient: Supabase.instance.client);
 });
 
-final categoryExerciseRepositoryProvider = Provider<CategoryExerciseRepository>(
-  (ref) {
-    return CategoryExerciseRepository(supabaseClient: Supabase.instance.client);
-  },
-);
+final categoryExerciseRepositoryProvider =
+    Provider<ICategoryExerciseRepository>((ref) {
+      return CategoryExerciseRepository(
+        supabaseClient: Supabase.instance.client,
+      );
+    });
