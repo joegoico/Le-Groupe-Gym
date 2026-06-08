@@ -3,6 +3,8 @@ import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
+import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 
 void main() {
   group('Rutina Model Tests - Completo', () {
@@ -13,7 +15,11 @@ void main() {
         idEjercicio: 1,
         nombre: 'Press de Banca Plano',
         categorias: [
-          CategoriaEjercicio(idCategoria: 1, nombre: 'Pecho', tipo: 'grupo_muscular'),
+          CategoriaEjercicio(
+            idCategoria: 1,
+            nombre: 'Pecho',
+            tipo: 'grupo_muscular',
+          ),
         ],
       );
       mockEjercicioRutina = EjercicioRutina(
@@ -23,12 +29,8 @@ void main() {
       );
     });
     test('toMap debe incluir id_alumno cuando está presente', () {
-  // Arrange
-      final rutina = Rutina(
-        nombre: 'Día 1 - Empuje',
-        idAlumno: 'abc-123',
-        ejercicios: [],
-      );
+      // Arrange
+      final rutina = Rutina(nombre: 'Día 1 - Empuje', idAlumno: 'abc-123');
 
       // Act
       final mapa = rutina.toMap();
@@ -42,7 +44,6 @@ void main() {
       final rutina = Rutina(
         nombre: 'Día 1 - Empuje',
         // idAlumno no se pasa → queda null
-        ejercicios: [],
       );
 
       // Act
@@ -53,45 +54,74 @@ void main() {
     });
 
     test('Debe instanciar una Rutina completa correctamente', () {
+      // Arrange + Act
       final rutina = Rutina(
         idRutina: 100,
         nombre: 'Día 1 - Fuerza Pecho y Triceps',
-        ejercicios: [mockEjercicioRutina],
+        dias: [
+          DiaRutina(
+            nombre: 'Día 1',
+            orden: 0,
+            bloques: [
+              BloqueRutina(
+                id: 'b1',
+                nombre: 'Bloque 1',
+                ejercicios: [mockEjercicioRutina],
+              ),
+            ],
+          ),
+        ],
       );
 
+      // Assert
       expect(rutina.idRutina, 100);
       expect(rutina.nombre, 'Día 1 - Fuerza Pecho y Triceps');
-      expect(rutina.ejercicios.length, 1);
+      expect(rutina.ejercicios.length, 1); // getter de compatibilidad
       expect(rutina.ejercicios.first.ejercicio.nombre, 'Press de Banca Plano');
     });
 
-    test('toMap debe exportar con la clave nombre_rutina que usa la tabla de Supabase', () {
+    test(
+      'toMap debe exportar con la clave nombre_rutina que usa la tabla de Supabase',
+      () {
+        // Arrange
+        final rutina = Rutina(idRutina: 10, nombre: 'Día 1 - Empuje');
+
+        // Act
+        final mapa = rutina.toMap();
+
+        // Assert
+        expect(mapa['id_rutina'], 10);
+        expect(
+          mapa['nombre_rutina'],
+          'Día 1 - Empuje',
+        ); // ✅ clave real de la BD
+        expect(
+          mapa.containsKey('nombre'),
+          isFalse,
+        ); // ✅ la clave vieja no debe existir
+      },
+    );
+
+    test('fromMap debe reconstruir la Rutina desde la cabecera de la BD', () {
       // Arrange
-      final rutina = Rutina(
-        idRutina: 10,
-        nombre: 'Día 1 - Empuje',
-        ejercicios: [mockEjercicioRutina],
+      final jsonMock = {
+        'id_rutina': 42,
+        'nombre_rutina': 'Circuito de Piernas',
+      };
+      final diaConEjercicios = DiaRutina(
+        nombre: 'Día 1',
+        orden: 0,
+        bloques: [
+          BloqueRutina(
+            id: 'b1',
+            nombre: 'Bloque 1',
+            ejercicios: [mockEjercicioRutina],
+          ),
+        ],
       );
 
       // Act
-      final mapa = rutina.toMap();
-
-      // Assert
-      expect(mapa['id_rutina'], 10);
-      expect(mapa['nombre_rutina'], 'Día 1 - Empuje'); // ✅ clave real de la BD
-      expect(mapa.containsKey('nombre'), isFalse);      // ✅ la clave vieja no debe existir
-      expect(mapa.containsKey('ejercicios'), isFalse);  // se maneja en tabla intermedia
-    });
-
-    test('fromMap debe reconstruir la Rutina desde la cabecera de la BD', () {
-      // Arrange — el JSON refleja exactamente lo que devuelve Supabase
-      final jsonMock = {
-        'id_rutina': 42,
-        'nombre_rutina': 'Circuito de Piernas', // ✅ clave real de la BD
-      };
-
-      // Act
-      final resultado = Rutina.fromMap(jsonMock, ejercicios: [mockEjercicioRutina]);
+      final resultado = Rutina.fromMap(jsonMock, dias: [diaConEjercicios]);
 
       // Assert
       expect(resultado.idRutina, 42);
@@ -102,11 +132,7 @@ void main() {
 
     test('copyWith debe permitir clonar modificando atributos específicos', () {
       // Arrange
-      final original = Rutina(
-        idRutina: 1,
-        nombre: 'Rutina A',
-        ejercicios: [mockEjercicioRutina],
-      );
+      final original = Rutina(idRutina: 1, nombre: 'Rutina A');
 
       // Act
       final clon = original.copyWith(nombre: 'Rutina B (Actualizada)');
@@ -114,7 +140,6 @@ void main() {
       // Assert
       expect(clon.idRutina, 1);
       expect(clon.nombre, 'Rutina B (Actualizada)');
-      expect(clon.ejercicios.length, 1);
     });
   });
 }

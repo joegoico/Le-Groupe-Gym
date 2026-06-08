@@ -110,6 +110,13 @@ class EjercicioRutina {
     );
   }
 
+  /// Deshace la combinación, eliminando todos los miembros excepto el original.
+  /// Preserva los parámetros (series, reps, peso, notas) del ejercicio original.
+  void deshacerCombinacion() {
+    if (!esSuperserie) return;
+    _miembros.removeRange(1, _miembros.length);
+  }
+
   void actualizarMiembro(
     int slotIndex, {
     int? series,

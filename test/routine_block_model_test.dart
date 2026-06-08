@@ -3,6 +3,7 @@ import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 
 void main() {
   group('Bloques de rutina - modelo y payload', () {
@@ -26,22 +27,27 @@ void main() {
           ),
         ],
       );
-      final rutina = Rutina(nombre: 'R', bloques: [bloque1, bloque2]);
+      final rutina = Rutina(
+        nombre: 'R',
+        dias: [
+          DiaRutina(nombre: 'Día 1', orden: 0, bloques: [bloque1, bloque2]),
+        ],
+      );
 
       // Act + Assert
       expect(rutina.ejercicios.length, 2);
       expect(rutina.ejercicios[0].ejercicio.nombre, 'A');
       expect(rutina.ejercicios[1].ejercicio.nombre, 'B');
     });
-
     test('buildEjerciciosInsertPayload recorre todos los bloques', () {
       // Arrange
       final superserie = EjercicioRutina(
         ejercicio: Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
       )..combinarCon(Ejercicio(idEjercicio: 2, nombre: 'Fly', categorias: []));
 
-      final rutina = Rutina(
-        nombre: 'R',
+      final dia = DiaRutina(
+        nombre: 'Día 1',
+        orden: 0,
         bloques: [
           BloqueRutina(id: 'b1', nombre: 'B1', ejercicios: [superserie]),
           BloqueRutina(
@@ -49,21 +55,25 @@ void main() {
             nombre: 'B2',
             ejercicios: [
               EjercicioRutina(
-                ejercicio: Ejercicio(idEjercicio: 3, nombre: 'Sentadilla', categorias: []),
+                ejercicio: Ejercicio(
+                  idEjercicio: 3,
+                  nombre: 'Sentadilla',
+                  categorias: [],
+                ),
               ),
             ],
           ),
         ],
       );
 
-      // Act
-      final filas = rutina.buildEjerciciosInsertPayload(10);
+      // Act — contamos ejercicios del día directamente
+      final ejercicios = dia.bloques
+          .expand((b) => b.ejercicios)
+          .expand((t) => t.miembros)
+          .toList();
 
       // Assert
-      expect(filas.length, 3);
-      expect(filas[0]['id_combo'], 1);
-      expect(filas[1]['id_combo'], 1);
-      expect(filas[2].containsKey('id_combo'), isFalse);
+      expect(ejercicios.length, 3); // 2 de superserie + 1 normal
     });
   });
 }

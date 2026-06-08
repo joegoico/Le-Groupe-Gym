@@ -45,6 +45,16 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
     _loadCategories();
   }
 
+  @override
+  void didUpdateWidget(ExcerciseSidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.allExercises != widget.allExercises) {
+      setState(() {
+        _controller = SidebarController(allExercises: widget.allExercises);
+      });
+    }
+  }
+
   Future<void> _loadCategories() async {
     final categories = await widget.categoryExerciseRepository.getCategories();
     if (mounted) {
@@ -366,6 +376,8 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(AppRadius.md),
                       ),
+                      visualDensity: VisualDensity.compact,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
                 ),

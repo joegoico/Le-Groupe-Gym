@@ -5,6 +5,7 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 
 class PdfGeneratorStyle {
   final String regularFontAsset;
@@ -41,7 +42,6 @@ class PdfGenerator {
   }) async {
     final pdf = pw.Document();
 
-    // Cargamos fuentes con soporte Unicode
     final fontData = await rootBundle.load(style.regularFontAsset);
     final boldFontData = await rootBundle.load(style.boldFontAsset);
     final font = pw.Font.ttf(fontData);
@@ -56,30 +56,56 @@ class PdfGenerator {
     final baseStyle = pw.TextStyle(font: font, fontSize: 12);
     final boldStyle = pw.TextStyle(font: boldFont, fontSize: 12);
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              _buildHeader(logoImage, alumno, rutina, boldStyle, baseStyle),
-              pw.SizedBox(height: 24),
-              pw.Divider(color: PdfColors.grey400),
-              pw.SizedBox(height: 16),
-              _buildExerciseTable(rutina, font, boldFont, blockSeparatorFont),
-              pw.SizedBox(height: 24),
-              if (rutina.notasGenerales != null &&
-                  rutina.notasGenerales!.isNotEmpty)
-                _buildNotes(rutina.notasGenerales!, baseStyle, boldStyle),
-              pw.Spacer(),
-              _buildFooter(baseStyle),
-            ],
-          );
-        },
-      ),
-    );
+    // Una página por día
+    for (var i = 0; i < rutina.dias.length; i++) {
+      final dia = rutina.dias[i];
+
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header solo en la primera página
+                if (i == 0) ...[
+                  _buildHeader(logoImage, alumno, rutina, boldStyle, baseStyle),
+                  pw.SizedBox(height: 24),
+                  pw.Divider(color: PdfColors.grey400),
+                ],
+
+                // Título del día
+                pw.SizedBox(height: 16),
+                pw.Text(
+                  dia.nombre,
+                  style: pw.TextStyle(font: boldFont, fontSize: 16),
+                ),
+                pw.SizedBox(height: 12),
+
+                // Tabla de ejercicios del día
+                _buildExerciseTable(
+                  _buildExerciseTableRows(dia),
+                  font,
+                  boldFont,
+                  blockSeparatorFont,
+                ),
+                pw.SizedBox(height: 24),
+
+                // Notas solo en última página
+                if (i == rutina.dias.length - 1 &&
+                    rutina.notasGenerales != null &&
+                    rutina.notasGenerales!.isNotEmpty)
+                  _buildNotes(rutina.notasGenerales!, baseStyle, boldStyle),
+
+                pw.Spacer(),
+                _buildFooter(baseStyle),
+              ],
+            );
+          },
+        ),
+      );
+    }
 
     return pdf.save();
   }
@@ -115,14 +141,13 @@ class PdfGenerator {
     );
   }
 
+  // 👇 Ahora recibe List<_ExerciseTableRow> en lugar de Rutina
   pw.Widget _buildExerciseTable(
-    Rutina rutina,
+    List<_ExerciseTableRow> filas,
     pw.Font font,
     pw.Font boldFont,
     pw.Font blockSeparatorFont,
   ) {
-    final filas = _buildExerciseTableRows(rutina);
-
     return pw.TableHelper.fromTextArray(
       headerStyle: pw.TextStyle(font: boldFont, color: PdfColors.white),
       cellStyle: pw.TextStyle(font: font),
@@ -160,17 +185,18 @@ class PdfGenerator {
 
   @visibleForTesting
   List<List<String>> buildExerciseTableData(Rutina rutina) {
-    return _buildExerciseTableRows(
-      rutina,
-    ).map((fila) => fila.cells).toList(growable: false);
+    // Combina todas las filas de todos los días
+    return rutina.dias
+        .expand((dia) => _buildExerciseTableRows(dia))
+        .map((fila) => fila.cells)
+        .toList(growable: false);
   }
 
-  /// Una fila por miembro; las superseries muestran cada ejercicio con sus series/reps.
-  List<_ExerciseTableRow> _buildExerciseTableRows(Rutina rutina) {
+  List<_ExerciseTableRow> _buildExerciseTableRows(DiaRutina dia) {
     final filas = <_ExerciseTableRow>[];
     var numeroTarjeta = 0;
 
-    for (final bloque in rutina.bloques) {
+    for (final bloque in dia.bloques) {
       if (bloque.ejercicios.isEmpty) continue;
 
       filas.add(

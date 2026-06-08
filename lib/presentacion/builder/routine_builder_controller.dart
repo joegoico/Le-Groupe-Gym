@@ -1,12 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
-import 'package:flutter/foundation.dart';
 
 class RoutineBuilderController extends ChangeNotifier {
-  final List<BloqueRutina> _bloques = [];
+  final List<DiaRutina> _dias = [];
+  int? _activeDayIndex;
   int? _activeBlockIndex;
   int? _combiningBlockIndex;
   int? _combiningExerciseIndex;
@@ -14,113 +15,158 @@ class RoutineBuilderController extends ChangeNotifier {
   String _pendingCombineReps = '10';
   int _blockIdCounter = 0;
 
-  List<BloqueRutina> get bloques => List.unmodifiable(_bloques);
+  // ── Getters de días ──────────────────────────────────────────────
+  List<DiaRutina> get dias => List.unmodifiable(_dias);
+  int? get activeDayIndex => _activeDayIndex;
+
+  // ── Getters de bloques (del día activo) ──────────────────────────
+  List<BloqueRutina> get bloques {
+    final dia = _diaActivo;
+    if (dia == null) return [];
+    return List.unmodifiable(dia.bloques);
+  }
 
   int? get activeBlockIndex => _activeBlockIndex;
 
   List<EjercicioRutina> get currentRoutine =>
-      _bloques.expand((b) => b.ejercicios).toList(growable: false);
+      _dias.expand((d) => d.bloques.expand((b) => b.ejercicios)).toList();
 
   int get totalEjercicios => currentRoutine.length;
 
-  bool get isEmpty => _bloques.isEmpty || totalEjercicios == 0;
+  bool get isEmpty => _dias.isEmpty || totalEjercicios == 0;
 
+  // ── Combining ────────────────────────────────────────────────────
   int? get combiningBlockIndex => _combiningBlockIndex;
-
   int? get combiningExerciseIndex => _combiningExerciseIndex;
-
   int get pendingCombineSeries => _pendingCombineSeries;
-
   String get pendingCombineReps => _pendingCombineReps;
-
   bool get isSelectingForCombine => _combiningBlockIndex != null;
 
   String? get combiningTargetExerciseName {
-    if (_combiningBlockIndex == null || _combiningExerciseIndex == null) {
+    if (_combiningBlockIndex == null || _combiningExerciseIndex == null)
       return null;
-    }
-    final bloque = _bloques[_combiningBlockIndex!];
-    return bloque.ejercicios[_combiningExerciseIndex!].ejercicio.nombre;
+    final dia = _diaActivo;
+    if (dia == null) return null;
+    return dia
+        .bloques[_combiningBlockIndex!]
+        .ejercicios[_combiningExerciseIndex!]
+        .ejercicio
+        .nombre;
   }
 
   bool isCombiningAt(int blockIndex, int exerciseIndex) =>
       _combiningBlockIndex == blockIndex &&
       _combiningExerciseIndex == exerciseIndex;
 
-  /// Compatibilidad con índice plano (primer bloque que contiene el índice acumulado).
-  @Deprecated('Usar isCombiningAt(blockIndex, exerciseIndex)')
-  bool isCombiningAtFlat(int flatIndex) {
-    final pos = _flatToPosition(flatIndex);
-    if (pos == null) return false;
-    return isCombiningAt(pos.$1, pos.$2);
+  // ── Día activo ───────────────────────────────────────────────────
+  DiaRutina? get _diaActivo {
+    if (_activeDayIndex == null || _dias.isEmpty) return null;
+    if (_activeDayIndex! >= _dias.length) return null;
+    return _dias[_activeDayIndex!];
   }
 
-  Rutina buildRutina({
-    required String nombre,
-    String? idAlumno,
-    int? idRutina,
-  }) {
-    return Rutina(
-      idRutina: idRutina,
-      idAlumno: idAlumno,
-      nombre: nombre,
-      bloques: _bloques
-          .map(
-            (b) => BloqueRutina(
-              id: b.id,
-              nombre: b.nombre,
-              ejercicios: List.from(b.ejercicios),
-            ),
-          )
-          .toList(),
+  int addDay({String? nombre}) {
+    if (_dias.length >= 5) return -1;
+    final dia = DiaRutina(
+      nombre: nombre ?? 'Día ${_dias.length + 1}',
+      orden: _dias.length,
     );
+    _dias.add(dia);
+    _activeDayIndex = _dias.length - 1;
+    _activeBlockIndex = null;
+    notifyListeners();
+    return _activeDayIndex!;
   }
 
+  bool removeDay(int dayIndex) {
+    if (_dias.length <= 1) return false;
+    if (dayIndex < 0 || dayIndex >= _dias.length) return false;
+    _dias.removeAt(dayIndex);
+    _syncIndicesAfterDayRemoved(dayIndex);
+    notifyListeners();
+    return true;
+  }
+
+  void renameDay(int dayIndex, String nombre) {
+    if (dayIndex < 0 || dayIndex >= _dias.length) return;
+    _dias[dayIndex] = _dias[dayIndex].copyWith(nombre: nombre);
+    notifyListeners();
+  }
+
+  void selectDay(int dayIndex) {
+    if (dayIndex >= 0 && dayIndex < _dias.length) {
+      _activeDayIndex = dayIndex;
+      _activeBlockIndex = null;
+      notifyListeners();
+    }
+  }
+
+  void deselectDay() {
+    _activeDayIndex = null;
+    _activeBlockIndex = null;
+    cancelCombining();
+    notifyListeners();
+  }
+
+  // ── Métodos de bloques ───────────────────────────────────────────
   int addBlock({String? nombre}) {
+    // Si no hay días, crear uno automáticamente
+    if (_dias.isEmpty) addDay();
+
     _blockIdCounter++;
     final bloque = BloqueRutina(
       id: 'bloque-$_blockIdCounter',
-      nombre: nombre ?? 'Bloque ${_bloques.length + 1}',
+      nombre: nombre ?? 'Bloque ${_diaActivo!.bloques.length + 1}',
     );
-    _bloques.add(bloque);
+    _diaActivo!.bloques.add(bloque);
+    _activeBlockIndex = _diaActivo!.bloques.length - 1;
     notifyListeners();
-    _activeBlockIndex = _bloques.length - 1;
     return _activeBlockIndex!;
   }
 
-  void selectBlock(int blockIndex) {
-    if (blockIndex >= 0 && blockIndex < _bloques.length) {
+  void selectBlock(int dayIndex, int blockIndex) {
+    if (dayIndex < 0 || dayIndex >= _dias.length) return;
+    final dia = _dias[dayIndex];
+    if (blockIndex >= 0 && blockIndex < dia.bloques.length) {
+      _activeDayIndex = dayIndex;
       _activeBlockIndex = blockIndex;
     }
     notifyListeners();
   }
 
-  /// Elimina un bloque vacío. Falla si tiene ejercicios o es el único bloque.
   bool removeBlock(int blockIndex) {
-    if (blockIndex < 0 || blockIndex >= _bloques.length) return false;
-    if (_bloques.length <= 1) return false;
+    final dia = _diaActivo;
+    if (dia == null) return false;
+    if (blockIndex < 0 || blockIndex >= dia.bloques.length) return false;
+    if (dia.bloques.length <= 1) return false;
 
-    _bloques.removeAt(blockIndex);
+    dia.bloques.removeAt(blockIndex);
     _syncIndicesAfterBlockRemoved(blockIndex);
     notifyListeners();
     return true;
   }
 
+  // ── Métodos de ejercicios ────────────────────────────────────────
   bool addExercise(Ejercicio ejercicio, {int? blockIndex}) {
+    if (_dias.isEmpty) addDay();
+
     final target = _resolveBlockIndex(blockIndex);
     if (target == null) {
       addBlock();
-      addExercise(ejercicio, blockIndex: _bloques.length - 1);
-      return true;
+      return addExercise(ejercicio, blockIndex: _diaActivo!.bloques.length - 1);
     }
-    final yaExiste = _bloques.any(
-      (bloque) => bloque.ejercicios.any(
-        (e) => e.ejercicio.idEjercicio == ejercicio.idEjercicio,
+
+    // Verificar duplicado en TODA la rutina
+    final yaExiste = _dias.any(
+      (d) => d.bloques.any(
+        (b) => b.ejercicios.any(
+          (e) => e.ejercicio.idEjercicio == ejercicio.idEjercicio,
+        ),
       ),
     );
     if (yaExiste) return false;
 
-    _bloques[target].ejercicios.add(
+    _diaActivo!.bloques[target].ejercicios.add(
       EjercicioRutina(
         ejercicio: ejercicio,
         series: 4,
@@ -138,18 +184,14 @@ class RoutineBuilderController extends ChangeNotifier {
     if (_combiningBlockIndex != null && _combiningExerciseIndex != null) {
       return _combineFromSidebar(ejercicio);
     }
-    bool exerciseAdded = addExercise(ejercicio);
-    notifyListeners();
-    return exerciseAdded;
+    return addExercise(ejercicio);
   }
 
   bool _combineFromSidebar(Ejercicio ejercicio) {
     final blockIndex = _combiningBlockIndex!;
     final exerciseIndex = _combiningExerciseIndex!;
-    if (_ejercicioYaEnTarjeta(blockIndex, exerciseIndex, ejercicio)) {
+    if (_ejercicioYaEnTarjeta(blockIndex, exerciseIndex, ejercicio))
       return false;
-    }
-
     confirmCombine(
       blockIndex: blockIndex,
       exerciseIndex: exerciseIndex,
@@ -157,7 +199,6 @@ class RoutineBuilderController extends ChangeNotifier {
       series: _pendingCombineSeries,
       repeticiones: _pendingCombineReps,
     );
-    notifyListeners();
     return true;
   }
 
@@ -166,27 +207,22 @@ class RoutineBuilderController extends ChangeNotifier {
     int exerciseIndex,
     Ejercicio ejercicio,
   ) {
-    notifyListeners();
-    return _bloques[blockIndex].ejercicios[exerciseIndex].miembros.any(
+    final dia = _diaActivo;
+    if (dia == null) return false;
+    return dia.bloques[blockIndex].ejercicios[exerciseIndex].miembros.any(
       (m) => m.ejercicio.idEjercicio == ejercicio.idEjercicio,
     );
   }
 
-  /// Elimina un ejercicio. Falla si es el único del bloque (mínimo 1 por bloque).
   bool removeExercise(int blockIndex, int exerciseIndex) {
+    final dia = _diaActivo;
+    if (dia == null) return false;
     if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return false;
-    if (_bloques[blockIndex].ejercicios.length <= 1) return false;
-
-    _bloques[blockIndex].ejercicios.removeAt(exerciseIndex);
+    if (dia.bloques[blockIndex].ejercicios.length <= 1) return false;
+    dia.bloques[blockIndex].ejercicios.removeAt(exerciseIndex);
     _syncIndicesAfterExerciseRemoved(blockIndex, exerciseIndex);
     notifyListeners();
     return true;
-  }
-
-  @Deprecated('Usar removeExercise(blockIndex, exerciseIndex)')
-  void removeExerciseFlat(int flatIndex) {
-    final pos = _flatToPosition(flatIndex);
-    if (pos != null) removeExercise(pos.$1, pos.$2);
   }
 
   bool moveExercise({
@@ -195,15 +231,17 @@ class RoutineBuilderController extends ChangeNotifier {
     required int toBlockIndex,
     int? toExerciseIndex,
   }) {
+    final dia = _diaActivo;
+    if (dia == null) return false;
     if (!_isValidExerciseIndex(fromBlockIndex, fromExerciseIndex)) return false;
-    if (toBlockIndex < 0 || toBlockIndex >= _bloques.length) return false;
+    if (toBlockIndex < 0 || toBlockIndex >= dia.bloques.length) return false;
     if (fromBlockIndex == toBlockIndex) return false;
 
-    final source = _bloques[fromBlockIndex];
+    final source = dia.bloques[fromBlockIndex];
     if (source.ejercicios.length <= 1) return false;
 
     final tarjeta = source.ejercicios.removeAt(fromExerciseIndex);
-    final destino = _bloques[toBlockIndex];
+    final destino = dia.bloques[toBlockIndex];
     final insertAt = toExerciseIndex == null
         ? destino.ejercicios.length
         : toExerciseIndex.clamp(0, destino.ejercicios.length);
@@ -216,12 +254,32 @@ class RoutineBuilderController extends ChangeNotifier {
   }
 
   void clearRoutine() {
-    _bloques.clear();
+    _dias.clear();
+    _activeDayIndex = null;
     _activeBlockIndex = null;
     _combiningBlockIndex = null;
     _combiningExerciseIndex = null;
     _resetPendingCombineParams();
     notifyListeners();
+  }
+
+  void updateMemberParams({
+    required int blockIndex,
+    required int exerciseIndex,
+    required int slotIndex,
+    int? series,
+    String? repeticiones,
+    String? notas,
+    String? peso,
+  }) {
+    if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return;
+    _diaActivo!.bloques[blockIndex].ejercicios[exerciseIndex].actualizarMiembro(
+      slotIndex,
+      series: series,
+      repeticiones: repeticiones,
+      notas: notas,
+      peso: peso,
+    );
   }
 
   void updateExerciseParams({
@@ -239,24 +297,6 @@ class RoutineBuilderController extends ChangeNotifier {
     );
   }
 
-  void updateMemberParams({
-    required int blockIndex,
-    required int exerciseIndex,
-    required int slotIndex,
-    int? series,
-    String? repeticiones,
-    String? notas,
-    String? peso,
-  }) {
-    if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return;
-    _bloques[blockIndex].ejercicios[exerciseIndex].actualizarMiembro(
-      slotIndex,
-      series: series,
-      repeticiones: repeticiones,
-      notas: notas,
-    );
-  }
-
   void updatePendingCombineParams({int? series, String? repeticiones}) {
     if (_combiningBlockIndex == null) return;
     if (series != null) _pendingCombineSeries = series;
@@ -265,7 +305,9 @@ class RoutineBuilderController extends ChangeNotifier {
 
   void startCombining(int blockIndex, int exerciseIndex) {
     if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return;
-    if (_bloques[blockIndex].ejercicios[exerciseIndex].esSuperserie) return;
+    final dia = _diaActivo;
+    if (dia == null) return;
+    if (dia.bloques[blockIndex].ejercicios[exerciseIndex].esSuperserie) return;
     _combiningBlockIndex = blockIndex;
     _combiningExerciseIndex = exerciseIndex;
     _resetPendingCombineParams();
@@ -279,12 +321,6 @@ class RoutineBuilderController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _resetPendingCombineParams() {
-    _pendingCombineSeries = 4;
-    _pendingCombineReps = '10';
-    notifyListeners();
-  }
-
   void confirmCombine({
     required int blockIndex,
     required int exerciseIndex,
@@ -293,7 +329,7 @@ class RoutineBuilderController extends ChangeNotifier {
     String repeticiones = '10',
   }) {
     if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return;
-    _bloques[blockIndex].ejercicios[exerciseIndex].combinarCon(
+    _diaActivo!.bloques[blockIndex].ejercicios[exerciseIndex].combinarCon(
       ejercicio,
       series: series,
       repeticiones: repeticiones,
@@ -305,75 +341,110 @@ class RoutineBuilderController extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool uncombineExercise(int blockIndex, int exerciseIndex) {
+    final dia = _diaActivo;
+    if (dia == null) return false;
+    if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return false;
+    final tarjeta = dia.bloques[blockIndex].ejercicios[exerciseIndex];
+    if (!tarjeta.esSuperserie) return false;
+
+    tarjeta.deshacerCombinacion();
+    notifyListeners();
+    return true;
+  }
+
   void reorderExerciseInBlock(int blockIndex, int oldIndex, int newIndex) {
-    if (blockIndex < 0 || blockIndex >= _bloques.length) return;
-    final lista = _bloques[blockIndex].ejercicios;
+    final dia = _diaActivo;
+    if (dia == null) return;
+    if (blockIndex < 0 || blockIndex >= dia.bloques.length) return;
+    final lista = dia.bloques[blockIndex].ejercicios;
     if (oldIndex < 0 || oldIndex >= lista.length) return;
     if (newIndex > oldIndex) newIndex -= 1;
     if (newIndex < 0 || newIndex >= lista.length) return;
-
     final item = lista.removeAt(oldIndex);
     lista.insert(newIndex, item);
-    _syncIndicesAfterExerciseReorder(blockIndex, oldIndex, newIndex);
     notifyListeners();
   }
 
   void renameBlock(int blockIndex, String nombre) {
-    if (blockIndex >= 0 && blockIndex < _bloques.length) {
-      _bloques[blockIndex].nombre = nombre;
+    final dia = _diaActivo;
+    if (dia == null) return;
+    if (blockIndex >= 0 && blockIndex < dia.bloques.length) {
+      dia.bloques[blockIndex].nombre = nombre;
     }
     notifyListeners();
   }
 
+  Rutina buildRutina({
+    required String nombre,
+    String? idAlumno,
+    int? idRutina,
+  }) {
+    return Rutina(
+      idRutina: idRutina,
+      idAlumno: idAlumno,
+      nombre: nombre,
+      dias: _dias
+          .map(
+            (d) => DiaRutina(
+              idDia: d.idDia,
+              nombre: d.nombre,
+              orden: d.orden,
+              bloques: List.from(d.bloques),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
   int? _resolveBlockIndex(int? blockIndex) {
-    if (_bloques.isEmpty) return null;
-    if (blockIndex != null && blockIndex >= 0 && blockIndex < _bloques.length) {
+    final dia = _diaActivo;
+    if (dia == null) return null;
+    if (dia.bloques.isEmpty) return null;
+    if (blockIndex != null &&
+        blockIndex >= 0 &&
+        blockIndex < dia.bloques.length) {
       return blockIndex;
     }
-    if (_activeBlockIndex != null && _activeBlockIndex! < _bloques.length) {
+    if (_activeBlockIndex != null && _activeBlockIndex! < dia.bloques.length) {
       return _activeBlockIndex;
     }
-    return _bloques.length - 1;
+    return dia.bloques.length - 1;
   }
 
   bool _isValidExerciseIndex(int blockIndex, int exerciseIndex) {
-    if (blockIndex < 0 || blockIndex >= _bloques.length) return false;
-    final lista = _bloques[blockIndex].ejercicios;
+    final dia = _diaActivo;
+    if (dia == null) return false;
+    if (blockIndex < 0 || blockIndex >= dia.bloques.length) return false;
+    final lista = dia.bloques[blockIndex].ejercicios;
     return exerciseIndex >= 0 && exerciseIndex < lista.length;
   }
 
-  (int, int)? _flatToPosition(int flatIndex) {
-    var cursor = 0;
-    for (var b = 0; b < _bloques.length; b++) {
-      final count = _bloques[b].ejercicios.length;
-      if (flatIndex < cursor + count) {
-        return (b, flatIndex - cursor);
-      }
-      cursor += count;
+  void _resetPendingCombineParams() {
+    _pendingCombineSeries = 4;
+    _pendingCombineReps = '10';
+    notifyListeners();
+  }
+
+  void _syncIndicesAfterDayRemoved(int removedDayIndex) {
+    if (_activeDayIndex == null) return;
+    if (_activeDayIndex == removedDayIndex) {
+      _activeDayIndex = _dias.isEmpty ? null : 0;
+      _activeBlockIndex = null;
+    } else if (_activeDayIndex! > removedDayIndex) {
+      _activeDayIndex = _activeDayIndex! - 1;
     }
-    return null;
+    cancelCombining();
   }
 
   void _syncIndicesAfterBlockRemoved(int removedBlockIndex) {
-    if (_activeBlockIndex != null) {
-      if (_activeBlockIndex == removedBlockIndex) {
-        _activeBlockIndex = (_bloques.isEmpty) ? null : 0;
-      } else if (_activeBlockIndex! > removedBlockIndex) {
-        _activeBlockIndex = _activeBlockIndex! - 1;
-      }
+    if (_activeBlockIndex == null) return;
+    if (_activeBlockIndex == removedBlockIndex) {
+      _activeBlockIndex = _diaActivo!.bloques.isEmpty ? null : 0;
+    } else if (_activeBlockIndex! > removedBlockIndex) {
+      _activeBlockIndex = _activeBlockIndex! - 1;
     }
-    _adjustCombiningAfterBlockRemoved(removedBlockIndex);
-    notifyListeners();
-  }
-
-  void _adjustCombiningAfterBlockRemoved(int removedBlockIndex) {
-    if (_combiningBlockIndex == null) return;
-    if (_combiningBlockIndex == removedBlockIndex) {
-      cancelCombining();
-    } else if (_combiningBlockIndex! > removedBlockIndex) {
-      _combiningBlockIndex = _combiningBlockIndex! - 1;
-    }
-    notifyListeners();
   }
 
   void _syncIndicesAfterExerciseRemoved(int blockIndex, int removedIndex) {
@@ -384,25 +455,5 @@ class RoutineBuilderController extends ChangeNotifier {
         _combiningExerciseIndex = _combiningExerciseIndex! - 1;
       }
     }
-    notifyListeners();
-  }
-
-  void _syncIndicesAfterExerciseReorder(
-    int blockIndex,
-    int oldIndex,
-    int newIndex,
-  ) {
-    if (_combiningBlockIndex != blockIndex || _combiningExerciseIndex == null) {
-      return;
-    }
-    final combining = _combiningExerciseIndex!;
-    if (combining == oldIndex) {
-      _combiningExerciseIndex = newIndex;
-    } else if (combining > oldIndex && combining <= newIndex) {
-      _combiningExerciseIndex = combining - 1;
-    } else if (combining < oldIndex && combining >= newIndex) {
-      _combiningExerciseIndex = combining + 1;
-    }
-    notifyListeners();
   }
 }

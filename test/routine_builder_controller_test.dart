@@ -215,14 +215,19 @@ void main() {
       expect(controller.bloques[0].ejercicios.first.esSuperserie, isTrue);
     });
 
-    test('buildRutina debe exportar bloques con ejercicios', () {
+    test('buildRutina debe exportar días con bloques y ejercicios', () {
+      // Arrange
+      controller.addDay(nombre: 'Día 1');
       controller.addBlock(nombre: 'Fuerza');
       controller.addExercise(ejercicioMock1);
 
+      // Act
       final rutina = controller.buildRutina(nombre: 'Test', idAlumno: 'x');
 
-      expect(rutina.bloques.length, 1);
-      expect(rutina.bloques.first.nombre, 'Fuerza');
+      // Assert
+      expect(rutina.dias.length, 1);
+      expect(rutina.dias.first.bloques.length, 1);
+      expect(rutina.dias.first.bloques.first.nombre, 'Fuerza');
       expect(rutina.ejercicios.length, 1);
     });
     test(
@@ -288,5 +293,121 @@ void main() {
         expect(controller.bloques.first.nombre, 'Bloque B');
       },
     );
+    group('Días de rutina', () {
+      test('debe iniciar sin días', () {
+        expect(controller.dias, isEmpty);
+      });
+
+      test('addDay debe crear un día y marcarlo como activo', () {
+        // Act
+        controller.addDay(nombre: 'Día 1 - Pecho');
+
+        // Assert
+        expect(controller.dias.length, 1);
+        expect(controller.dias.first.nombre, 'Día 1 - Pecho');
+        expect(controller.activeDayIndex, 0);
+      });
+
+      test('no debe permitir más de 5 días', () {
+        // Act
+        for (var i = 0; i < 6; i++) {
+          controller.addDay(nombre: 'Día $i');
+        }
+
+        // Assert
+        expect(controller.dias.length, 5);
+      });
+
+      test('removeDay debe eliminar un día si hay más de uno', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+        controller.addDay(nombre: 'Día 2');
+
+        // Act
+        final ok = controller.removeDay(0);
+
+        // Assert
+        expect(ok, isTrue);
+        expect(controller.dias.length, 1);
+        expect(controller.dias.first.nombre, 'Día 2');
+      });
+
+      test('no debe permitir eliminar el único día', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+
+        // Act
+        final ok = controller.removeDay(0);
+
+        // Assert
+        expect(ok, isFalse);
+        expect(controller.dias.length, 1);
+      });
+
+      test('renameDay debe actualizar el nombre del día', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+
+        // Act
+        controller.renameDay(0, 'Día 1 - Pecho y Tríceps');
+
+        // Assert
+        expect(controller.dias.first.nombre, 'Día 1 - Pecho y Tríceps');
+      });
+
+      test('addBlock debe agregar al día activo', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+
+        // Act
+        controller.addBlock(nombre: 'Calentamiento');
+
+        // Assert
+        expect(controller.dias.first.bloques.length, 1);
+        expect(controller.dias.first.bloques.first.nombre, 'Calentamiento');
+      });
+
+      test('addExercise debe agregar al bloque activo del día activo', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock();
+
+        // Act
+        controller.addExercise(ejercicioMock1);
+
+        // Assert
+        expect(controller.dias.first.bloques.first.ejercicios.length, 1);
+      });
+
+      test('clearRoutine debe vaciar todos los días', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock();
+        controller.addExercise(ejercicioMock1);
+
+        // Act
+        controller.clearRoutine();
+
+        // Assert
+        expect(controller.dias, isEmpty);
+      });
+
+      test('no debe permitir el mismo ejercicio en distintos días', () {
+        // Arrange
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock();
+        controller.addExercise(ejercicioMock1);
+
+        controller.addDay(nombre: 'Día 2');
+        controller.addBlock();
+
+        // Act
+        controller.addExercise(ejercicioMock1);
+
+        // Assert
+        expect(controller.dias[0].bloques.first.ejercicios.length, 1);
+        expect(controller.dias[1].bloques.first.ejercicios.length, 0);
+      });
+    });
   });
 }

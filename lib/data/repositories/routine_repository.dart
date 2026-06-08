@@ -10,9 +10,12 @@ class SupabaseRoutineRepository implements RoutineRepository {
   final SupabaseClient supabaseClient;
 
   SupabaseRoutineRepository({required this.supabaseClient});
-  
- @override
-  Future<void> updatePdfUrl({required int idRutina, required String url}) async {
+
+  @override
+  Future<void> updatePdfUrl({
+    required int idRutina,
+    required String url,
+  }) async {
     try {
       await supabaseClient
           .from('Rutinas')
@@ -28,7 +31,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<int> saveRoutine(Rutina rutina) async {
     try {
-      // Paso 1: insertar cabecera en Rutinas y recuperar el id generado
+      // Paso 1 — insertar cabecera en Rutinas
       final rutinaResponse = await supabaseClient
           .from('Rutinas')
           .insert(rutina.toMap())
@@ -37,11 +40,46 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
       final idRutina = rutinaResponse['id_rutina'] as int;
 
-      // Paso 2: insertar cada miembro (superserie = 2 filas con el mismo id_combo)
-      final ejerciciosData = rutina.buildEjerciciosInsertPayload(idRutina);
+      // Paso 2 — insertar cada día y sus ejercicios
+      for (var diaIndex = 0; diaIndex < rutina.dias.length; diaIndex++) {
+        final dia = rutina.dias[diaIndex];
 
-      if (ejerciciosData.isNotEmpty) {
-        await supabaseClient.from('Rutina_Ejercicios').insert(ejerciciosData);
+        // Insertar el día
+        final diaResponse = await supabaseClient
+            .from('Dias_Rutina')
+            .insert(dia.toMap(idRutina: idRutina))
+            .select('id_dia')
+            .single();
+
+        final idDia = diaResponse['id_dia'] as int;
+
+        // Insertar ejercicios del día
+        final ejerciciosData = <Map<String, dynamic>>[];
+        var orden = 0;
+
+        for (final bloque in dia.bloques) {
+          for (final tarjeta in bloque.ejercicios) {
+            for (
+              var slotIndex = 0;
+              slotIndex < tarjeta.miembros.length;
+              slotIndex++
+            ) {
+              final miembro = tarjeta.miembros[slotIndex];
+              ejerciciosData.add({
+                'id_dia': idDia,
+                'id_ejercicio': miembro.ejercicio.idEjercicio,
+                'series': miembro.series,
+                'repeticiones': miembro.repeticiones,
+                'orden': orden,
+              });
+              orden++;
+            }
+          }
+        }
+
+        if (ejerciciosData.isNotEmpty) {
+          await supabaseClient.from('Rutina_Ejercicios').insert(ejerciciosData);
+        }
       }
 
       return idRutina;

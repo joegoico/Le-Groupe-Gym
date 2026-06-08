@@ -5,6 +5,8 @@ import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
+import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -39,21 +41,39 @@ void main() {
         nombre: 'Sentadilla',
         categorias: [mockCategoriaCuadriceps],
       );
+
+      // 👇 Nueva estructura con días y bloques
       mockRutinaSuperserie = Rutina(
         idRutina: 2,
         nombre: 'Rutina con Superserie',
         idAlumno: 'abc-123',
-        ejercicios: [
-          EjercicioRutina(
-            ejercicio: Ejercicio(
-              idEjercicio: 1,
-              nombre: 'Press de Banca',
-              categorias: [],
-            ),
-            series: 4,
-            repeticiones: '10',
-            peso: '',
-          )..combinarCon(mockEjercicioCombo, series: 3, repeticiones: '15'),
+        dias: [
+          DiaRutina(
+            nombre: 'Día 1',
+            orden: 0,
+            bloques: [
+              BloqueRutina(
+                id: 'b1',
+                nombre: 'Bloque 1',
+                ejercicios: [
+                  EjercicioRutina(
+                    ejercicio: Ejercicio(
+                      idEjercicio: 1,
+                      nombre: 'Press de Banca',
+                      categorias: [],
+                    ),
+                    series: 4,
+                    repeticiones: '10',
+                    peso: '',
+                  )..combinarCon(
+                    mockEjercicioCombo,
+                    series: 3,
+                    repeticiones: '15',
+                  ),
+                ],
+              ),
+            ],
+          ),
         ],
       );
 
@@ -61,26 +81,38 @@ void main() {
         idRutina: 1,
         nombre: 'Día 1 - Empuje',
         idAlumno: 'abc-123',
-        ejercicios: [
-          EjercicioRutina(
-            ejercicio: Ejercicio(
-              idEjercicio: 1,
-              nombre: 'Press de Banca',
-              categorias: [mockCategoriaPecho],
-            ),
-            series: 4,
-            repeticiones: '10',
-            peso: '',
-          ),
-          EjercicioRutina(
-            ejercicio: Ejercicio(
-              idEjercicio: 2,
-              nombre: 'Sentadilla',
-              categorias: [mockCategoriaCuadriceps],
-            ),
-            series: 3,
-            repeticiones: '12',
-            peso: '',
+        dias: [
+          DiaRutina(
+            nombre: 'Día 1',
+            orden: 0,
+            bloques: [
+              BloqueRutina(
+                id: 'b1',
+                nombre: 'Bloque 1',
+                ejercicios: [
+                  EjercicioRutina(
+                    ejercicio: Ejercicio(
+                      idEjercicio: 1,
+                      nombre: 'Press de Banca',
+                      categorias: [mockCategoriaPecho],
+                    ),
+                    series: 4,
+                    repeticiones: '10',
+                    peso: '',
+                  ),
+                  EjercicioRutina(
+                    ejercicio: Ejercicio(
+                      idEjercicio: 2,
+                      nombre: 'Sentadilla',
+                      categorias: [mockCategoriaCuadriceps],
+                    ),
+                    series: 3,
+                    repeticiones: '12',
+                    peso: '',
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       );
@@ -179,5 +211,130 @@ void main() {
       expect(bytes, isNotEmpty);
       expect(bytes.length, greaterThan(1000));
     });
+    /*
+    group('PDF con múltiples días', () {
+      late Rutina mockRutinaMultiDia;
+
+      setUp(() {
+        mockRutinaMultiDia = Rutina(
+          idRutina: 3,
+          nombre: 'Rutina Semanal',
+          idAlumno: 'abc-123',
+          dias: [
+            DiaRutina(
+              nombre: 'Día 1 - Pecho',
+              orden: 0,
+              bloques: [
+                BloqueRutina(
+                  id: 'b1',
+                  nombre: 'Fuerza',
+                  ejercicios: [
+                    EjercicioRutina(
+                      ejercicio: Ejercicio(
+                        idEjercicio: 1,
+                        nombre: 'Press de Banca',
+                        categorias: [mockCategoriaPecho],
+                      ),
+                      series: 4,
+                      repeticiones: '10',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            DiaRutina(
+              nombre: 'Día 2 - Piernas',
+              orden: 1,
+              bloques: [
+                BloqueRutina(
+                  id: 'b2',
+                  nombre: 'Fuerza',
+                  ejercicios: [
+                    EjercicioRutina(
+                      ejercicio: Ejercicio(
+                        idEjercicio: 2,
+                        nombre: 'Sentadilla',
+                        categorias: [mockCategoriaCuadriceps],
+                      ),
+                      series: 5,
+                      repeticiones: '8',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+      });
+
+      test(
+        'generate con múltiples días debe crear PDF válido con varias páginas',
+        () async {
+          // Arrange
+          final generator = PdfGenerator();
+
+          // Act
+          final bytes = await generator.generate(
+            rutina: mockRutinaMultiDia,
+            alumno: mockAlumno,
+          );
+
+          // Assert
+          expect(bytes, isNotEmpty);
+          final header = String.fromCharCodes(bytes.take(4));
+          expect(header, equals('%PDF'));
+        },
+      );
+
+      test(
+        'buildExerciseTableData con múltiples días debe incluir cabecera de día',
+        () {
+          // Arrange
+          final generator = PdfGenerator();
+
+          // Act
+          final filas = generator.buildExerciseTableData(mockRutinaMultiDia);
+
+          // Assert — debe haber filas de cabecera de día
+          // Día 1: dayHeader + blockSeparator + 1 ejercicio = 3 filas
+          // Día 2: dayHeader + blockSeparator + 1 ejercicio = 3 filas
+          expect(filas.length, 6);
+          expect(filas[0][0], contains('Día 1 - Pecho'));
+          expect(filas[1][0], contains('Fuerza'));
+          expect(filas[2][0], contains('Press de Banca'));
+          expect(filas[3][0], contains('Día 2 - Piernas'));
+          expect(filas[4][0], contains('Fuerza'));
+          expect(filas[5][0], contains('Sentadilla'));
+        },
+      );
+
+      test('la numeración de ejercicios debe reiniciarse en cada día', () {
+        // Arrange
+        final generator = PdfGenerator();
+
+        // Act
+        final filas = generator.buildExerciseTableData(mockRutinaMultiDia);
+
+        // Assert — ejercicio del día 1 empieza en 1, ejercicio del día 2 también
+        expect(filas[2][0], startsWith('1.'));
+        expect(filas[5][0], startsWith('1.'));
+      });
+      /*
+      test(
+        'PdfGeneratorStyle debe tener color configurado para cabecera de día',
+        () {
+          // Arrange
+          final style = PdfGeneratorStyle();
+
+          // Assert — debe existir un color para cabecera de día
+          expect(style.dayHeaderBackgroundColor, isNotNull);
+          expect(
+            style.dayHeaderBackgroundColor,
+            isNot(equals(style.blockSeparatorBackgroundColor)),
+          );
+        },
+      );
+      */
+    });*/
   });
 }
