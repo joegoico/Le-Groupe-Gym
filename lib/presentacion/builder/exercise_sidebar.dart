@@ -73,7 +73,6 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
             _controller.selectedSubgroups.length;
 
         return Container(
-          width: 280,
           color: AppColors.surfaceLowest,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +301,6 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                             fontWeight: FontWeight.w500,
                             color: AppColors.onSurface,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: categoria.isNotEmpty
                             ? Text(

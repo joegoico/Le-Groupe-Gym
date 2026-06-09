@@ -17,6 +17,8 @@ class PdfGeneratorStyle {
   final bool blockSeparatorBold;
   final PdfColor? superserieBackgroundColor;
   final PdfColor superserieTextColor;
+  final PdfColor? dayHeaderBackgroundColor;
+  final PdfColor dayHeaderTextColor;
 
   const PdfGeneratorStyle({
     this.regularFontAsset = 'assets/Roboto/static/Roboto-Regular.ttf',
@@ -28,6 +30,8 @@ class PdfGeneratorStyle {
     this.blockSeparatorBold = true,
     this.superserieBackgroundColor = PdfColors.amber50,
     this.superserieTextColor = PdfColors.black,
+    this.dayHeaderBackgroundColor = PdfColors.blueGrey800,
+    this.dayHeaderTextColor = PdfColors.white,
   });
 }
 
@@ -158,6 +162,13 @@ class PdfGenerator {
       },
       textStyleBuilder: (_, _, rowNum) {
         final row = _rowForTableIndex(filas, rowNum);
+        if (row?.type == _ExerciseTableRowType.dayHeader) {
+          return pw.TextStyle(
+            font: boldFont,
+            fontSize: 13,
+            color: style.dayHeaderTextColor,
+          );
+        }
         if (row?.type == _ExerciseTableRowType.blockSeparator) {
           return pw.TextStyle(
             font: blockSeparatorFont,
@@ -185,11 +196,17 @@ class PdfGenerator {
 
   @visibleForTesting
   List<List<String>> buildExerciseTableData(Rutina rutina) {
-    // Combina todas las filas de todos los días
-    return rutina.dias
-        .expand((dia) => _buildExerciseTableRows(dia))
-        .map((fila) => fila.cells)
-        .toList(growable: false);
+    // Combina todas las filas de todos los días, agregando cabecera de día
+    final filas = <List<String>>[];
+    for (final dia in rutina.dias) {
+      // Cabecera del día
+      filas.add(['📅 ${dia.nombre}', '', '', '', '']);
+      // Filas de bloques y ejercicios
+      filas.addAll(
+        _buildExerciseTableRows(dia).map((fila) => fila.cells),
+      );
+    }
+    return filas;
   }
 
   List<_ExerciseTableRow> _buildExerciseTableRows(DiaRutina dia) {
@@ -267,6 +284,9 @@ class PdfGenerator {
   }
 
   PdfColor? _backgroundColorForRow(_ExerciseTableRowType? type) {
+    if (type == _ExerciseTableRowType.dayHeader) {
+      return style.dayHeaderBackgroundColor;
+    }
     if (type == _ExerciseTableRowType.blockSeparator) {
       return style.blockSeparatorBackgroundColor;
     }
@@ -308,13 +328,16 @@ class PdfGenerator {
   }
 }
 
-enum _ExerciseTableRowType { blockSeparator, normal, superserie }
+enum _ExerciseTableRowType { dayHeader, blockSeparator, normal, superserie }
 
 class _ExerciseTableRow {
   final _ExerciseTableRowType type;
   final List<String> cells;
 
   const _ExerciseTableRow._(this.type, this.cells);
+
+  factory _ExerciseTableRow.dayHeader(List<String> cells) =>
+      _ExerciseTableRow._(_ExerciseTableRowType.dayHeader, cells);
 
   factory _ExerciseTableRow.blockSeparator(List<String> cells) =>
       _ExerciseTableRow._(_ExerciseTableRowType.blockSeparator, cells);

@@ -174,16 +174,17 @@ void main() {
         // Act
         final filas = generator.buildExerciseTableData(mockRutinaSuperserie);
 
-        // Assert
-        expect(filas.length, 3);
-        expect(filas[0][0], contains('Bloque 1'));
-        expect(filas[1][0], contains('Press de Banca'));
-        expect(filas[1][0], contains('Superserie'));
-        expect(filas[1][1], '4');
-        expect(filas[1][2], '10');
-        expect(filas[2][0], contains('Sentadilla'));
-        expect(filas[2][1], '3');
-        expect(filas[2][2], '15');
+        // Assert — +1 por la cabecera de día
+        expect(filas.length, 4);
+        expect(filas[0][0], contains('Día 1'));
+        expect(filas[1][0], contains('Bloque 1'));
+        expect(filas[2][0], contains('Press de Banca'));
+        expect(filas[2][0], contains('Superserie'));
+        expect(filas[2][1], '4');
+        expect(filas[2][2], '10');
+        expect(filas[3][0], contains('Sentadilla'));
+        expect(filas[3][1], '3');
+        expect(filas[3][2], '15');
       },
     );
 
@@ -192,9 +193,10 @@ void main() {
 
       final filas = generator.buildExerciseTableData(mockRutina);
 
-      expect(filas.length, 3);
-      expect(filas[1][4], contains('Pecho'));
-      expect(filas[2][4], contains('Cuadriceps'));
+      // Assert — +1 por la cabecera de día
+      expect(filas.length, 4);
+      expect(filas[2][4], contains('Pecho'));
+      expect(filas[3][4], contains('Cuadriceps'));
     });
     test('el PDF debe contener un campo editable para el peso', () async {
       // Arrange
@@ -211,7 +213,6 @@ void main() {
       expect(bytes, isNotEmpty);
       expect(bytes.length, greaterThan(1000));
     });
-    /*
     group('PDF con múltiples días', () {
       late Rutina mockRutinaMultiDia;
 
@@ -319,7 +320,7 @@ void main() {
         expect(filas[2][0], startsWith('1.'));
         expect(filas[5][0], startsWith('1.'));
       });
-      /*
+
       test(
         'PdfGeneratorStyle debe tener color configurado para cabecera de día',
         () {
@@ -334,7 +335,6 @@ void main() {
           );
         },
       );
-      */
-    });*/
+    });
   });
 }

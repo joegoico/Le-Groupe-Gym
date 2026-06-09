@@ -3,6 +3,7 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.d
 import 'routine_builder_controller.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/routien_day_accordion.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/view_selector.dart';
 
 class RoutineWorkspace extends StatefulWidget {
   final RoutineBuilderController controller;
@@ -24,9 +25,11 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
+    return ViewSelector<(int, int)>(
       listenable: widget.controller,
-      builder: (context, _) {
+      selector: () =>
+          (widget.controller.dias.length, widget.controller.totalEjercicios),
+      builder: (context, _, __) {
         return Container(
           color: AppColors.surfaceContainerLow,
           padding: const EdgeInsets.all(24.0),

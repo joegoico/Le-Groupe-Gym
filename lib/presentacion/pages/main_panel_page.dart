@@ -190,41 +190,45 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                     Expanded(
                       child: Row(
                         children: [
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              border: Border(
-                                right: BorderSide(
-                                  color: Colors.white,
-                                  width: 2,
+                          Expanded(
+                            flex: 1,
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                border: Border(
+                                  right: BorderSide(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
-                            ),
-                            child: ExcerciseSidebar(
-                              allExercises: _loadedExercises,
-                              controller: _routineController,
-                              exerciseRepository: ref.read(
-                                exerciseRepositoryProvider,
-                              ),
-                              categoryExerciseRepository: ref.read(
-                                categoryExerciseRepositoryProvider,
-                              ),
-                              onAddExercise: (ejercicio) {
-                                final agregado = _routineController
-                                    .handleExerciseFromSidebar(ejercicio);
-                                if (!agregado && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Ese ejercicio ya está en el bloque activo.',
+                              child: ExcerciseSidebar(
+                                allExercises: _loadedExercises,
+                                controller: _routineController,
+                                exerciseRepository: ref.read(
+                                  exerciseRepositoryProvider,
+                                ),
+                                categoryExerciseRepository: ref.read(
+                                  categoryExerciseRepositoryProvider,
+                                ),
+                                onAddExercise: (ejercicio) {
+                                  final agregado = _routineController
+                                      .handleExerciseFromSidebar(ejercicio);
+                                  if (!agregado && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Ese ejercicio ya está en el bloque activo.',
+                                        ),
                                       ),
-                                    ),
-                                  );
-                                }
-                              },
-                              onCreateEjercicio: _reloadExercises,
+                                    );
+                                  }
+                                },
+                                onCreateEjercicio: _reloadExercises,
+                              ),
                             ),
                           ),
                           Expanded(
+                            flex: 2,
                             child: RoutineWorkspace(
                               controller: _routineController,
                               onShowMessage: (msg) {

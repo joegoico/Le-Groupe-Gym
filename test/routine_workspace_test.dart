@@ -34,15 +34,17 @@ void main() {
             return Scaffold(
               body: Row(
                 children: [
-                  ExcerciseSidebar(
-                    allExercises: catalogo,
-                    controller: controller,
-                    onAddExercise: (ejercicio) {
-                      controller.handleExerciseFromSidebar(ejercicio);
-                    },
-                    exerciseRepository: MockExerciseRepository(),
-                    categoryExerciseRepository:
-                        MockCategoryExerciseRepository(),
+                  SizedBox(
+                    width: 400,
+                    child: ExcerciseSidebar(
+                      allExercises: catalogo,
+                      controller: controller,
+                      onAddExercise: (ejercicio) {
+                        controller.handleExerciseFromSidebar(ejercicio);
+                      },
+                      exerciseRepository: MockExerciseRepository(),
+                      categoryExerciseRepository: MockCategoryExerciseRepository(),
+                    ),
                   ),
                   Expanded(child: RoutineWorkspace(controller: controller)),
                 ],
