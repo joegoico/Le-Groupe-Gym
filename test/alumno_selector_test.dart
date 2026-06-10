@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
+import 'mocks/mock_alumno_repository.dart';
 
 void main() {
   group('AlumnoSelector Widget Tests', () {
-    final mockAlumnos = [
-      Alumno(
-        idAlumno: 'abc-123',
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        aplicaDescuento: false,
-      ),
-      Alumno(
-        idAlumno: 'def-456',
-        nombre: 'María',
-        apellido: 'García',
-        aplicaDescuento: true,
-      ),
-    ];
+    late MockAlumnoRepository mockRepo;
+
+    setUp(() {
+      mockRepo = MockAlumnoRepository();
+    });
+
     testWidgets('debe mostrar el hint cuando no hay alumno seleccionado', (
       tester,
     ) async {
@@ -29,7 +21,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: AlumnoSelector(
-              alumnos: mockAlumnos,
+              alumnoRepository: mockRepo,
               alumnoSeleccionado: seleccionado,
               onAlumnoChanged: (alumno) => seleccionado = alumno,
             ),
@@ -45,12 +37,18 @@ void main() {
       tester,
     ) async {
       // Arrange
-      final alumnoSeleccionado = mockAlumnos.first;
+      final alumnoSeleccionado = Alumno(
+        idAlumno: 'abc-123',
+        nombre: 'Juan',
+        apellido: 'Pérez',
+        mail: 'juan@mail.com',
+        aplicaDescuento: false,
+      );
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: AlumnoSelector(
-              alumnos: mockAlumnos,
+              alumnoRepository: mockRepo,
               alumnoSeleccionado: alumnoSeleccionado,
               onAlumnoChanged: (_) {},
             ),
@@ -62,7 +60,7 @@ void main() {
       expect(find.text('Juan Pérez'), findsOneWidget);
     });
 
-    testWidgets('debe disparar onAlumnoChanged al seleccionar un alumno', (
+    testWidgets('debe mostrar sugerencias al escribir y seleccionar una', (
       tester,
     ) async {
       // Arrange
@@ -71,7 +69,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: AlumnoSelector(
-              alumnos: mockAlumnos,
+              alumnoRepository: mockRepo,
               alumnoSeleccionado: null,
               onAlumnoChanged: (alumno) => resultado = alumno,
             ),
@@ -79,10 +77,15 @@ void main() {
         ),
       );
 
-      // Act
-      await tester.tap(find.byType(TextField));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('María García').last);
+      // Act — type a query and wait for debounce + async
+      await tester.enterText(find.byType(TextField), 'Mar');
+      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+
+      // Assert — 'María García' should appear in the overlay
+      expect(find.text('María García'), findsOneWidget);
+
+      // Act — tap on the suggestion
+      await tester.tap(find.text('María García'));
       await tester.pumpAndSettle();
 
       // Assert

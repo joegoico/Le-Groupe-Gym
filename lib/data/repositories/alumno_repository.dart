@@ -3,6 +3,10 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 abstract class AlumnoRepository {
   Future<List<Alumno>> getAlumnos();
+
+  /// Busca alumnos cuyo nombre o apellido contenga [query].
+  /// Retorna como máximo [limit] resultados (default 10).
+  Future<List<Alumno>> searchAlumnos(String query, {int limit = 10});
 }
 
 class SupabaseAlumnoRepository implements AlumnoRepository {
@@ -25,6 +29,27 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
       throw Exception('Error al obtener alumnos: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado al obtener alumnos: $e');
+    }
+  }
+
+  @override
+  Future<List<Alumno>> searchAlumnos(String query, {int limit = 10}) async {
+    try {
+      final pattern = '%$query%';
+      final response = await supabaseClient
+          .from('Alumno')
+          .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
+          .or('"Nombre".ilike.$pattern,"Apellido".ilike.$pattern')
+          .order('"Apellido"', ascending: true)
+          .limit(limit);
+
+      return (response as List<dynamic>)
+          .map((json) => Alumno.fromMap(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Error al buscar alumnos: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al buscar alumnos: $e');
     }
   }
 }

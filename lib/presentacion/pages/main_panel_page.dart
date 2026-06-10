@@ -24,8 +24,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       RoutineBuilderController();
 
   List<Ejercicio> _loadedExercises = [];
-  List<Alumno> _loadedAlumnos = []; // 👈 agregado
-  Alumno? _alumnoSeleccionado; // 👈 agregado
+  Alumno? _alumnoSeleccionado;
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -46,15 +45,10 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
   Future<void> _loadData() async {
     final exerciseRepo = ref.read(exerciseRepositoryProvider);
-    final alumnoRepo = ref.read(alumnoRepositoryProvider); // 👈 agregado
     try {
-      final results = await Future.wait([
-        exerciseRepo.getExercises(),
-        alumnoRepo.getAlumnos(),
-      ]);
+      final exercises = await exerciseRepo.getExercises();
       setState(() {
-        _loadedExercises = results[0] as List<Ejercicio>;
-        _loadedAlumnos = results[1] as List<Alumno>; // 👈 agregado
+        _loadedExercises = exercises;
         _isLoading = false;
       });
     } catch (e) {
@@ -176,7 +170,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                     TopBar(
                       onBack:
                           () {}, // por ahora vacío — se conecta cuando haya navegación
-                      alumnos: _loadedAlumnos,
+                      alumnoRepository: ref.read(alumnoRepositoryProvider),
                       alumnoSeleccionado: _alumnoSeleccionado,
                       onAlumnoChanged: (alumno) {
                         setState(() => _alumnoSeleccionado = alumno);

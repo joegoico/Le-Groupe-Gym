@@ -48,5 +48,15 @@ void main() {
       // Assert
       expect(primero.nombreCompleto, '${primero.nombre} ${primero.apellido}');
     });
+    test(
+      'searchAlumnos debe retornar máximo 10 resultados filtrados',
+      () async {
+        // Arrange + Act
+        final result = await repository.searchAlumnos('ju');
+
+        // Assert
+        expect(result.length, lessThanOrEqualTo(10));
+      },
+    );
   });
 }

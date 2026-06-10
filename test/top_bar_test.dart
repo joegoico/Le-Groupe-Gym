@@ -1,24 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/presentacion/builder/top_bar.dart';
+import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'mocks/mock_alumno_repository.dart';
 
 void main() {
   group('TopBar Widget Tests', () {
-    final mockAlumnos = [
-      Alumno(
-        idAlumno: 'abc-123',
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        aplicaDescuento: false,
-      ),
-      Alumno(
-        idAlumno: 'def-456',
-        nombre: 'María',
-        apellido: 'García',
-        aplicaDescuento: true,
-      ),
-    ];
+    late MockAlumnoRepository mockRepo;
+
+    setUp(() {
+      mockRepo = MockAlumnoRepository();
+    });
 
     Widget createWidgetUnderTest({
       VoidCallback? onBack,
@@ -29,7 +22,7 @@ void main() {
         home: Scaffold(
           body: TopBar(
             onBack: onBack ?? () {},
-            alumnos: mockAlumnos,
+            alumnoRepository: mockRepo,
             alumnoSeleccionado: alumnoSeleccionado,
             onAlumnoChanged: (_) {},
             routineNameController: TextEditingController(),
@@ -76,7 +69,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Assert
-      expect(find.byType(DropdownMenu<Alumno>), findsOneWidget);
+      expect(find.byType(AlumnoSelector), findsOneWidget);
 
       addTearDown(tester.view.resetPhysicalSize);
     });
@@ -119,7 +112,12 @@ void main() {
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpWidget(
           createWidgetUnderTest(
-            alumnoSeleccionado: mockAlumnos.first,
+            alumnoSeleccionado: Alumno(
+              idAlumno: 'abc-123',
+              nombre: 'Juan',
+              apellido: 'Pérez',
+              aplicaDescuento: false,
+            ),
             onGuardar: () {},
           ),
         );

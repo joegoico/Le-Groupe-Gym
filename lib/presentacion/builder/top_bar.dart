@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 
 class TopBar extends StatelessWidget {
   final VoidCallback onBack;
-  final List<Alumno> alumnos;
+  final AlumnoRepository alumnoRepository;
   final Alumno? alumnoSeleccionado;
   final ValueChanged<Alumno?> onAlumnoChanged;
   final TextEditingController routineNameController;
@@ -15,7 +16,7 @@ class TopBar extends StatelessWidget {
   const TopBar({
     super.key,
     required this.onBack,
-    required this.alumnos,
+    required this.alumnoRepository,
     required this.alumnoSeleccionado,
     required this.onAlumnoChanged,
     required this.routineNameController,
@@ -69,7 +70,7 @@ class TopBar extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 300),
               child: AlumnoSelector(
-                alumnos: alumnos,
+                alumnoRepository: alumnoRepository,
                 alumnoSeleccionado: alumnoSeleccionado,
                 onAlumnoChanged: onAlumnoChanged,
               ),
