@@ -160,4 +160,79 @@ void main() {
       },
     );
   });
+  group('SidebarController - paginación', () {
+    test('debe iniciar en página 0 sin ejercicios cargados', () {
+      // Arrange + Act
+      final controller = SidebarController(allExercises: []);
+
+      // Assert
+      expect(controller.currentPage, 0);
+      expect(controller.loadedExercises, isEmpty);
+      expect(controller.hayMas, isFalse);
+      expect(controller.isLoadingMore, isFalse);
+    });
+
+    test('loadPage debe agregar ejercicios a la lista existente', () {
+      // Arrange
+      final controller = SidebarController(allExercises: []);
+      final ejercicios = [
+        Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
+        Ejercicio(idEjercicio: 2, nombre: 'Sentadilla', categorias: []),
+      ];
+
+      // Act
+      controller.setPage(ejercicios: ejercicios, hayMas: true, page: 0);
+
+      // Assert
+      expect(controller.loadedExercises.length, 2);
+      expect(controller.hayMas, isTrue);
+      expect(controller.currentPage, 0);
+    });
+
+    test('loadPage en página 1 debe agregar a los ejercicios existentes', () {
+      // Arrange
+      final controller = SidebarController(allExercises: []);
+      controller.setPage(
+        ejercicios: [
+          Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
+        ],
+        hayMas: true,
+        page: 0,
+      );
+
+      // Act
+      controller.setPage(
+        ejercicios: [
+          Ejercicio(idEjercicio: 2, nombre: 'Sentadilla', categorias: []),
+        ],
+        hayMas: false,
+        page: 1,
+      );
+
+      // Assert
+      expect(controller.loadedExercises.length, 2);
+      expect(controller.hayMas, isFalse);
+      expect(controller.currentPage, 1);
+    });
+
+    test('resetPagination debe limpiar ejercicios y volver a página 0', () {
+      // Arrange
+      final controller = SidebarController(allExercises: []);
+      controller.setPage(
+        ejercicios: [
+          Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
+        ],
+        hayMas: true,
+        page: 0,
+      );
+
+      // Act
+      controller.resetPagination();
+
+      // Assert
+      expect(controller.loadedExercises, isEmpty);
+      expect(controller.currentPage, 0);
+      expect(controller.hayMas, isFalse);
+    });
+  });
 }

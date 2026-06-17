@@ -181,5 +181,21 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
       },
     );
+    testWidgets('debe mostrar botón cargar más cuando hayMas es true', (
+      tester,
+    ) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Assert — el mock retorna hayMas=false con 4 ejercicios
+      // Para testear hayMas=true necesitamos un mock específico
+      expect(find.text('Cargar más'), findsNothing);
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
   });
 }

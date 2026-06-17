@@ -60,7 +60,7 @@ void main() {
 
         // Act
         await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
 
         // Assert
         expect(find.byType(CircularProgressIndicator), findsNothing);
@@ -77,7 +77,7 @@ void main() {
         tester.view.physicalSize = const Size(1280, 800);
         tester.view.devicePixelRatio = 1.0;
         await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pumpAndSettle();
 
         // Act — agregamos el mismo ejercicio dos veces via el botón +
         await tester.tap(find.byIcon(Icons.add).first);
