@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le_groupe_gym/presentacion/pages/main_panel_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/routine_work_page.dart';
 import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
-import 'mocks/mock_exercise_repository.dart';
-import 'mocks/mock_routine_repository.dart';
-import 'mocks/mock_alumno_repository.dart';
-import 'mocks/mock_category_exercise_repository.dart';
+import '../../mocks/mock_exercise_repository.dart';
+import '../../mocks/mock_routine_repository.dart';
+import '../../mocks/mock_alumno_repository.dart';
+import '../../mocks/mock_category_exercise_repository.dart';
 
 void main() {
   group('MainPanelPage Widget Tests - Flujo Asíncrono AAA', () {

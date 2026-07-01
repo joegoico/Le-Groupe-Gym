@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // falta esto
-import 'presentacion/pages/main_panel_page.dart'; // Importamos la página que separamos
+import 'presentacion/pages/routine_work_page.dart'; // Importamos la página que separamos
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importamos dotenv para cargar variables de entorno
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,7 +31,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       // Apuntamos a la pantalla que ahora vive en su propio archivo
-      home: const MainPanelPage(), 
+      home: const MainPanelPage(),
     );
   }
 }

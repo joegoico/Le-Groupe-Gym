@@ -4,8 +4,8 @@ import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
-import 'mocks/mock_category_exercise_repository.dart';
-import 'mocks/mock_exercise_repository.dart';
+import '../../mocks/mock_category_exercise_repository.dart';
+import '../../mocks/mock_exercise_repository.dart';
 
 void main() {
   group('ExcerciseSidebar Widget Tests - Patrón AAA Estricto', () {

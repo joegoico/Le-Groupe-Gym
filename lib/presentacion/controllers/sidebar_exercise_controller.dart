@@ -1,54 +1,22 @@
+import 'package:flutter/foundation.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/category_exercise_model.dart';
 
-class SidebarController {
+class SidebarController extends ChangeNotifier {
   final List<Ejercicio> allExercises;
 
   // ── Paginación ───────────────────────────────────────────────────
   List<Ejercicio> _loadedExercises = [];
-  int _currentPage = 0;
-  bool _hayMas = false;
-  bool _isLoadingMore = false;
 
   List<Ejercicio> get loadedExercises => List.from(_loadedExercises);
-  int get currentPage => _currentPage;
-  bool get hayMas => _hayMas;
-  bool get isLoadingMore => _isLoadingMore;
 
   // ── Filtros ──────────────────────────────────────────────────────
   String searchQuery = '';
-  final Set<String> selectedMuscleGroups = {};
-  final Set<String> selectedSubgroups = {};
+  String? selectedMuscleGroup;
+  String? selectedSubgroup;
 
   SidebarController({required this.allExercises}) {
     _loadedExercises = List.from(allExercises);
-  }
-
-  // ── Métodos de paginación ────────────────────────────────────────
-  void setPage({
-    required List<Ejercicio> ejercicios,
-    required bool hayMas,
-    required int page,
-  }) {
-    if (page == 0) {
-      _loadedExercises = List.from(ejercicios);
-    } else {
-      _loadedExercises = [..._loadedExercises, ...ejercicios];
-    }
-    _currentPage = page;
-    _hayMas = hayMas;
-    _isLoadingMore = false;
-  }
-
-  void setLoadingMore(bool loading) {
-    _isLoadingMore = loading;
-  }
-
-  void resetPagination() {
-    _loadedExercises = [];
-    _currentPage = 0;
-    _hayMas = false;
-    _isLoadingMore = false;
   }
 
   // ── Filtros (igual que antes) ────────────────────────────────────
@@ -75,17 +43,16 @@ class SidebarController {
       );
 
       final matchesMuscleGroup =
-          selectedMuscleGroups.isEmpty ||
+          selectedMuscleGroup == null ||
           exercise.categorias.any(
             (c) =>
-                c.tipo == 'grupo_muscular' &&
-                selectedMuscleGroups.contains(c.nombre),
+                c.tipo == 'grupo_muscular' && c.nombre == selectedMuscleGroup,
           );
 
       final matchesSubgroup =
-          selectedSubgroups.isEmpty ||
+          selectedSubgroup == null ||
           exercise.categorias.any(
-            (c) => c.tipo == 'subgrupo' && selectedSubgroups.contains(c.nombre),
+            (c) => c.tipo == 'subgrupo' && c.nombre == selectedSubgroup,
           );
 
       return matchesSearch && matchesMuscleGroup && matchesSubgroup;
@@ -94,33 +61,39 @@ class SidebarController {
 
   void setSearchQuery(String query) {
     searchQuery = query;
+    notifyListeners();
   }
 
   void toggleMuscleGroup(String groupName) {
-    if (selectedMuscleGroups.contains(groupName)) {
-      selectedMuscleGroups.remove(groupName);
-      _cleanSubgroupsFor(groupName);
+    if (selectedMuscleGroup == groupName) {
+      // Si aprieta el grupo que YA estaba seleccionado, lo deselecciona
+      // y también limpia el subgrupo asociado.
+      selectedMuscleGroup = null;
+      selectedSubgroup = null;
     } else {
-      selectedMuscleGroups.add(groupName);
+      // Si aprieta un grupo nuevo, pisa la selección anterior y limpia el subgrupo.
+      selectedMuscleGroup = groupName;
+      selectedSubgroup = null;
     }
+    notifyListeners();
   }
 
   void toggleSubgroup(String subgroupName) {
-    if (selectedSubgroups.contains(subgroupName)) {
-      selectedSubgroups.remove(subgroupName);
+    if (selectedSubgroup == subgroupName) {
+      selectedSubgroup = null;
     } else {
-      selectedSubgroups.add(subgroupName);
+      selectedSubgroup = subgroupName;
     }
+    notifyListeners();
   }
 
   List<String> getSubgroupsForSelected() {
-    if (selectedMuscleGroups.isEmpty) return [];
+    if (selectedMuscleGroup == null) return [];
     return allExercises
         .where(
           (e) => e.categorias.any(
             (c) =>
-                c.tipo == 'grupo_muscular' &&
-                selectedMuscleGroups.contains(c.nombre),
+                c.tipo == 'grupo_muscular' && c.nombre == selectedMuscleGroup,
           ),
         )
         .expand(
@@ -131,21 +104,5 @@ class SidebarController {
         .toSet()
         .toList()
       ..sort();
-  }
-
-  void _cleanSubgroupsFor(String groupName) {
-    final subgruposDelGrupo = allExercises
-        .where(
-          (e) => e.categorias.any(
-            (c) => c.tipo == 'grupo_muscular' && c.nombre == groupName,
-          ),
-        )
-        .expand(
-          (e) => e.categorias
-              .where((c) => c.tipo == 'subgrupo')
-              .map((c) => c.nombre),
-        )
-        .toSet();
-    selectedSubgroups.removeAll(subgruposDelGrupo);
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
-import 'mocks/mock_alumno_repository.dart';
+import '../../mocks/mock_alumno_repository.dart';
 
 void main() {
   group('AlumnoSelector Widget Tests', () {

@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import '../../data/models/exercise_model.dart';
 import 'routine_builder_controller.dart';
-import 'sidebar_controller.dart';
+import '../controllers/sidebar_exercise_controller.dart';
 import 'package:le_groupe_gym/presentacion/forms/exercise_form.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/widget_muscular_groups.dart';
@@ -37,7 +37,6 @@ class ExcerciseSidebar extends StatefulWidget {
 class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
   late SidebarController _controller;
   List<CategoriaEjercicio> _categories = [];
-  bool _isLoading = false;
   bool _disposed = false;
 
   @override
@@ -51,7 +50,6 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
     super.initState();
     _controller = SidebarController(allExercises: widget.allExercises);
     _loadCategories();
-    _loadPage(0);
   }
 
   @override
@@ -62,48 +60,6 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
         _controller = SidebarController(allExercises: widget.allExercises);
       });
     }
-  }
-
-  Future<void> _loadPage(int page) async {
-    if (_isLoading || _disposed) return;
-    setState(() => _isLoading = true);
-
-    try {
-      final result = await widget.exerciseRepository.getExercisesPaginated(
-        page: page,
-        limit: 15,
-        searchQuery: _controller.searchQuery.isEmpty
-            ? null
-            : _controller.searchQuery,
-        gruposMusculares: _controller.selectedMuscleGroups.isEmpty
-            ? null
-            : _controller.selectedMuscleGroups.toList(),
-        subgrupos: _controller.selectedSubgroups.isEmpty
-            ? null
-            : _controller.selectedSubgroups.toList(),
-      );
-
-      if (_disposed) return;
-      setState(() {
-        _controller.setPage(
-          ejercicios: result.ejercicios,
-          hayMas: result.hayMas,
-          page: page,
-        );
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (_disposed) return;
-      setState(() => _isLoading = false);
-      debugPrint('Error cargando ejercicios: $e');
-    }
-  }
-
-  Future<void> _resetAndReload() async {
-    setState(() {
-      _controller.resetPagination();
-    });
-    await _loadPage(0);
   }
 
   Future<void> _loadCategories() async {
@@ -120,8 +76,8 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
       builder: (context, _) {
         final filteredExercises = _controller.filteredExercises;
         final activeFiltersCount =
-            _controller.selectedMuscleGroups.length +
-            _controller.selectedSubgroups.length;
+            (_controller.selectedMuscleGroup != null ? 1 : 0) +
+            (_controller.selectedSubgroup != null ? 1 : 0);
 
         return Container(
           color: AppColors.surfaceLowest,
@@ -228,15 +184,13 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                       .expand((e) => e.categorias)
                       .toSet()
                       .toList(),
-                  selectedGroups: _controller.selectedMuscleGroups,
-                  selectedSubgroups: _controller.selectedSubgroups,
+                  selectedGroup: _controller.selectedMuscleGroup,
+                  selectedSubgroup: _controller.selectedSubgroup,
                   onToggleGroup: (grupo) {
                     setState(() => _controller.toggleMuscleGroup(grupo));
-                    _resetAndReload(); // 👈
                   },
                   onToggleSubgroup: (sub) {
                     setState(() => _controller.toggleSubgroup(sub));
-                    _resetAndReload(); // 👈
                   },
                 ),
               ),
@@ -309,68 +263,8 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                     horizontal: AppSpacing.sm,
                     vertical: AppSpacing.xs,
                   ),
-                  itemCount:
-                      filteredExercises.length + 1, // 👈 +1 para el botón
+                  itemCount: filteredExercises.length,
                   itemBuilder: (context, index) {
-                    // Último item — botón cargar más o mensaje
-                    if (index == filteredExercises.length) {
-                      if (_isLoading) {
-                        return const Padding(
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          child: Center(
-                            child: SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      if (_controller.hayMas) {
-                        return Padding(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                _loadPage(_controller.currentPage + 1),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: AppColors.primary.withOpacity(0.5),
-                              ),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(AppRadius.md),
-                              ),
-                            ),
-                            child: Text(
-                              'Cargar más',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      if (filteredExercises.isEmpty && !_isLoading) {
-                        return Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Center(
-                            child: Text(
-                              'No hay ejercicios para estos filtros',
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-                      return const SizedBox.shrink();
-                    }
-
-                    // Ejercicio normal
                     final exercise = filteredExercises[index];
                     final categoria = exercise.categorias.isNotEmpty
                         ? exercise.categorias

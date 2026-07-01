@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
-import 'mocks/mock_exercise_repository.dart';
+import '../../mocks/mock_exercise_repository.dart';
 
 // Mock del cliente de Supabase con mocktail
 class MockSupabaseClient extends Mock implements SupabaseClient {}
@@ -83,85 +83,6 @@ void main() {
           ),
         ),
       );
-    });
-  });
-  group('ExerciseRepository - paginación', () {
-    late ExerciseRepository repository;
-
-    setUp(() {
-      repository = MockExerciseRepository();
-    });
-
-    test(
-      'getExercisesPaginated debe retornar máximo 15 ejercicios por página',
-      () async {
-        // Arrange + Act
-        final result = await repository.getExercisesPaginated(
-          page: 0,
-          limit: 15,
-        );
-
-        // Assert
-        expect(result.ejercicios.length, lessThanOrEqualTo(15));
-      },
-    );
-
-    test('getExercisesPaginated debe indicar si hay más páginas', () async {
-      // Arrange + Act
-      final result = await repository.getExercisesPaginated(page: 0, limit: 15);
-
-      // Assert
-      expect(result.hayMas, isA<bool>());
-    });
-
-    test(
-      'getExercisesPaginated debe respetar filtros de grupo muscular',
-      () async {
-        // Arrange + Act
-        final result = await repository.getExercisesPaginated(
-          page: 0,
-          limit: 15,
-          gruposMusculares: ['Pecho'],
-        );
-
-        // Assert — todos los ejercicios retornados deben pertenecer al grupo
-        for (final ejercicio in result.ejercicios) {
-          expect(
-            ejercicio.categorias.any(
-              (c) => c.tipo == 'grupo_muscular' && c.nombre == 'Pecho',
-            ),
-            isTrue,
-          );
-        }
-      },
-    );
-
-    test('getExercisesPaginated debe respetar búsqueda por nombre', () async {
-      // Arrange + Act
-      final result = await repository.getExercisesPaginated(
-        page: 0,
-        limit: 15,
-        searchQuery: 'press',
-      );
-
-      // Assert
-      for (final ejercicio in result.ejercicios) {
-        expect(ejercicio.nombre.toLowerCase(), contains('press'));
-      }
-    });
-
-    test('página 1 debe retornar ejercicios distintos a página 0', () async {
-      // Arrange
-      final page0 = await repository.getExercisesPaginated(page: 0, limit: 2);
-      final page1 = await repository.getExercisesPaginated(page: 1, limit: 2);
-
-      // Assert
-      if (page0.ejercicios.isNotEmpty && page1.ejercicios.isNotEmpty) {
-        expect(
-          page0.ejercicios.first.idEjercicio,
-          isNot(equals(page1.ejercicios.first.idEjercicio)),
-        );
-      }
     });
   });
 }

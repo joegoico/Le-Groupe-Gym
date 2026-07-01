@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
-import 'package:le_groupe_gym/presentacion/builder/sidebar_controller.dart';
+import 'package:le_groupe_gym/presentacion/controllers/sidebar_exercise_controller.dart';
 
 void main() {
   group('Sidebar Business Logic Tests - Filtros Base', () {
@@ -71,7 +71,18 @@ void main() {
           ),
           isFalse,
         );
-        expect(controller.selectedMuscleGroups.contains('Pecho'), true);
+        expect(controller.selectedMuscleGroup == 'Pecho', true);
+      },
+    );
+    test(
+      'Al cambiar la selección de un filtro por grupo muscular, se debe limpiar la selección anterior',
+      () {
+        final controller = SidebarController(allExercises: listaMock);
+
+        controller.toggleMuscleGroup('Pecho');
+
+        controller.toggleMuscleGroup('Piernas');
+        expect(controller.selectedMuscleGroup == 'Pecho', false);
       },
     );
 
@@ -149,90 +160,15 @@ void main() {
         // 1. Activamos padre e hijo
         controller.toggleMuscleGroup('Pecho');
         controller.toggleSubgroup('Pectoral Mayor');
-        expect(controller.selectedSubgroups, contains('Pectoral Mayor'));
+        expect(controller.selectedSubgroup == 'Pectoral Mayor', true);
 
         // 2. Desactivamos el padre
         controller.toggleMuscleGroup('Pecho');
 
         // 3. El subgrupo debe haberse borrado automáticamente del estado para no quedar huérfano
-        expect(controller.selectedSubgroups, isNot(contains('Pectoral Mayor')));
-        expect(controller.selectedSubgroups, isEmpty);
+        expect(controller.selectedSubgroup == 'Pectoral Mayor', false);
+        expect(controller.selectedSubgroup == null, true);
       },
     );
-  });
-  group('SidebarController - paginación', () {
-    test('debe iniciar en página 0 sin ejercicios cargados', () {
-      // Arrange + Act
-      final controller = SidebarController(allExercises: []);
-
-      // Assert
-      expect(controller.currentPage, 0);
-      expect(controller.loadedExercises, isEmpty);
-      expect(controller.hayMas, isFalse);
-      expect(controller.isLoadingMore, isFalse);
-    });
-
-    test('loadPage debe agregar ejercicios a la lista existente', () {
-      // Arrange
-      final controller = SidebarController(allExercises: []);
-      final ejercicios = [
-        Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
-        Ejercicio(idEjercicio: 2, nombre: 'Sentadilla', categorias: []),
-      ];
-
-      // Act
-      controller.setPage(ejercicios: ejercicios, hayMas: true, page: 0);
-
-      // Assert
-      expect(controller.loadedExercises.length, 2);
-      expect(controller.hayMas, isTrue);
-      expect(controller.currentPage, 0);
-    });
-
-    test('loadPage en página 1 debe agregar a los ejercicios existentes', () {
-      // Arrange
-      final controller = SidebarController(allExercises: []);
-      controller.setPage(
-        ejercicios: [
-          Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
-        ],
-        hayMas: true,
-        page: 0,
-      );
-
-      // Act
-      controller.setPage(
-        ejercicios: [
-          Ejercicio(idEjercicio: 2, nombre: 'Sentadilla', categorias: []),
-        ],
-        hayMas: false,
-        page: 1,
-      );
-
-      // Assert
-      expect(controller.loadedExercises.length, 2);
-      expect(controller.hayMas, isFalse);
-      expect(controller.currentPage, 1);
-    });
-
-    test('resetPagination debe limpiar ejercicios y volver a página 0', () {
-      // Arrange
-      final controller = SidebarController(allExercises: []);
-      controller.setPage(
-        ejercicios: [
-          Ejercicio(idEjercicio: 1, nombre: 'Press', categorias: []),
-        ],
-        hayMas: true,
-        page: 0,
-      );
-
-      // Act
-      controller.resetPagination();
-
-      // Assert
-      expect(controller.loadedExercises, isEmpty);
-      expect(controller.currentPage, 0);
-      expect(controller.hayMas, isFalse);
-    });
   });
 }

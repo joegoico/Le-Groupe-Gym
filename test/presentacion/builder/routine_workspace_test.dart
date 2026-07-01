@@ -4,8 +4,8 @@ import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
-import 'mocks/mock_category_exercise_repository.dart';
-import 'mocks/mock_exercise_repository.dart';
+import '../../mocks/mock_category_exercise_repository.dart';
+import '../../mocks/mock_exercise_repository.dart';
 
 void main() {
   group('RoutineWorkspace Widget Tests - Patrón AAA', () {
@@ -43,7 +43,8 @@ void main() {
                         controller.handleExerciseFromSidebar(ejercicio);
                       },
                       exerciseRepository: MockExerciseRepository(),
-                      categoryExerciseRepository: MockCategoryExerciseRepository(),
+                      categoryExerciseRepository:
+                          MockCategoryExerciseRepository(),
                     ),
                   ),
                   Expanded(child: RoutineWorkspace(controller: controller)),
@@ -339,10 +340,7 @@ void main() {
 
           // Assert — debe aparecer diálogo de confirmación
           expect(find.text('Eliminar ejercicio'), findsOneWidget);
-          expect(
-            find.textContaining('¿Estás seguro'),
-            findsOneWidget,
-          );
+          expect(find.textContaining('¿Estás seguro'), findsOneWidget);
           expect(find.text('Cancelar'), findsOneWidget);
           expect(find.text('Eliminar'), findsOneWidget);
 
@@ -440,33 +438,32 @@ void main() {
         },
       );
 
-      testWidgets(
-        'confirmar eliminación de bloque debe eliminar el bloque',
-        (WidgetTester tester) async {
-          // Arrange
-          tester.view.physicalSize = const Size(1280, 900);
-          tester.view.devicePixelRatio = 1.0;
-          controller.addDay(nombre: 'Día 1');
-          controller.addBlock(nombre: 'Bloque 1');
-          controller.addBlock(nombre: 'Bloque 2');
-          controller.addExercise(mockEjercicio, blockIndex: 0);
+      testWidgets('confirmar eliminación de bloque debe eliminar el bloque', (
+        WidgetTester tester,
+      ) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock(nombre: 'Bloque 1');
+        controller.addBlock(nombre: 'Bloque 2');
+        controller.addExercise(mockEjercicio, blockIndex: 0);
 
-          await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — delete_outline icons: 0=Limpiar Todo, 1=Día, 2=Bloque1, 3=Bloque2
-          final deleteButtons = find.byIcon(Icons.delete_outline);
-          await tester.tap(deleteButtons.at(2));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Eliminar'));
-          await tester.pumpAndSettle();
+        // Act — delete_outline icons: 0=Limpiar Todo, 1=Día, 2=Bloque1, 3=Bloque2
+        final deleteButtons = find.byIcon(Icons.delete_outline);
+        await tester.tap(deleteButtons.at(2));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
 
-          // Assert
-          expect(controller.bloques.length, 1);
-          expect(find.text('Bloque 2'), findsNothing);
+        // Assert
+        expect(controller.bloques.length, 1);
+        expect(find.text('Bloque 2'), findsNothing);
 
-          addTearDown(tester.view.resetPhysicalSize);
-        },
-      );
+        addTearDown(tester.view.resetPhysicalSize);
+      });
 
       testWidgets(
         'al presionar eliminar día debe mostrar diálogo de confirmación',
@@ -491,29 +488,28 @@ void main() {
         },
       );
 
-      testWidgets(
-        'confirmar eliminación de día debe eliminar el día',
-        (WidgetTester tester) async {
-          // Arrange
-          tester.view.physicalSize = const Size(1280, 900);
-          tester.view.devicePixelRatio = 1.0;
-          controller.addDay(nombre: 'Día 1');
-          controller.addDay(nombre: 'Día 2');
+      testWidgets('confirmar eliminación de día debe eliminar el día', (
+        WidgetTester tester,
+      ) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        controller.addDay(nombre: 'Día 1');
+        controller.addDay(nombre: 'Día 2');
 
-          await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — delete_outline icons: 0=Limpiar Todo, 1=Día1, 2=Día2
-          await tester.tap(find.byIcon(Icons.delete_outline).at(1));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Eliminar'));
-          await tester.pumpAndSettle();
+        // Act — delete_outline icons: 0=Limpiar Todo, 1=Día1, 2=Día2
+        await tester.tap(find.byIcon(Icons.delete_outline).at(1));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
 
-          // Assert
-          expect(controller.dias.length, 1);
+        // Assert
+        expect(controller.dias.length, 1);
 
-          addTearDown(tester.view.resetPhysicalSize);
-        },
-      );
+        addTearDown(tester.view.resetPhysicalSize);
+      });
 
       testWidgets(
         'al presionar Limpiar Todo debe mostrar diálogo de confirmación',
@@ -539,57 +535,55 @@ void main() {
         },
       );
 
-      testWidgets(
-        'cancelar Limpiar Todo debe preservar la rutina',
-        (WidgetTester tester) async {
-          // Arrange
-          tester.view.physicalSize = const Size(1280, 900);
-          tester.view.devicePixelRatio = 1.0;
-          controller.addDay(nombre: 'Día 1');
-          controller.addBlock(nombre: 'Bloque 1');
-          controller.addExercise(mockEjercicio);
+      testWidgets('cancelar Limpiar Todo debe preservar la rutina', (
+        WidgetTester tester,
+      ) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock(nombre: 'Bloque 1');
+        controller.addExercise(mockEjercicio);
 
-          await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act
-          await tester.tap(find.text('Limpiar Todo'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Cancelar'));
-          await tester.pumpAndSettle();
+        // Act
+        await tester.tap(find.text('Limpiar Todo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Cancelar'));
+        await tester.pumpAndSettle();
 
-          // Assert
-          expect(controller.dias.length, 1);
-          expect(controller.totalEjercicios, 1);
+        // Assert
+        expect(controller.dias.length, 1);
+        expect(controller.totalEjercicios, 1);
 
-          addTearDown(tester.view.resetPhysicalSize);
-        },
-      );
+        addTearDown(tester.view.resetPhysicalSize);
+      });
 
-      testWidgets(
-        'confirmar Limpiar Todo debe vaciar la rutina',
-        (WidgetTester tester) async {
-          // Arrange
-          tester.view.physicalSize = const Size(1280, 900);
-          tester.view.devicePixelRatio = 1.0;
-          controller.addDay(nombre: 'Día 1');
-          controller.addBlock(nombre: 'Bloque 1');
-          controller.addExercise(mockEjercicio);
+      testWidgets('confirmar Limpiar Todo debe vaciar la rutina', (
+        WidgetTester tester,
+      ) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock(nombre: 'Bloque 1');
+        controller.addExercise(mockEjercicio);
 
-          await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act
-          await tester.tap(find.text('Limpiar Todo'));
-          await tester.pumpAndSettle();
-          await tester.tap(find.text('Eliminar'));
-          await tester.pumpAndSettle();
+        // Act
+        await tester.tap(find.text('Limpiar Todo'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
 
-          // Assert
-          expect(controller.dias, isEmpty);
-          expect(controller.currentRoutine, isEmpty);
+        // Assert
+        expect(controller.dias, isEmpty);
+        expect(controller.currentRoutine, isEmpty);
 
-          addTearDown(tester.view.resetPhysicalSize);
-        },
-      );
+        addTearDown(tester.view.resetPhysicalSize);
+      });
     });
 
     group('Edición inline de nombres', () {

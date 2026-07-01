@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/forms/exercise_form.dart';
-import '../mocks/mock_exercise_repository.dart';
+import '../../mocks/mock_exercise_repository.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
-import 'mocks/mock_alumno_repository.dart';
+import '../../mocks/mock_alumno_repository.dart';
 
 void main() {
   group('AlumnoRepository Tests - Mock Implementation', () {

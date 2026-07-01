@@ -25,8 +25,8 @@ class AddExerciseForm extends StatefulWidget {
 
 class _AddExerciseFormState extends State<AddExerciseForm> {
   final TextEditingController _nombreController = TextEditingController();
-  final Set<String> _selectedGroups = {};
-  final Set<String> _selectedSubgroups = {};
+  String? _selectedGroup;
+  String? _selectedSubgroup;
 
   bool get _canSave => _nombreController.text.trim().isNotEmpty;
 
@@ -45,8 +45,8 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
   List<int> getCategoriaIds() {
     final categoriasIds = <int>[];
     for (var categoria in widget.categorias) {
-      if (_selectedGroups.contains(categoria.nombre) ||
-          _selectedSubgroups.contains(categoria.nombre)) {
+      if (_selectedGroup == categoria.nombre ||
+          _selectedSubgroup == categoria.nombre) {
         categoriasIds.add(categoria.idCategoria);
       }
     }
@@ -63,8 +63,8 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
 
       widget.onGuardar({
         'nombre': _nombreController.text.trim(),
-        'grupos': _selectedGroups.toList(),
-        'subgrupos': _selectedSubgroups.toList(),
+        'grupos': _selectedGroup,
+        'subgrupos': _selectedSubgroup,
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -180,29 +180,25 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
                   // Categorías
                   MuscleCategorySelector(
                     categorias: widget.categorias,
-                    selectedGroups: _selectedGroups,
-                    selectedSubgroups: _selectedSubgroups,
+                    selectedGroup: _selectedGroup,
+                    selectedSubgroup: _selectedSubgroup,
                     onToggleGroup: (grupo) {
                       setState(() {
-                        if (_selectedGroups.contains(grupo)) {
-                          _selectedGroups.remove(grupo);
+                        if (_selectedGroup == grupo) {
+                          _selectedGroup = null;
                           // limpiar subgrupos huérfanos
-                          _selectedSubgroups.removeWhere(
-                            (sub) => widget.categorias.any(
-                              (c) => c.nombre == sub && c.tipo == 'subgrupo',
-                            ),
-                          );
+                          _selectedSubgroup = null;
                         } else {
-                          _selectedGroups.add(grupo);
+                          _selectedGroup = grupo;
                         }
                       });
                     },
                     onToggleSubgroup: (sub) {
                       setState(() {
-                        if (_selectedSubgroups.contains(sub)) {
-                          _selectedSubgroups.remove(sub);
+                        if (_selectedSubgroup == sub) {
+                          _selectedSubgroup = null;
                         } else {
-                          _selectedSubgroups.add(sub);
+                          _selectedSubgroup = sub;
                         }
                       });
                     },

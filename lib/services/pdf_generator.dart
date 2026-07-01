@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -121,6 +122,9 @@ class PdfGenerator {
     pw.TextStyle boldStyle,
     pw.TextStyle baseStyle,
   ) {
+    // Capturamos la fecha actual y la formateamos al instante
+    final fechaHoyFormateada = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
@@ -136,7 +140,7 @@ class PdfGenerator {
             ),
             pw.SizedBox(height: 2),
             pw.Text(
-              'Fecha: ${_formatDate(rutina.fechaCreacion)}',
+              'Fecha: $fechaHoyFormateada', // Usamos la variable formateada acá
               style: baseStyle.copyWith(fontSize: 11, color: PdfColors.grey600),
             ),
           ],
@@ -202,9 +206,7 @@ class PdfGenerator {
       // Cabecera del día
       filas.add(['📅 ${dia.nombre}', '', '', '', '']);
       // Filas de bloques y ejercicios
-      filas.addAll(
-        _buildExerciseTableRows(dia).map((fila) => fila.cells),
-      );
+      filas.addAll(_buildExerciseTableRows(dia).map((fila) => fila.cells));
     }
     return filas;
   }

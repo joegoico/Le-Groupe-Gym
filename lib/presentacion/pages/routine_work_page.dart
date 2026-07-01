@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/alumno_model.dart';
 import '../builder/exercise_sidebar.dart';
 import '../builder/routine_builder_controller.dart';
 import '../builder/routine_workspace.dart';
-import '../builder/top_bar.dart';
+import '../builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
@@ -168,17 +170,87 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                   children: [
                     // Barra superior
                     TopBar(
-                      onBack:
-                          () {}, // por ahora vacío — se conecta cuando haya navegación
-                      alumnoRepository: ref.read(alumnoRepositoryProvider),
-                      alumnoSeleccionado: _alumnoSeleccionado,
-                      onAlumnoChanged: (alumno) {
-                        setState(() => _alumnoSeleccionado = alumno);
-                      },
-                      routineNameController: _routineNameController,
-                      onGuardar: _alumnoSeleccionado != null
-                          ? _saveRoutine
-                          : null,
+                      onMenuPressed: () {},
+                      pageTitle: 'Crear Rutina',
+                      actionsCenter: [
+                        SizedBox(
+                          width: 220,
+                          child: AlumnoSelector(
+                            alumnoRepository: ref.read(
+                              alumnoRepositoryProvider,
+                            ),
+                            alumnoSeleccionado: _alumnoSeleccionado,
+                            onAlumnoChanged: (alumno) {
+                              setState(() => _alumnoSeleccionado = alumno);
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 220,
+                          height: 44,
+                          child: TextField(
+                            key: const Key('routine_name_field'),
+                            controller: _routineNameController,
+                            style: AppTextStyles.titleMd,
+                            decoration: InputDecoration(
+                              hintText: 'Nombre de la rutina',
+                              hintStyle: AppTextStyles.subtittles,
+                              filled: true,
+                              fillColor: AppColors.surfaceContainerHighest,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: const BorderRadius.all(
+                                  AppRadius.md,
+                                ),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withOpacity(0.08),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: const BorderRadius.all(
+                                  AppRadius.md,
+                                ),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      actionsEnd: [
+                        SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            onPressed: _alumnoSeleccionado != null
+                                ? _saveRoutine
+                                : null,
+                            icon: const Icon(Icons.save_outlined, size: 17),
+                            label: Text(
+                              'Guardar Rutina',
+                              style: AppTextStyles.buttonText,
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.surfaceContainerHigh,
+                              disabledForegroundColor:
+                                  AppColors.onSurfaceVariant,
+                              elevation: 0,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.lg,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     // 👇 Sidebar y Workspace en un Row con Expanded
                     Expanded(

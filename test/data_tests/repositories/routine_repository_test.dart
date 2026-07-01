@@ -5,7 +5,7 @@ import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/data/repositories/routine_repository.dart';
-import 'mocks/mock_routine_repository.dart';
+import '../../mocks/mock_routine_repository.dart';
 
 void main() {
   group('RoutineRepository Tests - Mock Implementation', () {

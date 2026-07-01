@@ -31,8 +31,8 @@ void main() {
     ];
 
     Widget createWidgetUnderTest({
-      Set<String> selectedGroups = const {},
-      Set<String> selectedSubgroups = const {},
+      String? selectedGroup,
+      String? selectedSubgroup,
       Function(String)? onToggleGroup,
       Function(String)? onToggleSubgroup,
     }) {
@@ -40,8 +40,8 @@ void main() {
         home: Scaffold(
           body: MuscleCategorySelector(
             categorias: mockCategorias,
-            selectedGroups: selectedGroups,
-            selectedSubgroups: selectedSubgroups,
+            selectedGroup: selectedGroup,
+            selectedSubgroup: selectedSubgroup,
             onToggleGroup: onToggleGroup ?? (_) {},
             onToggleSubgroup: onToggleSubgroup ?? (_) {},
           ),
@@ -75,7 +75,7 @@ void main() {
       tester,
     ) async {
       // Arrange + Act
-      await tester.pumpWidget(createWidgetUnderTest(selectedGroups: {'Pecho'}));
+      await tester.pumpWidget(createWidgetUnderTest(selectedGroup: 'Pecho'));
 
       // Assert
       expect(
@@ -109,7 +109,7 @@ void main() {
       String? toggled;
       await tester.pumpWidget(
         createWidgetUnderTest(
-          selectedGroups: {'Pecho'},
+          selectedGroup: 'Pecho',
           onToggleSubgroup: (sub) => toggled = sub,
         ),
       );

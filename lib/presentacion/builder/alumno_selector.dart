@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 
@@ -42,8 +43,7 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
   void didUpdateWidget(covariant AlumnoSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.alumnoSeleccionado != oldWidget.alumnoSeleccionado) {
-      _textController.text =
-          widget.alumnoSeleccionado?.nombreCompleto ?? '';
+      _textController.text = widget.alumnoSeleccionado?.nombreCompleto ?? '';
     }
   }
 
@@ -59,7 +59,10 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
 
   void _onFocusChanged() {
     if (!_focusNode.hasFocus) {
-      _removeOverlay();
+      // 👇 delay para que el onTap se ejecute antes de cerrar
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (mounted) _removeOverlay();
+      });
     }
   }
 
@@ -74,8 +77,9 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
       if (!mounted) return;
       setState(() => _isLoading = true);
       try {
-        final results =
-            await widget.alumnoRepository.searchAlumnos(query.trim());
+        final results = await widget.alumnoRepository.searchAlumnos(
+          query.trim(),
+        );
         if (mounted) {
           _suggestions = results;
           _isLoading = false;
@@ -89,6 +93,7 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
   }
 
   void _onAlumnoSelected(Alumno alumno) {
+    print("ALUMNO SELECCIONADO: ${alumno.nombreCompleto}");
     _textController.text = alumno.nombreCompleto;
     _suggestions = [];
     _removeOverlay();
@@ -124,7 +129,7 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
           child: Material(
             elevation: 8,
             borderRadius: BorderRadius.circular(8),
-            color: Colors.transparent,
+            color: AppColors.surfaceContainerHigh,
             child: Container(
               constraints: const BoxConstraints(maxHeight: 250),
               decoration: BoxDecoration(
@@ -145,18 +150,24 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
                 itemCount: _suggestions.length,
                 itemBuilder: (_, index) {
                   final alumno = _suggestions[index];
+                  //print("ALUMNO SELECCIONADO: ${alumno.nombreCompleto}");
                   return InkWell(
                     onTap: () => _onAlumnoSelected(alumno),
+                    hoverColor: AppColors.onSurfaceVariant.withValues(
+                      alpha: 0.1,
+                    ),
                     borderRadius: index == 0
-                        ? const BorderRadius.vertical(
-                            top: Radius.circular(8))
+                        ? const BorderRadius.vertical(top: Radius.circular(8))
                         : index == _suggestions.length - 1
-                            ? const BorderRadius.vertical(
-                                bottom: Radius.circular(8))
-                            : BorderRadius.zero,
+                        ? const BorderRadius.vertical(
+                            bottom: Radius.circular(8),
+                          )
+                        : BorderRadius.zero,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
                       child: Text(
                         alumno.nombreCompleto,
                         style: const TextStyle(fontSize: 13),
@@ -192,8 +203,10 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
         decoration: InputDecoration(
           hintText: 'Seleccionar alumno...',
           isDense: true,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 12,
+          ),
           suffixIcon: _isLoading
               ? const Padding(
                   padding: EdgeInsets.all(10),
@@ -204,27 +217,23 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
                   ),
                 )
               : _textController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.close, size: 18),
-                      onPressed: _clearSelection,
-                      splashRadius: 16,
-                    )
-                  : const Icon(Icons.search, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+              ? IconButton(
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: _clearSelection,
+                  splashRadius: 16,
+                )
+              : const Icon(Icons.search, size: 18),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(
-              color: Colors.white.withOpacity(0.08),
-            ),
+            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: Colors.blueAccent),
           ),
           filled: true,
-          fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          fillColor: AppColors.surfaceContainerHighest,
         ),
         style: const TextStyle(fontSize: 13),
       ),
