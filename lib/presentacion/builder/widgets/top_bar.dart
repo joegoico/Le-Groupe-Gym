@@ -24,7 +24,7 @@ class TopBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         border: Border(
-          bottom: BorderSide(color: Colors.white.withOpacity(0.05)),
+          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
       ),
       child: Row(
@@ -66,7 +66,7 @@ class TopBar extends StatelessWidget {
                 Flexible(
                   child: Text(
                     pageTitle,
-                    style: AppTextStyles.titleMd,
+                    style: AppTextStyles.headlineLg,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

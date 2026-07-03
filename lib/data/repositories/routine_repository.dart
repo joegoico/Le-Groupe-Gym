@@ -4,6 +4,7 @@ import 'package:le_groupe_gym/data/models/routine_model.dart';
 abstract class RoutineRepository {
   Future<int> saveRoutine(Rutina rutina);
   Future<void> updatePdfUrl({required int idRutina, required String url});
+  Future<List<Rutina>> getRutinas();
 }
 
 class SupabaseRoutineRepository implements RoutineRepository {
@@ -88,5 +89,11 @@ class SupabaseRoutineRepository implements RoutineRepository {
     } catch (e) {
       throw Exception('Error inesperado al guardar: $e');
     }
+  }
+
+  // En mock_routine_repository.dart
+  @override
+  Future<List<Rutina>> getRutinas() async {
+    return [];
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
-import 'package:le_groupe_gym/presentacion/dashboard/widgets/solicitudes_panel.dart';
+import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_widgets/solicitudes_panel.dart';
 
 void main() {
   group('SolicitudesPanel Widget Tests', () {
@@ -113,26 +113,41 @@ void main() {
       tester,
     ) async {
       // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
       SolicitudRutina? resuelta;
       await tester.pumpWidget(
         createWidgetUnderTest(onResolverSolicitud: (s) => resuelta = s),
       );
 
-      // Act
+      // Act — expandir el panel para que aparezcan los botones
+      await tester.tap(find.text('2 Rutinas Pendientes'));
+      await tester.pumpAndSettle();
+
       await tester.tap(find.text('Resolver').first);
       await tester.pump();
 
       // Assert
       expect(resuelta, isNotNull);
       expect(resuelta!.idSolicitud, 1);
+
+      addTearDown(tester.view.resetPhysicalSize);
     });
 
     testWidgets('debe mostrar mensaje si no hay solicitudes', (tester) async {
-      // Arrange + Act
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest(solicitudes: []));
+
+      // Act — expandir el panel para ver el contenido
+      await tester.tap(find.text('0 Rutinas Pendientes'));
+      await tester.pumpAndSettle();
 
       // Assert
       expect(find.text('No hay solicitudes pendientes'), findsOneWidget);
+
+      addTearDown(tester.view.resetPhysicalSize);
     });
   });
 }

@@ -14,4 +14,9 @@ class MockRoutineRepository implements RoutineRepository {
   }) async {
     // Mock — no hace nada
   }
+
+  @override
+  Future<List<Rutina>> getRutinas() async {
+    return [];
+  }
 }
