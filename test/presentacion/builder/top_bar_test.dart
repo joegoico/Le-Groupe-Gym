@@ -10,6 +10,7 @@ void main() {
       String pageTitle = 'Rutinas',
       List<Widget>? actionsCenter,
       List<Widget>? actionsEnd,
+      bool isBack = false,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -18,6 +19,7 @@ void main() {
             pageTitle: pageTitle,
             actionsCenter: actionsCenter,
             actionsEnd: actionsEnd,
+            isBack: isBack,
           ),
         ),
       );
@@ -110,6 +112,27 @@ void main() {
       expect(find.text('Guardar Rutina'), findsOneWidget);
 
       addTearDown(tester.view.resetPhysicalSize);
+    });
+    testWidgets('debe mostrar flecha back cuando isBack es true', (
+      tester,
+    ) async {
+      // Arrange + Act
+      await tester.pumpWidget(createWidgetUnderTest(isBack: true));
+
+      // Assert
+      expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
+      expect(find.byIcon(Icons.menu), findsNothing);
+    });
+
+    testWidgets('debe mostrar hamburguesa cuando isBack es false', (
+      tester,
+    ) async {
+      // Arrange + Act
+      await tester.pumpWidget(createWidgetUnderTest(isBack: false));
+
+      // Assert
+      expect(find.byIcon(Icons.menu), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back_ios_new), findsNothing);
     });
   });
 }

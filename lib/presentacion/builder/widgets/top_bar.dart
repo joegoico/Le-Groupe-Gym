@@ -7,6 +7,7 @@ class TopBar extends StatelessWidget {
   final String pageTitle;
   final List<Widget>? actionsCenter;
   final List<Widget>? actionsEnd;
+  final bool isBack;
 
   const TopBar({
     super.key,
@@ -14,6 +15,7 @@ class TopBar extends StatelessWidget {
     required this.pageTitle,
     this.actionsCenter,
     this.actionsEnd,
+    this.isBack = false,
   });
 
   @override
@@ -36,10 +38,10 @@ class TopBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
-                  icon: const Icon(
-                    Icons.menu,
+                  icon: Icon(
+                    isBack ? Icons.arrow_back_ios_new : Icons.menu,
                     color: AppColors.onSurface,
-                    size: 22,
+                    size: isBack ? 18 : 22,
                   ),
                   onPressed: onMenuPressed,
                   splashRadius: 20,

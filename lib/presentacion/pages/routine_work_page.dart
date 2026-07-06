@@ -13,9 +13,13 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
 import 'package:le_groupe_gym/services/service_storage.dart';
 import 'package:le_groupe_gym/services/email_service.dart';
+import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
+import 'package:go_router/go_router.dart';
 
 class MainPanelPage extends ConsumerStatefulWidget {
-  const MainPanelPage({super.key});
+  final Rutina? rutinaExistente;
+  final SolicitudRutina? solicitudOrigen;
+  const MainPanelPage({super.key, this.rutinaExistente, this.solicitudOrigen});
 
   @override
   ConsumerState<MainPanelPage> createState() => _MainPanelPageState();
@@ -47,10 +51,38 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
   Future<void> _loadData() async {
     final exerciseRepo = ref.read(exerciseRepositoryProvider);
+    final alumnoRepo = ref.read(alumnoRepositoryProvider);
+
     try {
       final exercises = await exerciseRepo.getExercises();
+
+      Alumno? alumnoPreseleccionado;
+
+      // Si venimos desde el Dashboard de Solicitudes, cargamos al alumno
+      // Si venimos desde el Dashboard de Solicitudes, cargamos al alumno
+      if (widget.solicitudOrigen != null) {
+        final alumnos = await alumnoRepo.getAlumnos();
+
+        // Buscamos el índice de forma segura
+        final index = alumnos.indexWhere(
+          (a) => a.idAlumno == widget.solicitudOrigen!.idAlumno,
+        );
+
+        // Si lo encontramos, lo asignamos
+        if (index != -1) {
+          alumnoPreseleccionado = alumnos[index];
+        }
+
+        if (widget.solicitudOrigen!.notas != null) {
+          _routineNameController.text = widget.solicitudOrigen!.notas!;
+        }
+      }
+
       setState(() {
         _loadedExercises = exercises;
+        if (alumnoPreseleccionado != null) {
+          _alumnoSeleccionado = alumnoPreseleccionado;
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -123,6 +155,16 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
       await _sendRoutineViaMail(nuevaRutina, url);
 
+      // --- NUEVO: Cierre de ciclo de la Solicitud ---
+      if (widget.solicitudOrigen != null &&
+          widget.solicitudOrigen!.idSolicitud != null) {
+        final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
+        await solicitudRepo.deleteSolicitud(
+          widget.solicitudOrigen!.idSolicitud!,
+        );
+      }
+      // ----------------------------------------------
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -135,6 +177,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       }
     } catch (e) {
       if (mounted) {
+        // ... el resto sigue igual
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al guardar: $e'),
@@ -170,8 +213,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                   children: [
                     // Barra superior
                     TopBar(
-                      onMenuPressed: () {},
+                      onMenuPressed: () => context.pop(),
                       pageTitle: 'Crear Rutina',
+                      isBack: true,
                       actionsCenter: [
                         SizedBox(
                           width: 220,

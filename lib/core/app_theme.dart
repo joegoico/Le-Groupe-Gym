@@ -63,6 +63,11 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.onSurface,
   );
+  static TextStyle get titleCards => GoogleFonts.inter(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primary,
+  );
 
   static TextStyle get buttonText => GoogleFonts.inter(
     fontSize: 15,
@@ -80,6 +85,11 @@ class AppTextStyles {
   static TextStyle get subtittles => GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w200,
+    color: AppColors.onSurface,
+  );
+  static TextStyle get subtittlesBold => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     color: AppColors.onSurface,
   );
 }

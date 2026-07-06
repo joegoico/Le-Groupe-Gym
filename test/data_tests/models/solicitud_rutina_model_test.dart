@@ -2,6 +2,47 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 
 void main() {
+  // =========================================================================
+  // PRUEBAS TDD - NUEVOS CAMPOS DE ALUMNO (FASE ROJA)
+  // =========================================================================
+
+  test('debe aceptar alumnoNombre y alumnoApellido en la instanciación', () {
+    // Arrange + Act
+    final solicitud = SolicitudRutina(
+      idSolicitud: 1,
+      idAlumno: 'abc-123',
+      fechaSolicitud: DateTime(2026, 7, 5),
+      alumnoNombre: 'Lucas',
+      alumnoApellido: 'Benítez',
+    );
+
+    // Assert
+    expect(solicitud.alumnoNombre, 'Lucas');
+    expect(solicitud.alumnoApellido, 'Benítez');
+  });
+
+  test(
+    'fromMap debe extraer nombre y apellido anidados desde Supabase (JOIN)',
+    () {
+      // Arrange
+      // Así es como Supabase devuelve un JOIN por defecto: anidando un mapa
+      // con el nombre de la tabla foránea ('alumnos')
+      final jsonMockConJoin = {
+        'id_solicitud': 1,
+        'id_alumno': 'abc-123',
+        'fecha_solicitud': '2026-07-05T14:30:00.000Z',
+        'notas': 'Cambiar rutina de pecho',
+        'Alumno': {'Nombre': 'Micaela', 'Apellido': 'Rossi'},
+      };
+
+      // Act
+      final solicitud = SolicitudRutina.fromMap(jsonMockConJoin);
+
+      // Assert
+      expect(solicitud.alumnoNombre, 'Micaela');
+      expect(solicitud.alumnoApellido, 'Rossi');
+    },
+  );
   group('SolicitudRutina Model Tests', () {
     test('debe instanciar correctamente', () {
       // Arrange + Act

@@ -11,13 +11,36 @@ void main() {
       repository = MockSolicitudRutinaRepository();
     });
 
-    test('getSolicitudes debe retornar lista de solicitudes', () async {
-      // Act
-      final result = await repository.getSolicitudes();
+    test(
+      'getSolicitudes debe retornar lista de solicitudes con los datos del alumno (JOIN)',
+      () async {
+        // Act
+        final result = await repository.getSolicitudes();
 
-      // Assert
-      expect(result, isA<List<SolicitudRutina>>());
-    });
+        // Assert
+        expect(result, isA<List<SolicitudRutina>>());
+        expect(
+          result,
+          isNotEmpty,
+          reason:
+              'El mock necesita tener datos precargados para evaluar el JOIN',
+        );
+
+        final primeraSolicitud = result.first;
+
+        // Aquí forzamos que el contrato cumpla con devolver la data relacional
+        expect(
+          primeraSolicitud.alumnoNombre,
+          isNotNull,
+          reason: 'El JOIN debe popular el nombre del alumno',
+        );
+        expect(
+          primeraSolicitud.alumnoApellido,
+          isNotNull,
+          reason: 'El JOIN debe popular el apellido del alumno',
+        );
+      },
+    );
 
     test(
       'createSolicitud debe retornar el id de la solicitud creada',

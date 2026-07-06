@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       ),
       // Apuntamos a la pantalla que ahora vive en su propio archivo
       //home: const RutinasDashboardPage(),
-      routerConfig: router,
+      routerConfig: appRouter,
     );
   }
 }

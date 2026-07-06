@@ -162,30 +162,25 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                solicitud.idAlumno,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.onSurface,
-                                ),
+                                // Si tenemos nombre y apellido, los mostramos juntos.
+                                // Si no (por ej. si es un dato viejo sin relacional), mostramos el ID como fallback.
+                                (solicitud.alumnoNombre != null &&
+                                        solicitud.alumnoApellido != null)
+                                    ? '${solicitud.alumnoNombre} ${solicitud.alumnoApellido}'
+                                    : 'ID: ${solicitud.idAlumno}',
+                                style: AppTextStyles.titleCards,
                               ),
                               if (solicitud.notas != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
                                   solicitud.notas!,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
+                                  style: AppTextStyles.subtittlesBold,
                                 ),
                               ],
                               const SizedBox(height: 2),
                               Text(
                                 _formatDate(solicitud.fechaSolicitud),
-                                style: GoogleFonts.robotoMono(
-                                  fontSize: 10,
-                                  color: AppColors.onSurfaceVariant,
-                                ),
+                                style: AppTextStyles.subtittlesBold,
                               ),
                             ],
                           ),

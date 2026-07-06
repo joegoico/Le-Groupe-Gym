@@ -76,17 +76,42 @@ void main() {
       // Arrange
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
-      await tester.pumpWidget(createWidgetUnderTest());
+      // Usamos el mismo mock que venimos usando que tiene el alumnoNombre configurado
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          solicitudes: [
+            SolicitudRutina(
+              idSolicitud: 1,
+              idAlumno: 'abc-123',
+              fechaSolicitud: DateTime(2026, 1, 1),
+              notas: 'Quiero cambiar mi rutina de piernas',
+              alumnoNombre: 'Lucas', // <-- Este dato ya lo soporta el modelo
+              alumnoApellido:
+                  'Benítez', // <-- Este dato ya lo soporta el modelo
+            ),
+          ],
+        ),
+      );
 
-      // Assert — por defecto colapsado, no se ven las solicitudes
+      // Assert — por defecto colapsado
       expect(find.text('Quiero cambiar mi rutina de piernas'), findsNothing);
 
       // Act — expandir
-      await tester.tap(find.text('2 Rutinas Pendientes'));
+      await tester.tap(
+        find.text('1 Rutinas Pendientes'),
+      ); // Ajustado a 1 porque mandamos 1
       await tester.pumpAndSettle();
 
-      // Assert — ahora se ven
+      // Assert — ahora verificamos todo el contenido
       expect(find.text('Quiero cambiar mi rutina de piernas'), findsOneWidget);
+      expect(
+        find.text('Lucas Benítez'),
+        findsOneWidget,
+      ); // <-- ESTE ES EL NUEVO REQUISITO QUE VA A FALLAR
+      expect(
+        find.text('abc-123'),
+        findsNothing,
+      ); // <-- Ya NO queremos ver el ID pelado
 
       addTearDown(tester.view.resetPhysicalSize);
     });

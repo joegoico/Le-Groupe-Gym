@@ -93,7 +93,6 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
   }
 
   void _onAlumnoSelected(Alumno alumno) {
-    print("ALUMNO SELECCIONADO: ${alumno.nombreCompleto}");
     _textController.text = alumno.nombreCompleto;
     _suggestions = [];
     _removeOverlay();

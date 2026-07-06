@@ -16,10 +16,18 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   @override
   Future<List<SolicitudRutina>> getSolicitudes() async {
     try {
+      print('Fetching solicitudes from Supabase with Alumnos JOIN...');
+
+      // Mágia de Supabase: '*, alumnos(nombre, apellido)' le dice a PostgREST que traiga
+      // todos los campos de la solicitud y que haga un JOIN automático con la tabla
+      // 'alumnos' (o como se llame en tu BD) trayendo solo nombre y apellido.
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
-          .select('*, Alumno(nombre, apellido)')
+          .select('*, Alumno(Nombre, Apellido)')
           .order('fecha_solicitud', ascending: false);
+
+      print('Raw response from Supabase:');
+      print(response);
 
       return (response as List<dynamic>)
           .map((json) => SolicitudRutina.fromMap(json as Map<String, dynamic>))
