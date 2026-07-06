@@ -64,9 +64,18 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Error al crear la solicitud de rutina'),
-          backgroundColor: AppColors.errorContainer,
+        SnackBar(
+          content: Text(
+            'Error al crear la solicitud de rutina',
+            style: AppTextStyles.subtittlesBold.copyWith(
+              color: const Color(0xFFFFEDEB),
+            ),
+          ),
+          backgroundColor: const Color(0xFF8B1A1A),
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
         ),
       );
     } finally {

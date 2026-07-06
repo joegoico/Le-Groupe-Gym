@@ -23,6 +23,7 @@ void main() {
       List<SolicitudRutina>? solicitudes,
       VoidCallback? onRegistrarSolicitud,
       Function(SolicitudRutina)? onResolverSolicitud,
+      Function(SolicitudRutina)? onEliminarSolicitud,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -30,6 +31,7 @@ void main() {
             solicitudes: solicitudes ?? mockSolicitudes,
             onRegistrarSolicitud: onRegistrarSolicitud ?? () {},
             onResolverSolicitud: onResolverSolicitud ?? (_) {},
+            onEliminarSolicitud: onEliminarSolicitud ?? (_) {},
           ),
         ),
       );
@@ -174,5 +176,49 @@ void main() {
 
       addTearDown(tester.view.resetPhysicalSize);
     });
+    testWidgets('debe mostrar icono de basura antes del boton resolver', (
+      tester,
+    ) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Act — expandir
+      await tester.tap(find.text('2 Rutinas Pendientes'));
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byIcon(Icons.delete_outline_outlined), findsNWidgets(2));
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+    testWidgets(
+      'debe llamar onEliminarSolicitud al presionar el botón eliminar',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        SolicitudRutina? eliminada;
+
+        await tester.pumpWidget(
+          createWidgetUnderTest(onEliminarSolicitud: (s) => eliminada = s),
+        );
+
+        // Expandir el panel
+        await tester.tap(find.text('2 Rutinas Pendientes'));
+        await tester.pumpAndSettle();
+
+        // Act
+        await tester.tap(find.byIcon(Icons.delete_outline_outlined).first);
+        await tester.pump();
+
+        // Assert
+        expect(eliminada, isNotNull);
+        expect(eliminada!.idSolicitud, 1);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
   });
 }

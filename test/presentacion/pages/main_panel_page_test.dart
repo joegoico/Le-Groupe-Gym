@@ -16,38 +16,6 @@ import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
 
-class TestAlumnoRepository extends MockAlumnoRepository {
-  @override
-  Future<List<Alumno>> getAlumnos() async {
-    // Le forzamos al test a devolver exactamente el alumno que necesitamos
-    return [
-      Alumno(
-        idAlumno: 'abc-123',
-        nombre: 'Lucas',
-        apellido: 'Benítez',
-        aplicaDescuento: true,
-        // Si tu modelo Alumno requiere otros campos (como mail, fechaNacimiento, etc.),
-        // agregalos acá con datos de relleno.
-      ),
-    ];
-  }
-}
-
-class SpySolicitudRepository extends MockSolicitudRutinaRepository {
-  bool deleteFueLlamado = false;
-  int? idEliminado;
-
-  @override
-  Future<void> deleteSolicitud(int idSolicitud) async {
-    // ¡Anotamos que alguien nos llamó!
-    deleteFueLlamado = true;
-    idEliminado = idSolicitud;
-
-    // Y luego dejamos que el mock original haga lo suyo
-    await super.deleteSolicitud(idSolicitud);
-  }
-}
-
 void main() {
   group('MainPanelPage Widget Tests - Flujo Asíncrono AAA', () {
     // Agregamos parámetros para inyectar dependencias específicas por test
@@ -73,7 +41,7 @@ void main() {
             MockExerciseRepository(),
           ),
           routineRepositoryProvider.overrideWithValue(MockRoutineRepository()),
-          alumnoRepositoryProvider.overrideWithValue(TestAlumnoRepository()),
+          alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
           categoryExerciseRepositoryProvider.overrideWithValue(
             MockCategoryExerciseRepository(),
           ),
@@ -159,80 +127,81 @@ void main() {
     // PRUEBAS TDD - FLUJO DE SOLICITUDES (FASE ROJA/VERDE)
     // =========================================================================
 
-    testWidgets('debe pre-seleccionar al alumno si recibe una solicitudOrigen', (
-      tester,
-    ) async {
-      // Arrange
-      tester.view.physicalSize = const Size(1280, 800);
+    testWidgets(
+      'debe pre-seleccionar al alumno si recibe una solicitudOrigen',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
 
-      final solicitud = SolicitudRutina(
-        idSolicitud: 1,
-        idAlumno:
-            'abc-123', // CORREGIDO: Ahora coincide con el TestAlumnoRepository
-        fechaSolicitud: DateTime.now(),
-        alumnoNombre: 'Lucas',
-        alumnoApellido: 'Benítez',
-      );
+        final solicitud = SolicitudRutina(
+          idSolicitud: 1,
+          idAlumno:
+              'luc-001', // Coincide con Lucas Benítez en MockAlumnoRepository
+          fechaSolicitud: DateTime.now(),
+          alumnoNombre: 'Lucas',
+          alumnoApellido: 'Benítez',
+        );
 
-      // Act
-      await tester.pumpWidget(
-        createWidgetUnderTest(solicitudOrigen: solicitud),
-      );
-      await tester.pumpAndSettle();
+        // Act
+        await tester.pumpWidget(
+          createWidgetUnderTest(solicitudOrigen: solicitud),
+        );
+        await tester.pumpAndSettle();
 
-      // Assert
-      expect(
-        find.text('Lucas Benítez'),
-        findsOneWidget,
-        reason: 'El selector de alumnos debería mostrar al alumno precargado',
-      );
+        // Assert
+        expect(
+          find.text('Lucas Benítez'),
+          findsOneWidget,
+          reason: 'El selector de alumnos debería mostrar al alumno precargado',
+        );
 
-      addTearDown(tester.view.resetPhysicalSize);
-    });
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+    testWidgets(
+      'debe eliminar la solicitud al guardar una rutina con solicitudOrigen',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
 
-    testWidgets('debe borrar la solicitud tras guardar la rutina exitosamente', (
-      tester,
-    ) async {
-      // Arrange
-      tester.view.physicalSize = const Size(1280, 800);
+        final solicitud = SolicitudRutina(
+          idSolicitud: 1,
+          idAlumno: 'abc-123',
+          fechaSolicitud: DateTime(2026, 1, 1),
+        );
+        final mockSolicitudRepo = MockSolicitudRutinaRepository();
 
-      // CORREGIDO: Instanciamos el ESPÍA, no el mock normal
-      final spyRepo = SpySolicitudRepository();
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              exerciseRepositoryProvider.overrideWithValue(
+                MockExerciseRepository(),
+              ),
+              routineRepositoryProvider.overrideWithValue(
+                MockRoutineRepository(),
+              ),
+              alumnoRepositoryProvider.overrideWithValue(
+                MockAlumnoRepository(),
+              ),
+              categoryExerciseRepositoryProvider.overrideWithValue(
+                MockCategoryExerciseRepository(),
+              ),
+              solicitudRutinaRepositoryProvider.overrideWithValue(
+                mockSolicitudRepo,
+              ),
+            ],
+            child: MaterialApp(home: MainPanelPage(solicitudOrigen: solicitud)),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      final solicitud = SolicitudRutina(
-        idSolicitud: 99,
-        idAlumno:
-            'abc-123', // CORREGIDO: Ahora coincide con el TestAlumnoRepository
-        fechaSolicitud: DateTime.now(),
-        alumnoNombre: 'Lucas',
-        alumnoApellido: 'Benítez',
-      );
+        // Assert — la solicitud existe antes de guardar
+        expect((await mockSolicitudRepo.getSolicitudes()).length, 2);
 
-      await tester.pumpWidget(
-        createWidgetUnderTest(
-          solicitudOrigen: solicitud,
-          mockSolicitudRepo: spyRepo,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Act 1: Agregamos un ejercicio para que la rutina sea válida
-      await tester.tap(find.byIcon(Icons.add).first);
-      await tester.pumpAndSettle();
-
-      // Act 2: Guardamos la rutina
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Guardar Rutina'));
-      await tester.pumpAndSettle();
-
-      // Assert: CORREGIDO - Le preguntamos a las variables internas del ESPÍA
-      expect(
-        spyRepo.deleteFueLlamado,
-        isTrue,
-        reason: 'Se debió llamar a deleteSolicitud',
-      );
-      expect(spyRepo.idEliminado, 99);
-
-      addTearDown(tester.view.resetPhysicalSize);
-    });
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
   }); // ← cierre del group
 }

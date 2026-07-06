@@ -134,10 +134,10 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withOpacity(0.08)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -229,7 +229,7 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.blueAccent),
+            borderSide: const BorderSide(color: AppColors.primaryDim),
           ),
           filled: true,
           fillColor: AppColors.surfaceContainerHighest,

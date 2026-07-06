@@ -96,9 +96,18 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                 Navigator.of(dialogContext).pop();
                 _loadData();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Solicitud de rutina creada exitosamente'),
-                    backgroundColor: Colors.green,
+                  SnackBar(
+                    content: Text(
+                      'Solicitud de rutina creada exitosamente',
+                      style: AppTextStyles.subtittlesBold.copyWith(
+                        color: const Color(0xFF0D1F00),
+                      ),
+                    ),
+                    backgroundColor: const Color(0xFF7ECC3B),
+                    behavior: SnackBarBehavior.floating,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(AppRadius.md),
+                    ),
                   ),
                 );
               },
@@ -162,8 +171,23 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                         SolicitudesPanel(
                           solicitudes: _solicitudes,
                           onRegistrarSolicitud: _showRegistrarSolicitudForm,
-                          onResolverSolicitud: (solicitud) =>
-                              context.push('/crear-rutina', extra: solicitud),
+                          onResolverSolicitud: (solicitud) async {
+                            await context.push(
+                              '/crear-rutina',
+                              extra: solicitud,
+                            );
+                            _loadData(); // 👈 recarga al volver
+                          },
+                          onEliminarSolicitud: (solicitud) async {
+                            // 👈
+                            final solicitudRepo = ref.read(
+                              solicitudRutinaRepositoryProvider,
+                            );
+                            await solicitudRepo.deleteSolicitud(
+                              solicitud.idSolicitud!,
+                            );
+                            _loadData();
+                          },
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         RutinasPanel(rutinas: _rutinas, onVerDetalle: (_) {}),

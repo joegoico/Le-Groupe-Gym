@@ -130,58 +130,63 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   }
 
   Future<void> _saveRoutine() async {
-    if (_routineController.isEmpty || _alumnoSeleccionado == null) return;
-
+    if (_alumnoSeleccionado == null) return;
     setState(() => _isSaving = true);
 
-    final nombreRutina = _routineNameController.text.trim().isEmpty
-        ? 'Rutina de ${_alumnoSeleccionado!.nombreCompleto}'
-        : _routineNameController.text.trim();
-
-    final nuevaRutina = _routineController.buildRutina(
-      nombre: nombreRutina,
-      idAlumno: _alumnoSeleccionado!.idAlumno,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Guardando rutina en el sistema...'),
-        duration: Duration(seconds: 1),
-      ),
-    );
-
     try {
-      final String url = await _savePDfInSupabase(nuevaRutina);
+      final routineRepo = ref.read(routineRepositoryProvider);
+      final rutina = _routineController.buildRutina(
+        nombre: _routineNameController.text.isEmpty
+            ? 'Rutina sin nombre'
+            : _routineNameController.text,
+        idAlumno: _alumnoSeleccionado!.idAlumno,
+      );
 
-      await _sendRoutineViaMail(nuevaRutina, url);
+      final idRutina = await routineRepo.saveRoutine(rutina);
+      final pdfUrl = await _savePDfInSupabase(rutina);
+      await _sendRoutineViaMail(rutina, pdfUrl);
 
-      // --- NUEVO: Cierre de ciclo de la Solicitud ---
-      if (widget.solicitudOrigen != null &&
-          widget.solicitudOrigen!.idSolicitud != null) {
+      // 👇 Eliminar solicitud si existe
+      if (widget.solicitudOrigen != null) {
         final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
         await solicitudRepo.deleteSolicitud(
           widget.solicitudOrigen!.idSolicitud!,
         );
       }
-      // ----------------------------------------------
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Rutina guardada y PDF generado!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(
+              'Rutina guardada correctamente',
+              style: AppTextStyles.subtittlesBold.copyWith(
+                color: const Color(0xFF0D1F00),
+              ),
+            ),
+            backgroundColor: const Color(0xFF7ECC3B),
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(AppRadius.md),
+            ),
           ),
         );
-        _routineController.clearRoutine();
-        _routineNameController.clear();
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
-        // ... el resto sigue igual
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al guardar: $e'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Error al guardar: $e',
+              style: AppTextStyles.subtittlesBold.copyWith(
+                color: const Color(0xFFFFEDEB),
+              ),
+            ),
+            backgroundColor: const Color(0xFF8B1A1A),
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(AppRadius.md),
+            ),
           ),
         );
       }
@@ -325,9 +330,17 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                       .handleExerciseFromSidebar(ejercicio);
                                   if (!agregado && mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
+                                      SnackBar(
                                         content: Text(
                                           'Ese ejercicio ya está en el bloque activo.',
+                                          style: AppTextStyles.subtittlesBold.copyWith(
+                                            color: AppColors.onSurface,
+                                          ),
+                                        ),
+                                        backgroundColor: AppColors.surfaceContainerHighest,
+                                        behavior: SnackBarBehavior.floating,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.all(AppRadius.md),
                                         ),
                                       ),
                                     );
@@ -343,9 +356,21 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                               controller: _routineController,
                               onShowMessage: (msg) {
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(
-                                  context,
-                                ).showSnackBar(SnackBar(content: Text(msg)));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      msg,
+                                      style: AppTextStyles.subtittlesBold.copyWith(
+                                        color: AppColors.onSurface,
+                                      ),
+                                    ),
+                                    backgroundColor: AppColors.surfaceContainerHighest,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(AppRadius.md),
+                                    ),
+                                  ),
+                                );
                               },
                             ),
                           ),

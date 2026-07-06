@@ -68,15 +68,33 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("El ejercicio fue creado correctamente"),
-          backgroundColor: Colors.green,
+          content: Text(
+            'El ejercicio fue creado correctamente',
+            style: AppTextStyles.subtittlesBold.copyWith(
+              color: const Color(0xFF0D1F00),
+            ),
+          ),
+          backgroundColor: const Color(0xFF7ECC3B),
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Ocurrió el error ${e}"),
-          backgroundColor: AppColors.errorContainer,
+          content: Text(
+            'Ocurrió el error $e',
+            style: AppTextStyles.subtittlesBold.copyWith(
+              color: const Color(0xFFFFEDEB),
+            ),
+          ),
+          backgroundColor: const Color(0xFF8B1A1A),
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
         ),
       );
     }

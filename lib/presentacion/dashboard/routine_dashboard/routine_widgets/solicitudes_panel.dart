@@ -7,12 +7,14 @@ class SolicitudesPanel extends StatefulWidget {
   final List<SolicitudRutina> solicitudes;
   final VoidCallback onRegistrarSolicitud;
   final Function(SolicitudRutina) onResolverSolicitud;
+  final Function(SolicitudRutina) onEliminarSolicitud;
 
   const SolicitudesPanel({
     super.key,
     required this.solicitudes,
     required this.onRegistrarSolicitud,
     required this.onResolverSolicitud,
+    required this.onEliminarSolicitud,
   });
 
   @override
@@ -46,6 +48,13 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
               ),
               child: Row(
                 children: [
+                  Icon(
+                    _expandido
+                        ? Icons.keyboard_arrow_up
+                        : Icons.keyboard_arrow_down,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   // Ícono
                   Container(
                     width: 44,
@@ -112,14 +121,6 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                         vertical: 12,
                       ),
                     ),
-                  ),
-
-                  const SizedBox(width: AppSpacing.sm),
-                  Icon(
-                    _expandido
-                        ? Icons.keyboard_arrow_up
-                        : Icons.keyboard_arrow_down,
-                    color: AppColors.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -200,6 +201,19 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        IconButton(
+                          onPressed: () =>
+                              widget.onEliminarSolicitud(solicitud),
+                          icon: Icon(Icons.delete_outline_outlined),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.primary),
+                            foregroundColor: AppColors.primary,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(AppRadius.md),
                             ),
                           ),
                         ),
