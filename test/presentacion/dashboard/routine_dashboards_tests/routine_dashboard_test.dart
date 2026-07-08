@@ -92,7 +92,7 @@ void main() {
 
       // Assert
       expect(find.byType(AddSolicitudRutinaForm), findsOneWidget);
-      expect(find.text('Agregar Solicitud'), findsOneWidget);
+      expect(find.text('Nueva Solicitud de Rutina'), findsOneWidget);
 
       addTearDown(tester.view.resetPhysicalSize);
     });
@@ -120,7 +120,11 @@ void main() {
       await tester.enterText(alumnoField, 'Juan');
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Juan Pérez'));
+
+      // 👇 Juan Pérez se muestra en un Overlay (fuera del subárbol del formulario).
+      // Pueden existir 2 instancias (overlay + chip de selección), tomamos .last
+      // que corresponde al ítem del overlay insertado al final del árbol.
+      await tester.tap(find.text('Juan Pérez').last);
       await tester.pumpAndSettle();
 
       await tester.enterText(

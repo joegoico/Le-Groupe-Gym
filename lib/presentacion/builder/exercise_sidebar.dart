@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/core/app_theme.dart';
 import '../../data/models/exercise_model.dart';
 import 'routine_builder_controller.dart';
 import '../controllers/sidebar_exercise_controller.dart';
@@ -281,7 +282,7 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                         color: AppColors.surfaceContainerLow,
                         borderRadius: const BorderRadius.all(AppRadius.md),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
                       child: ListTile(
@@ -369,15 +370,13 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                     ),
                     label: Text(
                       'Agregar ejercicio',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                      style: AppTextStyles.buttonText.copyWith(
                         color: AppColors.primary,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(
-                        color: AppColors.primary.withOpacity(0.5),
+                        color: AppColors.primary.withValues(alpha: 0.5),
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: const RoundedRectangleBorder(

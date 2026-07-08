@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 
@@ -28,18 +27,21 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: const BorderRadius.all(AppRadius.lg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.vertical(
+          top: AppRadius.xl,
+          bottom: _expandido ? AppRadius.lg : AppRadius.xl,
+        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         children: [
-          // Header — siempre visible
+          // ── Header — siempre visible ───────────────────────────────
           InkWell(
             onTap: () => setState(() => _expandido = !_expandido),
             borderRadius: BorderRadius.vertical(
-              top: AppRadius.lg,
-              bottom: _expandido ? Radius.zero : AppRadius.lg,
+              top: AppRadius.xl,
+              bottom: _expandido ? Radius.zero : AppRadius.xl,
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -52,13 +54,13 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                     _expandido
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down,
-                    color: AppColors.onSurfaceVariant,
+                    color: AppColors.primary,
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  // Ícono
+                  const SizedBox(width: AppSpacing.md),
+                  // Ícono del panel
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: AppColors.surfaceContainerHigh,
                       borderRadius: const BorderRadius.all(AppRadius.md),
@@ -78,23 +80,18 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                       children: [
                         Text(
                           'SOLICITUDES ACTUALES',
-                          style: GoogleFonts.robotoMono(
+                          style: AppTextStyles.labelCaps.copyWith(
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.onSurfaceVariant,
                             letterSpacing: 1.2,
                           ),
                         ),
                         const SizedBox(height: 2),
-                        GestureDetector(
-                          onTap: () => setState(() => _expandido = !_expandido),
-                          child: Text(
-                            '${widget.solicitudes.length} Rutinas Pendientes',
-                            style: GoogleFonts.hankenGrotesk(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
-                            ),
+                        Text(
+                          '${widget.solicitudes.length} Rutinas Pendientes',
+                          style: AppTextStyles.headlineLg.copyWith(
+                            fontSize: 22,
+                            color: AppColors.primary,
+                            letterSpacing: -0.3,
                           ),
                         ),
                       ],
@@ -122,14 +119,18 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                       ),
                     ),
                   ),
+
+                  const SizedBox(width: AppSpacing.sm),
+
+                  // Chevron
                 ],
               ),
             ),
           ),
 
-          // Lista colapsable
+          // ── Lista colapsable ───────────────────────────────────────
           if (_expandido) ...[
-            Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
+            Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
             if (widget.solicitudes.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
@@ -145,7 +146,7 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.solicitudes.length,
-                separatorBuilder: (_, __) => Divider(
+                separatorBuilder: (_, _) => Divider(
                   height: 1,
                   color: Colors.white.withValues(alpha: 0.05),
                 ),
@@ -163,25 +164,33 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                // Si tenemos nombre y apellido, los mostramos juntos.
-                                // Si no (por ej. si es un dato viejo sin relacional), mostramos el ID como fallback.
                                 (solicitud.alumnoNombre != null &&
                                         solicitud.alumnoApellido != null)
                                     ? '${solicitud.alumnoNombre} ${solicitud.alumnoApellido}'
                                     : 'ID: ${solicitud.idAlumno}',
-                                style: AppTextStyles.titleCards,
+                                style: AppTextStyles.subtittlesBold.copyWith(
+                                  fontSize: 14,
+                                  color: AppColors.onSurface,
+                                ),
                               ),
                               if (solicitud.notas != null) ...[
                                 const SizedBox(height: 2),
                                 Text(
                                   solicitud.notas!,
-                                  style: AppTextStyles.subtittlesBold,
+                                  style: AppTextStyles.subtittles.copyWith(
+                                    fontSize: 13,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 2),
                               Text(
                                 _formatDate(solicitud.fechaSolicitud),
-                                style: AppTextStyles.subtittlesBold,
+                                style: AppTextStyles.labelCaps.copyWith(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),
@@ -198,20 +207,19 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
                           ),
                           child: Text(
                             'Resolver',
-                            style: GoogleFonts.inter(
+                            style: AppTextStyles.subtittlesBold.copyWith(
                               fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        const SizedBox(width: AppSpacing.sm),
                         IconButton(
                           onPressed: () =>
                               widget.onEliminarSolicitud(solicitud),
-                          icon: Icon(Icons.delete_outline_outlined),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: AppColors.primary),
-                            foregroundColor: AppColors.primary,
+                          icon: const Icon(Icons.delete_outline_outlined),
+                          color: AppColors.onSurfaceVariant,
+                          style: IconButton.styleFrom(
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(AppRadius.md),
                             ),

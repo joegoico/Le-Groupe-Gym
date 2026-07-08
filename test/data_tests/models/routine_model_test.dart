@@ -141,5 +141,30 @@ void main() {
       expect(clon.idRutina, 1);
       expect(clon.nombre, 'Rutina B (Actualizada)');
     });
+    test('fromMap debe mapear url_pdf cuando existe', () {
+      // Arrange
+      final jsonMock = {
+        'id_rutina': 1,
+        'nombre_rutina': 'Rutina Test',
+        'url_pdf': 'https://storage.supabase.co/rutinas/1.pdf',
+      };
+
+      // Act
+      final rutina = Rutina.fromMap(jsonMock);
+
+      // Assert
+      expect(rutina.urlPdf, 'https://storage.supabase.co/rutinas/1.pdf');
+    });
+
+    test('fromMap debe mapear url_pdf como null cuando no existe', () {
+      // Arrange
+      final jsonMock = {'id_rutina': 1, 'nombre_rutina': 'Rutina Test'};
+
+      // Act
+      final rutina = Rutina.fromMap(jsonMock);
+
+      // Assert
+      expect(rutina.urlPdf, isNull);
+    });
   });
 }

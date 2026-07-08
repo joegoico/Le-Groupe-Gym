@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
@@ -242,6 +243,16 @@ void main() {
 
       // Assert — si no lanza excepción, consideramos éxito
       expect(true, isTrue);
+    });
+    test('getRutinas debe retornar lista de rutinas con su alumno', () async {
+      // Act
+      final result = await repository.getRutinas();
+
+      // Assert
+      expect(result, isA<List<({Rutina rutina, Alumno alumno})>>());
+      expect(result, isNotEmpty);
+      expect(result.first.rutina.nombre, isNotEmpty);
+      expect(result.first.alumno.nombreCompleto, isNotEmpty);
     });
   });
 }

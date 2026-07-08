@@ -1,10 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
+import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 abstract class RoutineRepository {
   Future<int> saveRoutine(Rutina rutina);
   Future<void> updatePdfUrl({required int idRutina, required String url});
-  Future<List<Rutina>> getRutinas();
+  Future<List<({Rutina rutina, Alumno alumno})>> getRutinas(); // 👈
 }
 
 class SupabaseRoutineRepository implements RoutineRepository {
@@ -93,7 +94,23 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
   // En mock_routine_repository.dart
   @override
-  Future<List<Rutina>> getRutinas() async {
-    return [];
+  Future<List<({Rutina rutina, Alumno alumno})>> getRutinas() async {
+    try {
+      final response = await supabaseClient
+          .from('Rutinas')
+          .select('*, Alumno(*)')
+          .order('fecha_creacion', ascending: false)
+          .limit(10);
+
+      return (response as List<dynamic>).map((json) {
+        final rutina = Rutina.fromMap(json as Map<String, dynamic>);
+        final alumno = Alumno.fromMap(json['Alumno'] as Map<String, dynamic>);
+        return (rutina: rutina, alumno: alumno);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Error al obtener rutinas: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
   }
 }

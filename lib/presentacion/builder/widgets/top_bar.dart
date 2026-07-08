@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 
 class TopBar extends StatelessWidget {
@@ -55,10 +54,8 @@ class TopBar extends StatelessWidget {
                 // Nombre gimnasio
                 Text(
                   'Le Groupe Gym',
-                  style: GoogleFonts.hankenGrotesk(
+                  style: AppTextStyles.headlineLg.copyWith(
                     fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
                     letterSpacing: -0.3,
                   ),
                 ),

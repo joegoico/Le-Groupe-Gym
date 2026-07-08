@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -7,11 +6,15 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 class RutinasPanel extends StatelessWidget {
   final List<({Rutina rutina, Alumno alumno})> rutinas;
   final Function(Rutina) onVerDetalle;
+  final Function(Rutina)? onEditarRutina;
+  final VoidCallback? onVerHistorial;
 
   const RutinasPanel({
     super.key,
     required this.rutinas,
     required this.onVerDetalle,
+    this.onEditarRutina,
+    this.onVerHistorial,
   });
 
   @override
@@ -19,24 +22,33 @@ class RutinasPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título
+        // ── Encabezado ────────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(
-                  'Últimas rutinas realizadas',
-                  style: AppTextStyles.headlineLg,
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Text(
+                'Últimas 10 realizadas',
+                style: AppTextStyles.titleMd,
+                overflow: TextOverflow.ellipsis,
               ),
+              if (onVerHistorial != null)
+                GestureDetector(
+                  onTap: onVerHistorial,
+                  child: Text(
+                    'VER HISTORIAL COMPLETO',
+                    style: AppTextStyles.labelCaps.copyWith(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
 
-        // Lista o vacío
+        // ── Lista o vacío ─────────────────────────────────────────────
         if (rutinas.isEmpty)
           Center(
             child: Padding(
@@ -48,128 +60,180 @@ class RutinasPanel extends StatelessWidget {
             ),
           )
         else
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
-              borderRadius: const BorderRadius.all(AppRadius.lg),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-            ),
-            child: ListView.separated(
+          ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: rutinas.length,
-              separatorBuilder: (_, __) => Divider(
-                height: 1,
-                color: Colors.white.withValues(alpha: 0.05),
-              ),
+              separatorBuilder: (_, _) => const SizedBox(height: 6),
               itemBuilder: (context, index) {
                 final item = rutinas[index];
-                return InkWell(
-                  onTap: () => onVerDetalle(item.rutina),
-                  borderRadius: BorderRadius.vertical(
-                    top: index == 0 ? AppRadius.lg : Radius.zero,
-                    bottom: index == rutinas.length - 1
-                        ? AppRadius.lg
-                        : Radius.zero,
+                return Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: const BorderRadius.all(AppRadius.md),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Row(
-                      children: [
-                        // Ícono
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: const BorderRadius.all(AppRadius.md),
-                          ),
-                          child: const Icon(
-                            Icons.fitness_center,
-                            color: AppColors.primary,
-                            size: 18,
-                          ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      // ── Ícono ────────────────────────────────────
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainer,
+                          borderRadius: const BorderRadius.all(AppRadius.md),
                         ),
-                        const SizedBox(width: AppSpacing.md),
+                        child: const Icon(
+                          Icons.fitness_center,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
 
-                        // Info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.rutina.nombre,
-                                style: AppTextStyles.titleMd,
-                                overflow: TextOverflow.ellipsis,
+                      // ── Info ─────────────────────────────────────
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.rutina.nombre,
+                              style: AppTextStyles.subtittlesBold.copyWith(
+                                fontSize: 14,
+                                color: AppColors.onSurface,
                               ),
-                              const SizedBox(height: 2),
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      item.alumno.nombreCompleto,
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    item.alumno.nombreCompleto,
+                                    style: AppTextStyles.subtittlesBold
+                                        .copyWith(
+                                      fontSize: 12,
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w500,
                                     ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  if (item.rutina.fechaCreacion != null) ...[
-                                    Text(
-                                      ' · ',
-                                      style: GoogleFonts.inter(
-                                        fontSize: 12,
-                                        color: AppColors.onSurfaceVariant,
-                                      ),
-                                    ),
-                                    Icon(
-                                      Icons.access_time,
-                                      size: 11,
+                                ),
+                                if (item.rutina.fechaCreacion != null) ...[
+                                  Text(
+                                    ' · ',
+                                    style: AppTextStyles.subtittles.copyWith(
+                                      fontSize: 12,
                                       color: AppColors.onSurfaceVariant,
                                     ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      _formatDate(item.rutina.fechaCreacion!),
-                                      style: GoogleFonts.robotoMono(
-                                        fontSize: 11,
-                                        color: AppColors.onSurfaceVariant,
-                                      ),
+                                  ),
+                                  Icon(
+                                    _dateIcon(item.rutina.fechaCreacion!),
+                                    size: 11,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    _formatRelativeDate(
+                                      item.rutina.fechaCreacion!,
                                     ),
-                                  ],
+                                    style: AppTextStyles.labelCaps.copyWith(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w400,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  ),
                                 ],
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                          ],
                         ),
+                      ),
 
-                        // Flecha
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          size: 14,
-                          color: AppColors.onSurfaceVariant.withValues(
-                            alpha: 0.5,
+                      // ── Acciones ─────────────────────────────────
+                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(
+                        height: 30,
+                        child: ElevatedButton(
+                          onPressed: () => onVerDetalle(item.rutina),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.onPrimary,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                            ),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(AppRadius.md),
+                            ),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: Text(
+                            'Ver',
+                            style: AppTextStyles.buttonText.copyWith(
+                              fontSize: 11,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: IconButton(
+                          onPressed: onEditarRutina != null
+                              ? () => onEditarRutina!(item.rutina)
+                              : null,
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.edit_outlined, size: 15),
+                          color: AppColors.onSurfaceVariant,
+                          style: IconButton.styleFrom(
+                            backgroundColor: AppColors.surfaceContainerHigh,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(AppRadius.md),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                    ],
                   ),
                 );
               },
             ),
-          ),
       ],
     );
   }
 
-  String _formatDate(DateTime date) {
-    final hora =
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
-    return '$hora';
+  /// "Hoy, 10:30 AM" / "Ayer" / "DD/MM/YYYY"
+  String _formatRelativeDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateDay = DateTime(date.year, date.month, date.day);
+
+    if (dateDay == today) {
+      final hour = date.hour;
+      final minute = date.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour % 12 == 0 ? 12 : hour % 12;
+      return 'Hoy, $displayHour:$minute $period';
+    } else if (dateDay == today.subtract(const Duration(days: 1))) {
+      return 'Ayer';
+    } else {
+      return '${date.day.toString().padLeft(2, '0')}/'
+          '${date.month.toString().padLeft(2, '0')}/'
+          '${date.year}';
+    }
+  }
+
+  IconData _dateIcon(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateDay = DateTime(date.year, date.month, date.day);
+    return dateDay == today ? Icons.access_time : Icons.history;
   }
 }

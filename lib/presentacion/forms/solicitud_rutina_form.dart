@@ -96,6 +96,7 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ── HEADER ──────────────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md,
@@ -106,16 +107,31 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
               borderRadius: const BorderRadius.vertical(top: AppRadius.md),
               border: Border(
                 bottom: BorderSide(
-                  color: AppColors.onSurface.withValues(alpha: 0.05),
+                  color: AppColors.onSurface.withValues(alpha: 0.10),
                 ),
               ),
             ),
             child: Row(
               children: [
+                // Ícono decorativo
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: const BorderRadius.all(AppRadius.sm),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_add,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Agregar Solicitud',
-                    style: AppTextStyles.titleMd.copyWith(fontSize: 16),
+                    'Nueva Solicitud de Rutina',
+                    style: AppTextStyles.titleMd.copyWith(fontSize: 15),
                   ),
                 ),
                 IconButton(
@@ -131,11 +147,13 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
             ),
           ),
 
+          // ── BODY ────────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Campo: Alumno
                 const _FieldLabel('Alumno'),
                 const SizedBox(height: AppSpacing.xs),
                 AlumnoSelector(
@@ -144,7 +162,64 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
                   onAlumnoChanged: (alumno) =>
                       setState(() => _selectedAlumno = alumno),
                 ),
+
+                // Chip de alumno seleccionado
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeOut,
+                  child: _selectedAlumno != null
+                      ? Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.sm,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  borderRadius: const BorderRadius.all(
+                                    AppRadius.full,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.25,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.check_circle_outline,
+                                      size: 12,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _selectedAlumno!.nombreCompleto,
+                                      style: AppTextStyles.labelCaps.copyWith(
+                                        color: AppColors.primary,
+                                        fontSize: 10,
+                                        letterSpacing: 0.02,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+
                 const SizedBox(height: AppSpacing.md),
+
+                // Campo: Tipo de rutina
                 const _FieldLabel('Tipo de rutina'),
                 const SizedBox(height: AppSpacing.xs),
                 SizedBox(
@@ -154,12 +229,24 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
                     controller: _nombreRutinaController,
                     style: AppTextStyles.subtittles.copyWith(fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: 'Hipertrofia, Definición, Fuerza',
+                      hintText: 'Ej: Hipertrofia',
                       hintStyle: AppTextStyles.subtittles.copyWith(
                         fontSize: 13,
                         color: AppColors.onSurfaceVariant.withValues(
                           alpha: 0.7,
                         ),
+                      ),
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(left: 10, right: 6),
+                        child: Icon(
+                          Icons.fitness_center,
+                          size: 16,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 0,
                       ),
                       filled: true,
                       fillColor: AppColors.surfaceContainer,
@@ -181,61 +268,78 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
                     ),
                   ),
                 ),
+
+                // Micro-copy de ayuda
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Se usará como nombre sugerido al crear la rutina',
+                  style: AppTextStyles.labelCaps.copyWith(
+                    fontSize: 10,
+                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.02,
+                  ),
+                ),
+
                 const SizedBox(height: AppSpacing.md),
+
+                // Botones
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isSaving ? null : widget.onCancelar,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.onSurfaceVariant,
-                          side: BorderSide(
-                            color: AppColors.outlineVariant.withValues(
-                              alpha: 0.7,
+                      child: SizedBox(
+                        height: 44,
+                        child: OutlinedButton(
+                          onPressed: _isSaving ? null : widget.onCancelar,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.onSurfaceVariant,
+                            side: const BorderSide(
+                              color: AppColors.outlineVariant,
+                            ),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(AppRadius.md),
                             ),
                           ),
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(AppRadius.md),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: const Text('Cancelar'),
                         ),
-                        child: const Text('Cancelar'),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: ElevatedButton.icon(
-                        key: const Key('guardar_solicitud_button'),
-                        onPressed: _canSave ? _guardarSolicitudRutina : null,
-                        icon: _isSaving
-                            ? const SizedBox(
-                                width: 14,
-                                height: 14,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: AppColors.onPrimary,
-                                ),
-                              )
-                            : const Icon(Icons.check, size: 16),
-                        label: Text(
-                          _isSaving ? 'Guardando' : 'Guardar',
-                          style: AppTextStyles.buttonText.copyWith(
-                            color: _canSave
-                                ? AppColors.onPrimary
-                                : AppColors.onSurfaceVariant,
+                      child: SizedBox(
+                        height: 44,
+                        child: ElevatedButton.icon(
+                          key: const Key('guardar_solicitud_button'),
+                          onPressed: _canSave ? _guardarSolicitudRutina : null,
+                          icon: _isSaving
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.onPrimary,
+                                  ),
+                                )
+                              : const Icon(Icons.check, size: 16),
+                          label: Text(
+                            _isSaving ? 'Guardando' : 'Guardar',
+                            style: AppTextStyles.buttonText.copyWith(
+                              color: _canSave
+                                  ? AppColors.onPrimary
+                                  : AppColors.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: AppColors.onPrimary,
-                          disabledBackgroundColor:
-                              AppColors.surfaceContainerHigh,
-                          disabledForegroundColor: AppColors.onSurfaceVariant,
-                          elevation: 0,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(AppRadius.md),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: AppColors.onPrimary,
+                            disabledBackgroundColor:
+                                AppColors.surfaceContainerHigh,
+                            disabledForegroundColor: AppColors.onSurfaceVariant,
+                            elevation: 0,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.all(AppRadius.md),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
                     ),
@@ -250,19 +354,39 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
   }
 }
 
+/// Label de sección con acento izquierdo en lime primario.
 class _FieldLabel extends StatelessWidget {
   final String text;
+  final IconData? icon;
 
-  const _FieldLabel(this.text);
+  const _FieldLabel(this.text, {this.icon});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTextStyles.labelCaps.copyWith(
-        fontSize: 11,
-        color: AppColors.onSurfaceVariant,
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.all(AppRadius.full),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        if (icon != null) ...[  
+          Icon(icon, size: 14, color: AppColors.onSurface),
+          const SizedBox(width: 4),
+        ],
+        Text(
+          text,
+          style: AppTextStyles.subtittlesBold.copyWith(
+            fontSize: 13,
+            color: AppColors.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

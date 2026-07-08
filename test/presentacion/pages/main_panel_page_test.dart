@@ -104,7 +104,15 @@ void main() {
         await tester.pumpWidget(createWidgetUnderTest());
         await tester.pumpAndSettle();
 
-        // Act — agregamos el mismo ejercicio dos veces via el botón +
+        // Primero hay que crear un día y un bloque para pasar la validación
+        // que bloquea agregar ejercicios sin día/bloque seleccionados
+        await tester.tap(find.text('Agregar día'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Agregar bloque'));
+        await tester.pumpAndSettle();
+
+        // Act — intentamos agregar el mismo ejercicio dos veces via el botón +
         await tester.tap(find.byIcon(Icons.add).first);
         await tester.pump();
         await tester.tap(find.byIcon(Icons.add).first);
@@ -199,6 +207,34 @@ void main() {
 
         // Assert — la solicitud existe antes de guardar
         expect((await mockSolicitudRepo.getSolicitudes()).length, 2);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+    testWidgets(
+      'debe mostrar diálogo de confirmación al presionar volver con rutina en progreso',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        // Agregar un día para que haya progreso
+        // (simulamos que el controller tiene contenido)
+
+        // Act — presionar botón back
+        await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+        await tester.pump();
+
+        // Assert — aparece diálogo de confirmación
+        expect(find.text('¿Salir sin guardar?'), findsOneWidget);
+        expect(
+          find.text('Perdés los cambios de la rutina actual.'),
+          findsOneWidget,
+        );
+        expect(find.text('Cancelar'), findsOneWidget);
+        expect(find.text('Salir'), findsOneWidget);
 
         addTearDown(tester.view.resetPhysicalSize);
       },

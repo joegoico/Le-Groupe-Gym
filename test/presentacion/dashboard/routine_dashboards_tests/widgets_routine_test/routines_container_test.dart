@@ -43,12 +43,14 @@ void main() {
     Widget createWidgetUnderTest({
       List<({Rutina rutina, Alumno alumno})>? rutinas,
       Function(Rutina)? onVerDetalle,
+      Function(Rutina)? onEditarRutina,
     }) {
       return MaterialApp(
         home: Scaffold(
           body: RutinasPanel(
             rutinas: rutinas ?? mockRutinas,
             onVerDetalle: onVerDetalle ?? (_) {},
+            onEditarRutina: onEditarRutina ?? (_) {},
           ),
         ),
       );
@@ -59,7 +61,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Assert
-      expect(find.text('Últimas rutinas realizadas'), findsOneWidget);
+      expect(find.text('Últimas 10 realizadas'), findsOneWidget);
     });
 
     testWidgets('debe mostrar el nombre de cada rutina', (tester) async {
@@ -82,9 +84,31 @@ void main() {
       expect(find.text('María García'), findsOneWidget);
     });
 
-    testWidgets('debe llamar onVerDetalle al presionar el botón ver detalle', (
-      tester,
-    ) async {
+    testWidgets('debe mostrar botón Ver en cada rutina', (tester) async {
+      // Arrange + Act
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Assert
+      expect(find.text('Ver'), findsNWidgets(2));
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+
+    testWidgets('debe mostrar botón editar en cada rutina', (tester) async {
+      // Arrange + Act
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Assert
+      expect(find.byIcon(Icons.edit_outlined), findsNWidgets(2));
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+
+    testWidgets('debe llamar onVerDetalle al presionar Ver', (tester) async {
       // Arrange
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
@@ -94,12 +118,34 @@ void main() {
       );
 
       // Act
-      await tester.tap(find.byIcon(Icons.arrow_forward_ios).first);
+      await tester.tap(find.text('Ver').first);
       await tester.pump();
 
       // Assert
       expect(rutinaSeleccionada, isNotNull);
       expect(rutinaSeleccionada!.idRutina, 1);
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+
+    testWidgets('debe llamar onEditarRutina al presionar el lápiz', (
+      tester,
+    ) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      Rutina? rutinaEditada;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onEditarRutina: (r) => rutinaEditada = r),
+      );
+
+      // Act
+      await tester.tap(find.byIcon(Icons.edit_outlined).first);
+      await tester.pump();
+
+      // Assert
+      expect(rutinaEditada, isNotNull);
+      expect(rutinaEditada!.idRutina, 1);
 
       addTearDown(tester.view.resetPhysicalSize);
     });

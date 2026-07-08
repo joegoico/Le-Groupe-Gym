@@ -1,3 +1,5 @@
+import 'package:url_launcher/url_launcher.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,35 +36,28 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
 
   Future<void> _loadData() async {
     try {
-      final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
-
-      final solicitudes = await solicitudRepo.getSolicitudes();
-      print('Solicitudes cargadas: ${solicitudes.length}');
-      final mergedSolicitudes = _mergeWithRecentlyCreated(solicitudes);
-      // Por ahora retornamos lista vacía de rutinas hasta implementar getRutinas
-
-      if (mounted) {
-        setState(() {
-          _solicitudes = mergedSolicitudes;
-          _rutinas = [];
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
+      await Future.wait([_loadSolicitudes(), _loadRutinas()]);
+    } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  List<SolicitudRutina> _mergeWithRecentlyCreated(
-    List<SolicitudRutina> solicitudes,
-  ) {
-    final ids = solicitudes.map((s) => s.idSolicitud).whereType<int>().toSet();
+  Future<void> _loadSolicitudes() async {
+    final repo = ref.read(solicitudRutinaRepositoryProvider);
+    final solicitudes = await repo.getSolicitudes();
+    if (mounted) setState(() => _solicitudes = solicitudes);
+  }
 
-    _recentlyCreatedSolicitudes.removeWhere(
-      (s) => s.idSolicitud != null && ids.contains(s.idSolicitud),
-    );
+  Future<void> _loadRutinas() async {
+    final repo = ref.read(routineRepositoryProvider);
+    final rutinas = await repo.getRutinas();
+    if (mounted) setState(() => _rutinas = rutinas);
+  }
 
-    return [..._recentlyCreatedSolicitudes, ...solicitudes];
+  void _eliminarSolicitudLocal(SolicitudRutina solicitud) {
+    setState(() {
+      _solicitudes.removeWhere((s) => s.idSolicitud == solicitud.idSolicitud);
+    });
   }
 
   Future<void> _showRegistrarSolicitudForm() async {
@@ -100,10 +95,10 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                     content: Text(
                       'Solicitud de rutina creada exitosamente',
                       style: AppTextStyles.subtittlesBold.copyWith(
-                        color: const Color(0xFF0D1F00),
+                        color: AppColors.successContent,
                       ),
                     ),
-                    backgroundColor: const Color(0xFF7ECC3B),
+                    backgroundColor: AppColors.successContainer,
                     behavior: SnackBarBehavior.floating,
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(AppRadius.md),
@@ -139,8 +134,14 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
             ],
             actionsEnd: [
               ElevatedButton.icon(
-                onPressed: () {
-                  context.push('/crear-rutina');
+                onPressed: () async {
+                  final nuevaRutina = await context
+                      .push<({Rutina rutina, Alumno alumno})?>('/crear-rutina');
+                  if (nuevaRutina != null) {
+                    setState(
+                      () => _rutinas.insert(0, nuevaRutina),
+                    ); // 👈 agrega al inicio
+                  }
                 },
                 icon: const Icon(Icons.add, size: 16),
                 label: Text('Crear Rutina', style: AppTextStyles.buttonText),
@@ -166,32 +167,69 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                   )
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Column(
-                      children: [
-                        SolicitudesPanel(
-                          solicitudes: _solicitudes,
-                          onRegistrarSolicitud: _showRegistrarSolicitudForm,
-                          onResolverSolicitud: (solicitud) async {
-                            await context.push(
-                              '/crear-rutina',
-                              extra: solicitud,
-                            );
-                            _loadData(); // 👈 recarga al volver
-                          },
-                          onEliminarSolicitud: (solicitud) async {
-                            // 👈
-                            final solicitudRepo = ref.read(
-                              solicitudRutinaRepositoryProvider,
-                            );
-                            await solicitudRepo.deleteSolicitud(
-                              solicitud.idSolicitud!,
-                            );
-                            _loadData();
-                          },
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 860),
+                        child: Column(
+                          children: [
+                            SolicitudesPanel(
+                              solicitudes: _solicitudes,
+                              onRegistrarSolicitud: _showRegistrarSolicitudForm,
+                              onResolverSolicitud: (solicitud) async {
+                                await context.push(
+                                  '/crear-rutina',
+                                  extra: solicitud,
+                                );
+                                _loadRutinas();
+                              },
+                              onEliminarSolicitud: (solicitud) async {
+                                final solicitudRepo = ref.read(
+                                  solicitudRutinaRepositoryProvider,
+                                );
+                                await solicitudRepo.deleteSolicitud(
+                                  solicitud.idSolicitud!,
+                                );
+                                _eliminarSolicitudLocal(solicitud);
+                              },
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            RutinasPanel(
+                              rutinas: _rutinas,
+                              onVerDetalle: (rutina) async {
+                                if (rutina.urlPdf != null) {
+                                  final uri = Uri.parse(rutina.urlPdf!);
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  }
+                                }
+                              },
+                              onEditarRutina: (rutina) async {
+                                final rutinaActualizada = await context
+                                    .push<({Rutina rutina, Alumno alumno})?>(
+                                      '/editar-rutina',
+                                      extra: rutina,
+                                    );
+                                if (rutinaActualizada != null) {
+                                  setState(() {
+                                    final index = _rutinas.indexWhere(
+                                      (r) =>
+                                          r.rutina.idRutina ==
+                                          rutinaActualizada.rutina.idRutina,
+                                    );
+                                    if (index != -1) {
+                                      _rutinas[index] =
+                                          rutinaActualizada; // 👈 actualiza en lugar
+                                    }
+                                  });
+                                }
+                              },
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        RutinasPanel(rutinas: _rutinas, onVerDetalle: (_) {}),
-                      ],
+                      ),
                     ),
                   ),
           ),

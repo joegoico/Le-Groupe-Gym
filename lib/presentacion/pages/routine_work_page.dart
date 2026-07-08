@@ -28,6 +28,7 @@ class MainPanelPage extends ConsumerStatefulWidget {
 class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   final RoutineBuilderController _routineController =
       RoutineBuilderController();
+  final TextEditingController _notasController = TextEditingController();
 
   List<Ejercicio> _loadedExercises = [];
   Alumno? _alumnoSeleccionado;
@@ -40,6 +41,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   @override
   void dispose() {
     _routineNameController.dispose();
+    _notasController.dispose();
     super.dispose();
   }
 
@@ -91,29 +93,29 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
-  Future<String> _savePDfInSupabase(Rutina nuevaRutina) async {
+  Future<String> _savePDfInSupabase(Rutina rutina, int idRutina) async {
     final routineRepo = ref.read(routineRepositoryProvider);
 
-    // Paso 1 — Guardar rutina y obtener id
-    final idRutina = await routineRepo.saveRoutine(nuevaRutina);
-
-    // Paso 2 — Generar PDF
+    debugPrint('📄 Generando PDF para rutina $idRutina...');
     final pdfBytes = await PdfGenerator().generate(
-      rutina: nuevaRutina.copyWith(idRutina: idRutina),
+      rutina: rutina.copyWith(idRutina: idRutina),
       alumno: _alumnoSeleccionado!,
     );
+    debugPrint('✅ PDF generado: ${pdfBytes.length} bytes');
 
-    // Paso 3 — Subir PDF a Storage
+    debugPrint('☁️ Subiendo PDF a Storage...');
     final storageService = StorageService();
     final pdfUrl = await storageService.uploadPdf(
       bytes: pdfBytes,
       idRutina: idRutina,
       idAlumno: _alumnoSeleccionado!.idAlumno,
     );
+    debugPrint('✅ PDF subido: $pdfUrl');
 
+    debugPrint('💾 Actualizando url_pdf en BD...');
     await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
+    debugPrint('✅ url_pdf actualizado');
 
-    debugPrint('PDF subido: $pdfUrl');
     return pdfUrl;
   }
 
@@ -140,10 +142,13 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             ? 'Rutina sin nombre'
             : _routineNameController.text,
         idAlumno: _alumnoSeleccionado!.idAlumno,
+        notasGenerales: _notasController.text.isEmpty
+            ? null
+            : _notasController.text,
       );
 
       final idRutina = await routineRepo.saveRoutine(rutina);
-      final pdfUrl = await _savePDfInSupabase(rutina);
+      final pdfUrl = await _savePDfInSupabase(rutina, idRutina); // 👈
       await _sendRoutineViaMail(rutina, pdfUrl);
 
       // 👇 Eliminar solicitud si existe
@@ -160,17 +165,20 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             content: Text(
               'Rutina guardada correctamente',
               style: AppTextStyles.subtittlesBold.copyWith(
-                color: const Color(0xFF0D1F00),
+                color: AppColors.successContent,
               ),
             ),
-            backgroundColor: const Color(0xFF7ECC3B),
+            backgroundColor: AppColors.successContainer,
             behavior: SnackBarBehavior.floating,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(AppRadius.md),
             ),
           ),
         );
-        context.pop();
+        context.pop((
+          rutina: rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl),
+          alumno: _alumnoSeleccionado!,
+        )); // 👈 re
       }
     } catch (e) {
       if (mounted) {
@@ -179,10 +187,10 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             content: Text(
               'Error al guardar: $e',
               style: AppTextStyles.subtittlesBold.copyWith(
-                color: const Color(0xFFFFEDEB),
+                color: AppColors.onSurface,
               ),
             ),
-            backgroundColor: const Color(0xFF8B1A1A),
+            backgroundColor: AppColors.errorContainer,
             behavior: SnackBarBehavior.floating,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(AppRadius.md),
@@ -205,20 +213,57 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
+  Future<void> _confirmarSalida(BuildContext context) async {
+    // Siempre mostrar diálogo de confirmación al presionar volver
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.surfaceContainerHigh,
+        title: Text(
+          '¿Salir sin guardar?',
+          style: AppTextStyles.headlineLg.copyWith(fontSize: 18),
+        ),
+        content: Text(
+          'Perdés los cambios de la rutina actual.',
+          style: AppTextStyles.subtittles,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => context.pop(false),
+            child: Text('Cancelar', style: AppTextStyles.buttonText),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.onSurface,
+              elevation: 0,
+            ),
+            child: Text('Salir', style: AppTextStyles.buttonText),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmar == true && context.mounted) {
+      if (context.canPop()) {
+        context.pop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: Colors.blueAccent),
-            )
+          ? Center(child: CircularProgressIndicator(color: AppColors.success))
           : Stack(
               children: [
                 Column(
                   children: [
                     // Barra superior
                     TopBar(
-                      onMenuPressed: () => context.pop(),
+                      onMenuPressed: () => _confirmarSalida(context),
                       pageTitle: 'Crear Rutina',
                       isBack: true,
                       actionsCenter: [
@@ -255,7 +300,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                   AppRadius.md,
                                 ),
                                 borderSide: BorderSide(
-                                  color: Colors.white.withOpacity(0.08),
+                                  color: Colors.white.withValues(alpha: 0.08),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -326,6 +371,56 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                   categoryExerciseRepositoryProvider,
                                 ),
                                 onAddExercise: (ejercicio) {
+                                  // Validación: debe haber día y bloque seleccionados
+                                  final sinDia =
+                                      _routineController.activeDayIndex == null;
+                                  final sinBloque =
+                                      !sinDia &&
+                                      _routineController.activeBlockIndex ==
+                                          null;
+
+                                  if (sinDia || sinBloque) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context)
+                                      ..clearSnackBars()
+                                      ..showSnackBar(
+                                        SnackBar(
+                                          content: Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.info_outline_rounded,
+                                                size: 16,
+                                                color: AppColors.warningLow,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                sinDia
+                                                    ? 'Seleccioná un día y un bloque antes de agregar un ejercicio.'
+                                                    : 'Seleccioná un bloque antes de agregar un ejercicio.',
+                                                style: AppTextStyles
+                                                    .subtittlesBold
+                                                    .copyWith(
+                                                      fontSize: 13,
+                                                      color:
+                                                          AppColors.warningLow,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                          backgroundColor:
+                                              AppColors.warningLowContent,
+                                          behavior: SnackBarBehavior.floating,
+                                          duration: const Duration(seconds: 3),
+                                          shape: const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.all(
+                                              AppRadius.md,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    return;
+                                  }
+
                                   final agregado = _routineController
                                       .handleExerciseFromSidebar(ejercicio);
                                   if (!agregado && mounted) {
@@ -333,14 +428,18 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                       SnackBar(
                                         content: Text(
                                           'Ese ejercicio ya está en el bloque activo.',
-                                          style: AppTextStyles.subtittlesBold.copyWith(
-                                            color: AppColors.onSurface,
-                                          ),
+                                          style: AppTextStyles.subtittlesBold
+                                              .copyWith(
+                                                color: AppColors.onSurface,
+                                              ),
                                         ),
-                                        backgroundColor: AppColors.surfaceContainerHighest,
+                                        backgroundColor:
+                                            AppColors.surfaceContainerHighest,
                                         behavior: SnackBarBehavior.floating,
                                         shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(AppRadius.md),
+                                          borderRadius: BorderRadius.all(
+                                            AppRadius.md,
+                                          ),
                                         ),
                                       ),
                                     );
@@ -354,20 +453,23 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                             flex: 2,
                             child: RoutineWorkspace(
                               controller: _routineController,
+                              notasController: _notasController,
                               onShowMessage: (msg) {
                                 if (!mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(
                                       msg,
-                                      style: AppTextStyles.subtittlesBold.copyWith(
-                                        color: AppColors.onSurface,
-                                      ),
+                                      style: AppTextStyles.subtittlesBold
+                                          .copyWith(color: AppColors.onSurface),
                                     ),
-                                    backgroundColor: AppColors.surfaceContainerHighest,
+                                    backgroundColor:
+                                        AppColors.surfaceContainerHighest,
                                     behavior: SnackBarBehavior.floating,
                                     shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(AppRadius.md),
+                                      borderRadius: BorderRadius.all(
+                                        AppRadius.md,
+                                      ),
                                     ),
                                   ),
                                 );
@@ -382,8 +484,10 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                 if (_isSaving)
                   Container(
                     color: Colors.black54,
-                    child: const Center(
-                      child: CircularProgressIndicator(color: Colors.green),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.success,
+                      ),
                     ),
                   ),
               ],

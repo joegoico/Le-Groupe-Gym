@@ -23,7 +23,12 @@ void main() {
 
     Widget createWidgetUnderTest() {
       return MaterialApp(
-        home: Scaffold(body: RoutineWorkspace(controller: controller)),
+        home: Scaffold(
+          body: RoutineWorkspace(
+            controller: controller,
+            notasController: TextEditingController(),
+          ),
+        ),
       );
     }
 
@@ -47,7 +52,12 @@ void main() {
                           MockCategoryExerciseRepository(),
                     ),
                   ),
-                  Expanded(child: RoutineWorkspace(controller: controller)),
+                  Expanded(
+                    child: RoutineWorkspace(
+                      controller: controller,
+                      notasController: TextEditingController(),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -601,8 +611,12 @@ void main() {
           await tester.tap(find.byIcon(Icons.edit_outlined).first);
           await tester.pumpAndSettle();
 
-          // Assert — debe aparecer un TextField con el valor actual
-          expect(find.byType(TextField), findsOneWidget);
+          // Assert — debe aparecer el TextField inline (el de notas es el último)
+          // Se espera exactamente 2: el inline + el de notas generales
+          expect(find.byType(TextField), findsNWidgets(2));
+          // El primero (inline) debe tener el texto 'Día 1'
+          final inlineField = tester.widget<TextField>(find.byType(TextField).first);
+          expect(inlineField.controller?.text, 'Día 1');
 
           addTearDown(tester.view.resetPhysicalSize);
         },
@@ -622,8 +636,8 @@ void main() {
           await tester.tap(find.byIcon(Icons.edit_outlined).first);
           await tester.pumpAndSettle();
 
-          // Escribir nuevo nombre
-          await tester.enterText(find.byType(TextField), 'Pecho y Tríceps');
+          // Escribir nuevo nombre en el TextField inline (el primero)
+          await tester.enterText(find.byType(TextField).first, 'Pecho y Tríceps');
           await tester.testTextInput.receiveAction(TextInputAction.done);
           await tester.pumpAndSettle();
 
@@ -651,8 +665,11 @@ void main() {
           await tester.tap(editIcons.at(1));
           await tester.pumpAndSettle();
 
-          // Assert
-          expect(find.byType(TextField), findsOneWidget);
+          // Assert — el inline + el de notas = 2 TextFields
+          expect(find.byType(TextField), findsNWidgets(2));
+          // El primero (inline) debe tener el texto 'Bloque 1'
+          final inlineField = tester.widget<TextField>(find.byType(TextField).first);
+          expect(inlineField.controller?.text, 'Bloque 1');
 
           addTearDown(tester.view.resetPhysicalSize);
         },
@@ -674,8 +691,8 @@ void main() {
           await tester.tap(editIcons.at(1));
           await tester.pumpAndSettle();
 
-          // Escribir nuevo nombre
-          await tester.enterText(find.byType(TextField), 'Calentamiento');
+          // Escribir nuevo nombre en el TextField inline (el primero)
+          await tester.enterText(find.byType(TextField).first, 'Calentamiento');
           await tester.testTextInput.receiveAction(TextInputAction.done);
           await tester.pumpAndSettle();
 
@@ -805,6 +822,43 @@ void main() {
           addTearDown(tester.view.resetPhysicalSize);
         },
       );
+    });
+    testWidgets('debe mostrar el campo de notas generales', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      controller.addDay(nombre: 'Día 1');
+
+      // Act
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Assert
+      expect(find.byKey(const Key('notas_generales_field')), findsOneWidget);
+
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+
+    testWidgets('debe actualizar las notas al escribir', (tester) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      controller.addDay(nombre: 'Día 1');
+
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      // Act
+      await tester.enterText(
+        find.byKey(const Key('notas_generales_field')),
+        'Descansar 90 segundos entre series',
+      );
+      await tester.pump();
+
+      // Assert
+      expect(find.text('Descansar 90 segundos entre series'), findsOneWidget);
+
+      addTearDown(tester.view.resetPhysicalSize);
     });
   });
 }

@@ -7,6 +7,57 @@ import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.da
 import '../../mocks/mock_category_exercise_repository.dart';
 import '../../mocks/mock_exercise_repository.dart';
 
+// ---------------------------------------------------------------------------
+// Helper: construye el widget con la lógica del snackbar integrada,
+// imitando el comportamiento de routine_work_page.dart.
+// ---------------------------------------------------------------------------
+Widget buildSidebarWithSnackbarLogic({
+  required List<Ejercicio> exercises,
+  required RoutineBuilderController controller,
+  required ValueChanged<Ejercicio> onAddExercise,
+}) {
+  return MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Builder(
+      builder: (ctx) => Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: 320,
+              height: 800,
+              child: ExcerciseSidebar(
+                allExercises: exercises,
+                controller: controller,
+                onAddExercise: (ejercicio) {
+                  // Lógica que replica routine_work_page.dart
+                  final sinDia = controller.activeDayIndex == null;
+                  final sinBloque =
+                      !sinDia && controller.activeBlockIndex == null;
+                  if (sinDia || sinBloque) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(
+                      const SnackBar(
+                        key: Key('snackbar_seleccionar_dia_bloque'),
+                        content: Text('Seleccioná un día y un bloque'),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                    return;
+                  }
+                  onAddExercise(ejercicio);
+                },
+                exerciseRepository: MockExerciseRepository(),
+                categoryExerciseRepository: MockCategoryExerciseRepository(),
+              ),
+            ),
+            const Expanded(child: SizedBox()),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 void main() {
   group('ExcerciseSidebar Widget Tests - Patrón AAA Estricto', () {
     late List<Ejercicio> mockExercises;
@@ -197,5 +248,146 @@ void main() {
 
       addTearDown(tester.view.resetPhysicalSize);
     });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Tests: aviso cuando no hay día y/o bloque seleccionado
+  // ---------------------------------------------------------------------------
+  group('Validación de día/bloque al agregar ejercicio', () {
+    late List<Ejercicio> mockExercises;
+    late RoutineBuilderController controller;
+    late bool callbackEjecutado;
+
+    setUp(() {
+      callbackEjecutado = false;
+      controller = RoutineBuilderController();
+      mockExercises = [
+        Ejercicio(
+          idEjercicio: 1,
+          nombre: 'Dominadas',
+          categorias: [
+            CategoriaEjercicio(
+              idCategoria: 1,
+              nombre: 'Espalda',
+              tipo: 'grupo_muscular',
+            ),
+          ],
+        ),
+      ];
+    });
+
+    testWidgets(
+      'muestra snackbar cuando no hay ningún día seleccionado',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        // controller sin días → activeDayIndex == null
+        await tester.pumpWidget(
+          buildSidebarWithSnackbarLogic(
+            exercises: mockExercises,
+            controller: controller,
+            onAddExercise: (_) => callbackEjecutado = true,
+          ),
+        );
+
+        // Act
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pump();
+
+        // Assert
+        expect(
+          find.text('Seleccioná un día y un bloque'),
+          findsOneWidget,
+          reason: 'Debe aparecer el snackbar de aviso',
+        );
+        expect(
+          callbackEjecutado,
+          isFalse,
+          reason: 'El callback no debe ejecutarse sin día seleccionado',
+        );
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+
+    testWidgets(
+      'muestra snackbar cuando hay un día seleccionado pero ningún bloque activo',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        // Crear día sin bloques y deseleccionar bloque
+        controller.addDay(nombre: 'Día 1');
+        // addDay deja activeDayIndex = 0 pero activeBlockIndex = null
+        expect(controller.activeDayIndex, 0);
+        expect(controller.activeBlockIndex, isNull);
+
+        await tester.pumpWidget(
+          buildSidebarWithSnackbarLogic(
+            exercises: mockExercises,
+            controller: controller,
+            onAddExercise: (_) => callbackEjecutado = true,
+          ),
+        );
+
+        // Act
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pump();
+
+        // Assert
+        expect(
+          find.text('Seleccioná un día y un bloque'),
+          findsOneWidget,
+          reason: 'Debe aparecer el snackbar de aviso sin bloque seleccionado',
+        );
+        expect(callbackEjecutado, isFalse);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+
+    testWidgets(
+      'NO muestra snackbar y ejecuta callback cuando hay día y bloque seleccionados',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        // Crear día con bloque → ambos índices activos
+        controller.addDay(nombre: 'Día 1');
+        controller.addBlock(nombre: 'Bloque A');
+        expect(controller.activeDayIndex, 0);
+        expect(controller.activeBlockIndex, 0);
+
+        await tester.pumpWidget(
+          buildSidebarWithSnackbarLogic(
+            exercises: mockExercises,
+            controller: controller,
+            onAddExercise: (_) => callbackEjecutado = true,
+          ),
+        );
+
+        // Act
+        await tester.tap(find.byIcon(Icons.add).first);
+        await tester.pump();
+
+        // Assert
+        expect(
+          find.text('Seleccioná un día y un bloque'),
+          findsNothing,
+          reason: 'No debe aparecer el snackbar de aviso',
+        );
+        expect(
+          callbackEjecutado,
+          isTrue,
+          reason: 'El callback debe ejecutarse normalmente',
+        );
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
   });
 }

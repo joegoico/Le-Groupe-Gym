@@ -8,11 +8,13 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/view_selector.dart';
 class RoutineWorkspace extends StatefulWidget {
   final RoutineBuilderController controller;
   final void Function(String message)? onShowMessage;
+  final TextEditingController notasController;
 
   const RoutineWorkspace({
     super.key,
     required this.controller,
     this.onShowMessage,
+    required this.notasController,
   });
 
   @override
@@ -22,6 +24,11 @@ class RoutineWorkspace extends StatefulWidget {
 class _RoutineWorkspaceState extends State<RoutineWorkspace> {
   // Días expandidos — por defecto el primero está expandido
   final Set<int> _expandedDays = {0};
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +55,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
         children: [
           Icon(
             Icons.dashboard_customize_outlined,
-            color: AppColors.onSurfaceVariant.withOpacity(0.3),
+            color: AppColors.onSurfaceVariant.withValues(alpha: 0.3),
             size: 56,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -109,7 +116,9 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                 icon: const Icon(Icons.add, size: 14, color: AppColors.primary),
                 label: Text('Agregar día', style: AppTextStyles.titleMd),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.5),
+                  ),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,
@@ -181,7 +190,47 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
             },
           ),
         ),
+        const SizedBox(height: AppSpacing.lg),
+
+        // Campo de notas generales
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('NOTAS GENERALES', style: AppTextStyles.labelCaps),
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                key: const Key('notas_generales_field'),
+                controller: widget.notasController,
+                maxLines: 3,
+                style: AppTextStyles.subtittles,
+                decoration: InputDecoration(
+                  hintText:
+                      'Agregá notas o indicaciones generales para el alumno...',
+                  hintStyle: AppTextStyles.subtittles.copyWith(
+                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surfaceContainerLow,
+                  contentPadding: const EdgeInsets.all(AppSpacing.md),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(AppRadius.md),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.08),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: const BorderRadius.all(AppRadius.md),
+                    borderSide: const BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
+      // Al final de _buildWorkspace(), después del ListView de días
     );
   }
 }
