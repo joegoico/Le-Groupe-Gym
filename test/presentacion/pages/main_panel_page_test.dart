@@ -6,6 +6,11 @@ import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'package:le_groupe_gym/data/models/routine_model.dart';
+import 'package:le_groupe_gym/data/models/routine_block_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
+import 'package:le_groupe_gym/data/models/exercise_model.dart';
+import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import '../../mocks/mock_exercise_repository.dart';
 import '../../mocks/mock_routine_repository.dart';
@@ -235,6 +240,76 @@ void main() {
         );
         expect(find.text('Cancelar'), findsOneWidget);
         expect(find.text('Salir'), findsOneWidget);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+    testWidgets(
+      'debe precargar la rutina existente en el controller al editar',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        final rutinaExistente = Rutina(
+          idRutina: 1,
+          nombre: 'Rutina Fuerza',
+          idAlumno: 'abc-123',
+          dias: [
+            DiaRutina(
+              nombre: 'Día 1 - Pecho',
+              orden: 0,
+              bloques: [
+                BloqueRutina(
+                  id: 'b1',
+                  nombre: 'Bloque 1',
+                  ejercicios: [
+                    EjercicioRutina(
+                      ejercicio: Ejercicio(
+                        idEjercicio: 1,
+                        nombre: 'Press Banca',
+                        categorias: [],
+                      ),
+                      series: 4,
+                      repeticiones: '10',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              exerciseRepositoryProvider.overrideWithValue(
+                MockExerciseRepository(),
+              ),
+              routineRepositoryProvider.overrideWithValue(
+                MockRoutineRepository(),
+              ),
+              alumnoRepositoryProvider.overrideWithValue(
+                MockAlumnoRepository(),
+              ),
+              categoryExerciseRepositoryProvider.overrideWithValue(
+                MockCategoryExerciseRepository(),
+              ),
+              solicitudRutinaRepositoryProvider.overrideWithValue(
+                MockSolicitudRutinaRepository(),
+              ),
+            ],
+            child: MaterialApp(
+              home: MainPanelPage(rutinaExistente: rutinaExistente),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(find.text('Día 1 - Pecho'), findsOneWidget);
+        expect(find.text('Press Banca'), findsOneWidget);
+        expect(find.text('Rutina Fuerza'), findsOneWidget);
 
         addTearDown(tester.view.resetPhysicalSize);
       },

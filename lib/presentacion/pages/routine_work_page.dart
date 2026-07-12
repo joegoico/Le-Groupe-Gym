@@ -26,9 +26,8 @@ class MainPanelPage extends ConsumerStatefulWidget {
 }
 
 class _MainPanelPageState extends ConsumerState<MainPanelPage> {
-  final RoutineBuilderController _routineController =
-      RoutineBuilderController();
-  final TextEditingController _notasController = TextEditingController();
+  late RoutineBuilderController _routineController = RoutineBuilderController();
+  late TextEditingController _notasController = TextEditingController();
 
   List<Ejercicio> _loadedExercises = [];
   Alumno? _alumnoSeleccionado;
@@ -36,7 +35,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   bool _isSaving = false;
 
   // Agregá esto junto a las otras variables de estado
-  final TextEditingController _routineNameController = TextEditingController();
+  late TextEditingController _routineNameController = TextEditingController();
 
   @override
   void dispose() {
@@ -48,6 +47,16 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   @override
   void initState() {
     super.initState();
+    _routineController = RoutineBuilderController();
+    _routineNameController = TextEditingController();
+    _notasController = TextEditingController();
+
+    // 👇 Precargar nombre y notas si hay rutina existente
+    if (widget.rutinaExistente != null) {
+      _routineNameController.text = widget.rutinaExistente!.nombre;
+      _notasController.text = widget.rutinaExistente!.notasGenerales ?? '';
+    }
+
     _loadData();
   }
 
@@ -58,39 +67,111 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     try {
       final exercises = await exerciseRepo.getExercises();
 
-      Alumno? alumnoPreseleccionado;
-
-      // Si venimos desde el Dashboard de Solicitudes, cargamos al alumno
-      // Si venimos desde el Dashboard de Solicitudes, cargamos al alumno
-      if (widget.solicitudOrigen != null) {
-        final alumnos = await alumnoRepo.getAlumnos();
-
-        // Buscamos el índice de forma segura
-        final index = alumnos.indexWhere(
-          (a) => a.idAlumno == widget.solicitudOrigen!.idAlumno,
-        );
-
-        // Si lo encontramos, lo asignamos
-        if (index != -1) {
-          alumnoPreseleccionado = alumnos[index];
+      // 👇 Precargar rutina existente en el controller
+      if (widget.rutinaExistente != null) {
+        final rutinaCompleta = await ref
+            .read(routineRepositoryProvider)
+            .getRutinaCompleta(widget.rutinaExistente!.idRutina!);
+        if (rutinaCompleta != null) {
+          _cargarRutinaEnController(widget.rutinaExistente!);
+          _notasController.text = widget.rutinaExistente!.notasGenerales ?? '';
         }
 
-        if (widget.solicitudOrigen!.notas != null) {
-          _routineNameController.text = widget.solicitudOrigen!.notas!;
+        // Preseleccionar alumno
+        final alumno = await alumnoRepo.getAlumnoById(
+          widget.rutinaExistente!.idAlumno!,
+        );
+        if (mounted) {
+          setState(() {
+            _loadedExercises = exercises;
+            _alumnoSeleccionado = alumno;
+            _isLoading = false;
+          });
+        }
+      } else if (widget.solicitudOrigen != null) {
+        final alumno = await alumnoRepo.getAlumnoById(
+          widget.solicitudOrigen!.idAlumno!,
+        );
+        if (mounted) {
+          setState(() {
+            _loadedExercises = exercises;
+            _alumnoSeleccionado = alumno;
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _loadedExercises = exercises;
+            _isLoading = false;
+          });
         }
       }
-
-      setState(() {
-        _loadedExercises = exercises;
-        if (alumnoPreseleccionado != null) {
-          _alumnoSeleccionado = alumnoPreseleccionado;
-        }
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() => _isLoading = false);
-      debugPrint('Error al cargar datos: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _cargarRutinaEnController(Rutina rutina) {
+    debugPrint('Cargando rutina: ${rutina.nombre}');
+    debugPrint('Días: ${rutina.dias.length}');
+
+    for (var diaIndex = 0; diaIndex < rutina.dias.length; diaIndex++) {
+      final dia = rutina.dias[diaIndex];
+      debugPrint(
+        '  Día $diaIndex: ${dia.nombre} - ${dia.bloques.length} bloques',
+      );
+
+      _routineController.addDay(nombre: dia.nombre);
+      _routineController.selectDay(diaIndex);
+
+      for (
+        var bloqueIndex = 0;
+        bloqueIndex < dia.bloques.length;
+        bloqueIndex++
+      ) {
+        final bloque = dia.bloques[bloqueIndex];
+        debugPrint(
+          '    Bloque $bloqueIndex: ${bloque.nombre} - ${bloque.ejercicios.length} ejercicios',
+        );
+
+        _routineController.addBlock(nombre: bloque.nombre);
+        _routineController.selectBlock(diaIndex, bloqueIndex);
+
+        for (final ejercicioRutina in bloque.ejercicios) {
+          debugPrint('      Ejercicio: ${ejercicioRutina.ejercicio.nombre}');
+          final agregado = _routineController.addExercise(
+            ejercicioRutina.ejercicio,
+            blockIndex: bloqueIndex,
+          );
+          debugPrint('      Agregado: $agregado');
+
+          if (agregado) {
+            final blockIdx = _routineController.bloques.length - 1;
+            final exerciseIdx =
+                _routineController.bloques[blockIdx].ejercicios.length - 1;
+
+            for (
+              var slotIndex = 0;
+              slotIndex < ejercicioRutina.miembros.length;
+              slotIndex++
+            ) {
+              final miembro = ejercicioRutina.miembros[slotIndex];
+              _routineController.updateMemberParams(
+                blockIndex: blockIdx,
+                exerciseIndex: exerciseIdx,
+                slotIndex: slotIndex,
+                series: miembro.series,
+                repeticiones: miembro.repeticiones,
+                peso: miembro.peso,
+              );
+            }
+          }
+        }
+      }
+    }
+
+    debugPrint('Días en controller: ${_routineController.dias.length}');
   }
 
   Future<String> _savePDfInSupabase(Rutina rutina, int idRutina) async {
@@ -142,16 +223,25 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             ? 'Rutina sin nombre'
             : _routineNameController.text,
         idAlumno: _alumnoSeleccionado!.idAlumno,
+        idRutina: widget.rutinaExistente?.idRutina, // 👈
         notasGenerales: _notasController.text.isEmpty
             ? null
             : _notasController.text,
       );
 
-      final idRutina = await routineRepo.saveRoutine(rutina);
-      final pdfUrl = await _savePDfInSupabase(rutina, idRutina); // 👈
+      int idRutina;
+      if (widget.rutinaExistente != null) {
+        // 👇 Modo edición — actualizar
+        await routineRepo.updateRoutine(rutina);
+        idRutina = widget.rutinaExistente!.idRutina!;
+      } else {
+        // 👇 Modo creación — insertar
+        idRutina = await routineRepo.saveRoutine(rutina);
+      }
+
+      final pdfUrl = await _savePDfInSupabase(rutina, idRutina);
       await _sendRoutineViaMail(rutina, pdfUrl);
 
-      // 👇 Eliminar solicitud si existe
       if (widget.solicitudOrigen != null) {
         final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
         await solicitudRepo.deleteSolicitud(
@@ -163,7 +253,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Rutina guardada correctamente',
+              widget.rutinaExistente != null
+                  ? 'Rutina actualizada correctamente'
+                  : 'Rutina guardada correctamente',
               style: AppTextStyles.subtittlesBold.copyWith(
                 color: AppColors.successContent,
               ),
@@ -178,7 +270,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         context.pop((
           rutina: rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl),
           alumno: _alumnoSeleccionado!,
-        )); // 👈 re
+        ));
       }
     } catch (e) {
       if (mounted) {
@@ -187,14 +279,10 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             content: Text(
               'Error al guardar: $e',
               style: AppTextStyles.subtittlesBold.copyWith(
-                color: AppColors.onSurface,
+                color: AppColors.error,
               ),
             ),
             backgroundColor: AppColors.errorContainer,
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
           ),
         );
       }

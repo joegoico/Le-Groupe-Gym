@@ -135,4 +135,12 @@ class MockAlumnoRepository implements AlumnoRepository {
         .toList();
     return filtered;
   }
+
+  @override
+  Future<Alumno?> getAlumnoById(String idAlumno) async {
+    return _alumnos.firstWhere(
+      (a) => a.idAlumno == idAlumno,
+      orElse: () => _alumnos.first,
+    );
+  }
 }

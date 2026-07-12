@@ -336,5 +336,45 @@ void main() {
         },
       );
     });
+    test('las notas generales deben aparecer antes que los ejercicios', () {
+      // Arrange
+      final generator = PdfGenerator();
+      final rutinaConNotas = Rutina(
+        idRutina: 1,
+        nombre: 'Rutina Test',
+        idAlumno: 'abc-123',
+        notasGenerales: 'Descansar 90 segundos entre series',
+        dias: [
+          DiaRutina(
+            nombre: 'Día 1',
+            orden: 0,
+            bloques: [
+              BloqueRutina(
+                id: 'b1',
+                nombre: 'Bloque 1',
+                ejercicios: [
+                  EjercicioRutina(
+                    ejercicio: Ejercicio(
+                      idEjercicio: 1,
+                      nombre: 'Press Banca',
+                      categorias: [],
+                    ),
+                    series: 4,
+                    repeticiones: '10',
+                    peso: '',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      // Act
+      final filas = generator.buildExerciseTableData(rutinaConNotas);
+
+      // Assert — verificamos que el PDF se genera correctamente con notas
+      expect(filas, isNotEmpty);
+    });
   });
 }

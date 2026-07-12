@@ -48,9 +48,17 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
     if (mounted) setState(() => _solicitudes = solicitudes);
   }
 
+  Alumno? _alumnoFiltro;
+
   Future<void> _loadRutinas() async {
     final repo = ref.read(routineRepositoryProvider);
     final rutinas = await repo.getRutinas();
+    if (mounted) setState(() => _rutinas = rutinas);
+  }
+
+  Future<void> _filtrarPorAlumno(Alumno alumno) async {
+    final repo = ref.read(routineRepositoryProvider);
+    final rutinas = await repo.getRutinasPorAlumno(alumno.idAlumno);
     if (mounted) setState(() => _rutinas = rutinas);
   }
 
@@ -127,8 +135,15 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                 width: 320,
                 child: AlumnoSelector(
                   alumnoRepository: ref.read(alumnoRepositoryProvider),
-                  alumnoSeleccionado: null,
-                  onAlumnoChanged: (alumno) {},
+                  alumnoSeleccionado: _alumnoFiltro,
+                  onAlumnoChanged: (alumno) {
+                    setState(() => _alumnoFiltro = alumno);
+                    if (alumno != null) {
+                      _filtrarPorAlumno(alumno);
+                    } else {
+                      _loadRutinas();
+                    }
+                  },
                 ),
               ),
             ],
@@ -176,11 +191,15 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                               solicitudes: _solicitudes,
                               onRegistrarSolicitud: _showRegistrarSolicitudForm,
                               onResolverSolicitud: (solicitud) async {
-                                await context.push(
+                                final resultado = await context.push(
                                   '/crear-rutina',
                                   extra: solicitud,
                                 );
                                 _loadRutinas();
+                                if (resultado != null) {
+                                  // 👇 elimina la solicitud de la lista local
+                                  _eliminarSolicitudLocal(solicitud);
+                                }
                               },
                               onEliminarSolicitud: (solicitud) async {
                                 final solicitudRepo = ref.read(
@@ -207,6 +226,8 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                 }
                               },
                               onEditarRutina: (rutina) async {
+                                debugPrint('Editar rutina: ${rutina.idRutina}');
+                                debugPrint('dias: ${rutina.dias}');
                                 final rutinaActualizada = await context
                                     .push<({Rutina rutina, Alumno alumno})?>(
                                       '/editar-rutina',

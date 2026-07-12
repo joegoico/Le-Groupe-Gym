@@ -1,11 +1,20 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
+import 'package:le_groupe_gym/data/models/routine_block_model.dart';
+import 'package:le_groupe_gym/data/models/exercise_model.dart';
+import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 
 abstract class RoutineRepository {
   Future<int> saveRoutine(Rutina rutina);
   Future<void> updatePdfUrl({required int idRutina, required String url});
   Future<List<({Rutina rutina, Alumno alumno})>> getRutinas(); // 👈
+  Future<List<({Rutina rutina, Alumno alumno})>> getRutinasPorAlumno(
+    String idAlumno,
+  ); // 👈
+  Future<void> updateRoutine(Rutina rutina);
+  Future<Rutina?> getRutinaCompleta(int idRutina);
 }
 
 class SupabaseRoutineRepository implements RoutineRepository {
@@ -42,11 +51,8 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
       final idRutina = rutinaResponse['id_rutina'] as int;
 
-      // Paso 2 — insertar cada día y sus ejercicios
-      for (var diaIndex = 0; diaIndex < rutina.dias.length; diaIndex++) {
-        final dia = rutina.dias[diaIndex];
-
-        // Insertar el día
+      // Paso 2 — insertar días, bloques y ejercicios
+      for (final dia in rutina.dias) {
         final diaResponse = await supabaseClient
             .from('Dias_Rutina')
             .insert(dia.toMap(idRutina: idRutina))
@@ -55,32 +61,48 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
         final idDia = diaResponse['id_dia'] as int;
 
-        // Insertar ejercicios del día
-        final ejerciciosData = <Map<String, dynamic>>[];
-        var orden = 0;
+        for (
+          var bloqueIndex = 0;
+          bloqueIndex < dia.bloques.length;
+          bloqueIndex++
+        ) {
+          final bloque = dia.bloques[bloqueIndex];
 
-        for (final bloque in dia.bloques) {
+          // 👇 Insertar bloque
+          final bloqueResponse = await supabaseClient
+              .from('Bloques_Rutina')
+              .insert({
+                'id_dia': idDia,
+                'nombre': bloque.nombre,
+                'orden': bloqueIndex,
+              })
+              .select('id_bloque')
+              .single();
+
+          final idBloque = bloqueResponse['id_bloque'] as int;
+
+          // 👇 Insertar ejercicios del bloque
+          final ejerciciosData = <Map<String, dynamic>>[];
+          var orden = 0;
+
           for (final tarjeta in bloque.ejercicios) {
-            for (
-              var slotIndex = 0;
-              slotIndex < tarjeta.miembros.length;
-              slotIndex++
-            ) {
-              final miembro = tarjeta.miembros[slotIndex];
+            for (final miembro in tarjeta.miembros) {
               ejerciciosData.add({
                 'id_dia': idDia,
+                'id_bloque': idBloque,
                 'id_ejercicio': miembro.ejercicio.idEjercicio,
                 'series': miembro.series,
                 'repeticiones': miembro.repeticiones,
-                'orden': orden,
+                'orden': orden++,
               });
-              orden++;
             }
           }
-        }
 
-        if (ejerciciosData.isNotEmpty) {
-          await supabaseClient.from('Rutina_Ejercicios').insert(ejerciciosData);
+          if (ejerciciosData.isNotEmpty) {
+            await supabaseClient
+                .from('Rutina_Ejercicios')
+                .insert(ejerciciosData);
+          }
         }
       }
 
@@ -109,6 +131,143 @@ class SupabaseRoutineRepository implements RoutineRepository {
       }).toList();
     } on PostgrestException catch (e) {
       throw Exception('Error al obtener rutinas: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<void> updateRoutine(Rutina rutina) async {
+    try {
+      final diasPayload = rutina.dias.map((dia) {
+        return {
+          'nombre_dia': dia.nombre,
+          'orden': dia.orden,
+          'bloques': dia.bloques.asMap().entries.map((entry) {
+            var orden = 0;
+            return {
+              'nombre': entry.value.nombre,
+              'orden': entry.key,
+              'ejercicios': entry.value.ejercicios
+                  .expand(
+                    (tarjeta) => tarjeta.miembros.map(
+                      (miembro) => {
+                        'id_ejercicio': miembro.ejercicio.idEjercicio,
+                        'series': miembro.series,
+                        'repeticiones': miembro.repeticiones,
+                        'orden': orden++,
+                      },
+                    ),
+                  )
+                  .toList(),
+            };
+          }).toList(),
+        };
+      }).toList();
+
+      await supabaseClient.rpc(
+        'update_rutina',
+        params: {
+          'p_id_rutina': rutina.idRutina,
+          'p_nombre': rutina.nombre,
+          'p_notas_generales': rutina.notasGenerales,
+          'p_dias': diasPayload,
+        },
+      );
+    } on PostgrestException catch (e) {
+      throw Exception('Error al actualizar rutina: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al actualizar: $e');
+    }
+  }
+
+  @override
+  Future<Rutina?> getRutinaCompleta(int idRutina) async {
+    try {
+      final response = await supabaseClient
+          .from('Rutinas')
+          .select('''
+            *,
+            Dias_Rutina (
+              *,
+              Bloques_Rutina (
+                *,
+                Rutina_Ejercicios (
+                  *,
+                  Ejercicios (
+                    *,
+                    Rel_Ejercicio_Categoria (
+                      Categorias_Ejercicio (*)
+                    )
+                  )
+                )
+              )
+            )
+          ''')
+          .eq('id_rutina', idRutina)
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      final dias = (response['Dias_Rutina'] as List<dynamic>).map((diaJson) {
+        final bloques = (diaJson['Bloques_Rutina'] as List<dynamic>).map((
+          bloqueJson,
+        ) {
+          final ejercicios = (bloqueJson['Rutina_Ejercicios'] as List<dynamic>)
+              .map((ejJson) {
+                final ejercicioJson =
+                    ejJson['Ejercicios'] as Map<String, dynamic>;
+                final ejercicio = Ejercicio.fromJson(ejercicioJson);
+                return EjercicioRutina(
+                  ejercicio: ejercicio,
+                  series: ejJson['series'] as int,
+                  repeticiones: ejJson['repeticiones'] as String,
+                  peso: ejJson['peso'] as String? ?? '',
+                );
+              })
+              .toList();
+
+          return BloqueRutina(
+            id: 'bloque-${bloqueJson['id_bloque']}',
+            nombre: bloqueJson['nombre'] as String,
+            ejercicios: ejercicios,
+          );
+        }).toList();
+
+        return DiaRutina(
+          idDia: diaJson['id_dia'] as int,
+          nombre: diaJson['nombre_dia'] as String,
+          orden: diaJson['orden'] as int,
+          bloques: bloques,
+        );
+      }).toList()..sort((a, b) => a.orden.compareTo(b.orden));
+
+      return Rutina.fromMap(response as Map<String, dynamic>, dias: dias);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al obtener rutina completa: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<List<({Rutina rutina, Alumno alumno})>> getRutinasPorAlumno(
+    String idAlumno,
+  ) async {
+    try {
+      final response = await supabaseClient
+          .from('Rutinas')
+          .select('*, Alumno(*)')
+          .eq('id_alumno', idAlumno)
+          .order('fecha_creacion', ascending: false);
+
+      return (response as List<dynamic>).map((json) {
+        final rutina = Rutina.fromMap(json as Map<String, dynamic>);
+        final alumno = Alumno.fromMap(json['Alumno'] as Map<String, dynamic>);
+        return (rutina: rutina, alumno: alumno);
+      }).toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Error al obtener rutinas por alumno: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }

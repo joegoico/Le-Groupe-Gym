@@ -79,6 +79,14 @@ class PdfGenerator {
                   pw.SizedBox(height: 24),
                   pw.Divider(color: PdfColors.grey400),
                 ],
+                // 👇 Notas al principio — solo en primera página
+                if (i == 0 &&
+                    rutina.notasGenerales != null &&
+                    rutina.notasGenerales!.isNotEmpty) ...[
+                  pw.SizedBox(height: 16),
+                  _buildNotes(rutina.notasGenerales!, baseStyle, boldStyle),
+                  pw.SizedBox(height: 16),
+                ],
 
                 // Título del día
                 pw.SizedBox(height: 16),
@@ -96,15 +104,6 @@ class PdfGenerator {
                   blockSeparatorFont,
                 ),
                 pw.SizedBox(height: 24),
-
-                // Notas solo en última página
-                if (i == rutina.dias.length - 1 &&
-                    rutina.notasGenerales != null &&
-                    rutina.notasGenerales!.isNotEmpty)
-                  _buildNotes(rutina.notasGenerales!, baseStyle, boldStyle),
-
-                pw.Spacer(),
-                _buildFooter(baseStyle),
               ],
             );
           },

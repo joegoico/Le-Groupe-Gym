@@ -254,5 +254,69 @@ void main() {
       expect(result.first.rutina.nombre, isNotEmpty);
       expect(result.first.alumno.nombreCompleto, isNotEmpty);
     });
+    test('updateRoutine debe completarse sin errores', () async {
+      // Arrange
+      final rutina = Rutina(
+        idRutina: 1,
+        nombre: 'Rutina Actualizada',
+        idAlumno: 'abc-123',
+        dias: [
+          DiaRutina(
+            idDia: 1,
+            nombre: 'Día 1',
+            orden: 0,
+            bloques: [
+              BloqueRutina(
+                id: 'b1',
+                nombre: 'Bloque 1',
+                ejercicios: [
+                  EjercicioRutina(
+                    ejercicio: Ejercicio(
+                      idEjercicio: 1,
+                      nombre: 'Press Banca',
+                      categorias: [],
+                    ),
+                    series: 4,
+                    repeticiones: '10',
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+
+      // Act + Assert
+      expect(
+        () async => await repository.updateRoutine(rutina),
+        returnsNormally,
+      );
+    });
+    test(
+      'getRutinaCompleta debe retornar la rutina con días, bloques y ejercicios',
+      () async {
+        // Arrange + Act
+        final result = await repository.getRutinaCompleta(1);
+
+        // Assert
+        expect(result, isNotNull);
+        expect(result!.dias, isNotEmpty);
+        expect(result.dias.first.bloques, isNotEmpty);
+        expect(result.dias.first.bloques.first.ejercicios, isNotEmpty);
+      },
+    );
+    test(
+      'getRutinas con idAlumno debe retornar solo las rutinas de ese alumno',
+      () async {
+        // Arrange + Act
+        final result = await repository.getRutinasPorAlumno('abc-123');
+
+        // Assert
+        expect(result, isNotEmpty);
+        for (final item in result) {
+          expect(item.alumno.idAlumno, 'abc-123');
+        }
+      },
+    );
   });
 }

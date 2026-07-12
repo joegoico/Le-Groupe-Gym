@@ -58,5 +58,13 @@ void main() {
         expect(result.length, lessThanOrEqualTo(10));
       },
     );
+    test('getAlumnoById debe retornar el alumno correcto', () async {
+      // Arrange + Act
+      final result = await repository.getAlumnoById('abc-123');
+
+      // Assert
+      expect(result, isNotNull);
+      expect(result!.idAlumno, 'abc-123');
+    });
   });
 }
