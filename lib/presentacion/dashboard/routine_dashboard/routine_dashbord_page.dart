@@ -153,9 +153,12 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                   final nuevaRutina = await context
                       .push<({Rutina rutina, Alumno alumno})?>('/crear-rutina');
                   if (nuevaRutina != null) {
-                    setState(
-                      () => _rutinas.insert(0, nuevaRutina),
-                    ); // 👈 agrega al inicio
+                    setState(() {
+                      _rutinas.insert(0, nuevaRutina);
+                      if (_rutinas.length > 10) {
+                        _rutinas.removeLast();
+                      }
+                    }); // 👈 agrega al inicio
                   }
                 },
                 icon: const Icon(Icons.add, size: 16),

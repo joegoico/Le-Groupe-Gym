@@ -1,0 +1,8 @@
+organization=joegoico
+projectKey=joegoico_Le-Groupe-Gym
+serverUrl=https://sonarcloud.io
+serverVersion=8.0.0.96128
+branch=routine_dashboard
+dashboardUrl=https://sonarcloud.io/dashboard?id=joegoico_Le-Groupe-Gym&branch=routine_dashboard&resolved=false
+ceTaskId=AZ9Zejv-GdnUtZ7w4law
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ9Zejv-GdnUtZ7w4law

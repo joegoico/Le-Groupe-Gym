@@ -73,7 +73,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             .read(routineRepositoryProvider)
             .getRutinaCompleta(widget.rutinaExistente!.idRutina!);
         if (rutinaCompleta != null) {
-          _cargarRutinaEnController(widget.rutinaExistente!);
+          _cargarRutinaEnController(rutinaCompleta);
           _notasController.text = widget.rutinaExistente!.notasGenerales ?? '';
         }
 
@@ -113,14 +113,8 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   }
 
   void _cargarRutinaEnController(Rutina rutina) {
-    debugPrint('Cargando rutina: ${rutina.nombre}');
-    debugPrint('Días: ${rutina.dias.length}');
-
     for (var diaIndex = 0; diaIndex < rutina.dias.length; diaIndex++) {
       final dia = rutina.dias[diaIndex];
-      debugPrint(
-        '  Día $diaIndex: ${dia.nombre} - ${dia.bloques.length} bloques',
-      );
 
       _routineController.addDay(nombre: dia.nombre);
       _routineController.selectDay(diaIndex);
@@ -131,20 +125,15 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         bloqueIndex++
       ) {
         final bloque = dia.bloques[bloqueIndex];
-        debugPrint(
-          '    Bloque $bloqueIndex: ${bloque.nombre} - ${bloque.ejercicios.length} ejercicios',
-        );
 
         _routineController.addBlock(nombre: bloque.nombre);
         _routineController.selectBlock(diaIndex, bloqueIndex);
 
         for (final ejercicioRutina in bloque.ejercicios) {
-          debugPrint('      Ejercicio: ${ejercicioRutina.ejercicio.nombre}');
           final agregado = _routineController.addExercise(
             ejercicioRutina.ejercicio,
             blockIndex: bloqueIndex,
           );
-          debugPrint('      Agregado: $agregado');
 
           if (agregado) {
             final blockIdx = _routineController.bloques.length - 1;
@@ -170,32 +159,22 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         }
       }
     }
-
-    debugPrint('Días en controller: ${_routineController.dias.length}');
   }
 
   Future<String> _savePDfInSupabase(Rutina rutina, int idRutina) async {
     final routineRepo = ref.read(routineRepositoryProvider);
 
-    debugPrint('📄 Generando PDF para rutina $idRutina...');
     final pdfBytes = await PdfGenerator().generate(
       rutina: rutina.copyWith(idRutina: idRutina),
       alumno: _alumnoSeleccionado!,
     );
-    debugPrint('✅ PDF generado: ${pdfBytes.length} bytes');
-
-    debugPrint('☁️ Subiendo PDF a Storage...');
     final storageService = StorageService();
     final pdfUrl = await storageService.uploadPdf(
       bytes: pdfBytes,
       idRutina: idRutina,
       idAlumno: _alumnoSeleccionado!.idAlumno,
     );
-    debugPrint('✅ PDF subido: $pdfUrl');
-
-    debugPrint('💾 Actualizando url_pdf en BD...');
     await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
-    debugPrint('✅ url_pdf actualizado');
 
     return pdfUrl;
   }
@@ -302,34 +281,128 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   }
 
   Future<void> _confirmarSalida(BuildContext context) async {
-    // Siempre mostrar diálogo de confirmación al presionar volver
     final confirmar = await showDialog<bool>(
       context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.65),
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.surfaceContainerHigh,
-        title: Text(
-          '¿Salir sin guardar?',
-          style: AppTextStyles.headlineLg.copyWith(fontSize: 18),
-        ),
-        content: Text(
-          'Perdés los cambios de la rutina actual.',
-          style: AppTextStyles.subtittles,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(false),
-            child: Text('Cancelar', style: AppTextStyles.buttonText),
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadius.lg),
+          side: BorderSide(
+            color: AppColors.surfaceContainerHighest,
+            width: 1,
           ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onSurface,
-              elevation: 0,
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          0,
+          AppSpacing.lg,
+          AppSpacing.lg,
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.lg,
+          AppSpacing.md,
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.errorContainer.withValues(alpha: 0.35),
+                borderRadius: const BorderRadius.all(AppRadius.md),
+                border: Border.all(
+                  color: AppColors.error.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.error,
+                size: 22,
+              ),
             ),
-            child: Text('Salir', style: AppTextStyles.buttonText),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              '¿Salir sin guardar?',
+              style: AppTextStyles.titleMd,
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Perdés todos los cambios de la rutina actual. Esta acción no se puede deshacer.',
+              style: AppTextStyles.subtittles.copyWith(
+                color: AppColors.onSurfaceVariant,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            const Divider(
+              color: AppColors.surfaceContainerHighest,
+              thickness: 1,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm + 2,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(AppRadius.md),
+                        side: BorderSide(
+                          color: AppColors.surfaceContainerHighest,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      'Cancelar',
+                      style: AppTextStyles.subtittlesBold.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.errorContainer,
+                      foregroundColor: AppColors.error,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm + 2,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(AppRadius.md),
+                      ),
+                    ),
+                    child: Text(
+                      'Salir',
+                      style: AppTextStyles.subtittlesBold.copyWith(
+                        color: AppColors.error,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: const [],
       ),
     );
 

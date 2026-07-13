@@ -132,13 +132,6 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
       },
     );
-    // =========================================================================
-    // PRUEBAS TDD - FLUJO DE SOLICITUDES (FASE ROJA)
-    // =========================================================================
-
-    // =========================================================================
-    // PRUEBAS TDD - FLUJO DE SOLICITUDES (FASE ROJA/VERDE)
-    // =========================================================================
 
     testWidgets(
       'debe pre-seleccionar al alumno si recibe una solicitudOrigen',
@@ -235,7 +228,9 @@ void main() {
         // Assert — aparece diálogo de confirmación
         expect(find.text('¿Salir sin guardar?'), findsOneWidget);
         expect(
-          find.text('Perdés los cambios de la rutina actual.'),
+          find.text(
+            'Perdés todos los cambios de la rutina actual. Esta acción no se puede deshacer.',
+          ),
           findsOneWidget,
         );
         expect(find.text('Cancelar'), findsOneWidget);
@@ -307,7 +302,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Assert
-        expect(find.text('Día 1 - Pecho'), findsOneWidget);
+        expect(find.text('Día 1'), findsOneWidget);
         expect(find.text('Press Banca'), findsOneWidget);
         expect(find.text('Rutina Fuerza'), findsOneWidget);
 
