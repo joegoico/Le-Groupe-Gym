@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
@@ -18,9 +19,12 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   @override
   Future<List<Alumno>> getAlumnos() async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+
       final response = await supabaseClient
           .from('Alumno')
           .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
+          .eq('user_id', userId)
           .order('"Apellido"', ascending: true);
 
       return (response as List<dynamic>)
@@ -36,11 +40,13 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   @override
   Future<List<Alumno>> searchAlumnos(String query, {int limit = 10}) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       final pattern = '%$query%';
       final response = await supabaseClient
           .from('Alumno')
           .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
           .or('"Nombre".ilike.$pattern,"Apellido".ilike.$pattern')
+          .eq('user_id', userId)
           .order('"Apellido"', ascending: true)
           .limit(limit);
 
@@ -57,10 +63,12 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   @override
   Future<Alumno?> getAlumnoById(String idAlumno) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       final response = await supabaseClient
           .from('Alumno')
           .select()
           .eq('id_alumno', idAlumno)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (response == null) return null;

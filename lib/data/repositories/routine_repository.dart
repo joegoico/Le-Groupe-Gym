@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -28,9 +29,10 @@ class SupabaseRoutineRepository implements RoutineRepository {
     required String url,
   }) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       await supabaseClient
           .from('Rutinas')
-          .update({'url_pdf': url})
+          .update({'url_pdf': url, 'user_id': userId})
           .eq('id_rutina', idRutina);
     } on PostgrestException catch (e) {
       throw Exception('Error al actualizar url_pdf: ${e.message}');
@@ -42,10 +44,11 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<int> saveRoutine(Rutina rutina) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       // Paso 1 — insertar cabecera en Rutinas
       final rutinaResponse = await supabaseClient
           .from('Rutinas')
-          .insert(rutina.toMap())
+          .insert({...rutina.toMap(), 'user_id': userId})
           .select('id_rutina')
           .single();
 
@@ -118,9 +121,11 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<List<({Rutina rutina, Alumno alumno})>> getRutinas() async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('*, Alumno(*)')
+          .eq('user_id', userId)
           .order('fecha_creacion', ascending: false)
           .limit(10);
 
@@ -184,6 +189,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<Rutina?> getRutinaCompleta(int idRutina) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('''
@@ -205,6 +211,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
             )
           ''')
           .eq('id_rutina', idRutina)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (response == null) return null;
@@ -255,10 +262,12 @@ class SupabaseRoutineRepository implements RoutineRepository {
     String idAlumno,
   ) async {
     try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('*, Alumno(*)')
           .eq('id_alumno', idAlumno)
+          .eq('user_id', userId)
           .order('fecha_creacion', ascending: false);
 
       return (response as List<dynamic>).map((json) {

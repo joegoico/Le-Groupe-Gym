@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter/material.dart';
@@ -175,6 +176,13 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                     vertical: 12,
                   ),
                 ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  await SupabaseConfig.client.auth.signOut();
+                  if (context.mounted) context.go('/login');
+                },
+                child: const Text('Cerrar sesión'),
               ),
             ],
           ),
