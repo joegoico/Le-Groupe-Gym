@@ -193,36 +193,56 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
         const SizedBox(height: AppSpacing.lg),
 
         // Campo de notas generales
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerHigh,
+            borderRadius: const BorderRadius.all(AppRadius.lg),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.07),
+            ),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('NOTAS GENERALES', style: AppTextStyles.labelCaps),
+              Row(
+                children: [
+                  Icon(
+                    Icons.notes_rounded,
+                    size: 16,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text('NOTAS GENERALES', style: AppTextStyles.labelCaps),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               TextField(
                 key: const Key('notas_generales_field'),
                 controller: widget.notasController,
-                maxLines: 3,
+                maxLines: 4,
                 style: AppTextStyles.subtittles,
                 decoration: InputDecoration(
                   hintText:
                       'Agregá notas o indicaciones generales para el alumno...',
                   hintStyle: AppTextStyles.subtittles.copyWith(
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
                   ),
                   filled: true,
-                  fillColor: AppColors.surfaceContainerLow,
+                  fillColor: AppColors.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.all(AppSpacing.md),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(AppRadius.md),
                     borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(AppRadius.md),
-                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),

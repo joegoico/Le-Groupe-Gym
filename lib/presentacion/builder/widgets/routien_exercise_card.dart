@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
-import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
-import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
 
 class RoutineExerciseCard extends StatelessWidget {
@@ -186,10 +184,20 @@ class RoutineExerciseCard extends StatelessWidget {
             ),
             if (controller.bloques.length > 1)
               PopupMenuButton<int>(
+                tooltip: 'Mover a otro bloque',
                 icon: Icon(
-                  Icons.swap_horiz,
-                  color: AppColors.onSurfaceVariant.withOpacity(0.5),
-                  size: 16,
+                  Icons.swap_horiz_rounded,
+                  color: AppColors.onSurfaceVariant.withOpacity(0.75),
+                  size: 20,
+                ),
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(7),
+                  minimumSize: const Size(36, 36),
+                  hoverColor: AppColors.onSurfaceVariant.withOpacity(0.12),
+                  highlightColor: AppColors.onSurfaceVariant.withOpacity(0.2),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(AppRadius.sm),
+                  ),
                 ),
                 color: AppColors.surfaceContainerHigh,
                 onSelected: (targetBlock) {
@@ -214,21 +222,20 @@ class RoutineExerciseCard extends StatelessWidget {
               ),
             Builder(
               builder: (btnContext) => IconButton(
-                icon: Icon(
-                  Icons.close,
-                  color: AppColors.onSurfaceVariant.withOpacity(0.5),
-                  size: 16,
+                icon: const Icon(Icons.delete_rounded),
+                iconSize: 20,
+                color: AppColors.error.withOpacity(0.75),
+                tooltip: 'Eliminar ejercicio',
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(7),
+                  minimumSize: const Size(36, 36),
+                  hoverColor: AppColors.error.withOpacity(0.15),
+                  highlightColor: AppColors.error.withOpacity(0.25),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(AppRadius.sm),
+                  ),
                 ),
                 onPressed: () async {
-                  // Si es el único ejercicio, mostrar aviso sin diálogo
-                  if (controller.bloques.isNotEmpty &&
-                      blockIndex < controller.bloques.length &&
-                      controller.bloques[blockIndex].ejercicios.length <= 1) {
-                    onShowMessage?.call(
-                      'Cada bloque necesita al menos un ejercicio.',
-                    );
-                    return;
-                  }
                   final confirmed = await showConfirmDialog(
                     btnContext,
                     titulo: 'Eliminar ejercicio',
@@ -236,18 +243,12 @@ class RoutineExerciseCard extends StatelessWidget {
                         '¿Estás seguro de que querés eliminar este ejercicio?',
                   );
                   if (!confirmed) return;
-                  final ok = controller.removeExercise(
+                  controller.removeExercise(
                     blockIndex,
                     exerciseIndex,
                   );
-                  if (!ok) {
-                    onShowMessage?.call(
-                      'Cada bloque necesita al menos un ejercicio.',
-                    );
-                  }
+
                 },
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
               ),
             ),
           ],

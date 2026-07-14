@@ -285,53 +285,78 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                           color: Colors.white.withValues(alpha: 0.05),
                         ),
                       ),
-                      child: ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: 2,
-                        ),
-                        leading: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainerHigh,
-                            borderRadius: const BorderRadius.all(AppRadius.sm),
-                          ),
-                          child: const Icon(
-                            Icons.fitness_center,
-                            color: AppColors.primary,
-                            size: 16,
-                          ),
-                        ),
-                        title: Text(
-                          exercise.nombre,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.onSurface,
-                          ),
-                        ),
-                        subtitle: categoria.isNotEmpty
-                            ? Text(
-                                categoria,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  color: AppColors.onSurfaceVariant,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: const BorderRadius.all(AppRadius.md),
+                        child: InkWell(
+                          onTap: () => widget.onAddExercise(exercise),
+                          borderRadius: const BorderRadius.all(AppRadius.md),
+                          hoverColor: AppColors.primary.withOpacity(0.06),
+                          highlightColor: AppColors.primary.withOpacity(0.1),
+                          splashColor: AppColors.primary.withOpacity(0.08),
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: 2,
+                            ),
+                            leading: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceContainerHigh,
+                                borderRadius: const BorderRadius.all(
+                                  AppRadius.sm,
                                 ),
-                              )
-                            : null,
-                        trailing: IconButton(
-                          icon: Icon(
-                            widget.controller.isSelectingForCombine
-                                ? Icons.link
-                                : Icons.add,
-                            color: AppColors.primary,
-                            size: 18,
+                              ),
+                              child: const Icon(
+                                Icons.fitness_center,
+                                color: AppColors.primary,
+                                size: 16,
+                              ),
+                            ),
+                            title: Text(
+                              exercise.nombre,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.onSurface,
+                              ),
+                            ),
+                            subtitle: categoria.isNotEmpty
+                                ? Text(
+                                    categoria,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                  )
+                                : null,
+                            trailing: IconButton(
+                              icon: Icon(
+                                widget.controller.isSelectingForCombine
+                                    ? Icons.link
+                                    : Icons.add,
+                                color: AppColors.primary,
+                                size: 18,
+                              ),
+                              onPressed: () => widget.onAddExercise(exercise),
+                              tooltip: widget.controller.isSelectingForCombine
+                                  ? 'Combinar'
+                                  : 'Agregar al bloque activo',
+                              style: IconButton.styleFrom(
+                                padding: const EdgeInsets.all(4),
+                                minimumSize: const Size(28, 28),
+                                hoverColor: AppColors.primary.withOpacity(0.15),
+                                highlightColor: AppColors.primary.withOpacity(
+                                  0.25,
+                                ),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(AppRadius.sm),
+                                ),
+                              ),
+                            ),
                           ),
-                          onPressed: () => widget.onAddExercise(exercise),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                         ),
                       ),
                     );
