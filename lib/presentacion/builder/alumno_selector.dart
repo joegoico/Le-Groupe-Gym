@@ -8,12 +8,14 @@ class AlumnoSelector extends StatefulWidget {
   final AlumnoRepository alumnoRepository;
   final Alumno? alumnoSeleccionado;
   final ValueChanged<Alumno?> onAlumnoChanged;
+  final String hintText;
 
   const AlumnoSelector({
     super.key,
     required this.alumnoRepository,
     required this.alumnoSeleccionado,
     required this.onAlumnoChanged,
+    this.hintText = 'Seleccionar alumno...',
   });
 
   @override
@@ -200,7 +202,7 @@ class _AlumnoSelectorState extends State<AlumnoSelector> {
         focusNode: _focusNode,
         onChanged: _onSearchChanged,
         decoration: InputDecoration(
-          hintText: 'Seleccionar alumno...',
+          hintText: widget.hintText,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,

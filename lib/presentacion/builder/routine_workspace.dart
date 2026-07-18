@@ -22,8 +22,8 @@ class RoutineWorkspace extends StatefulWidget {
 }
 
 class _RoutineWorkspaceState extends State<RoutineWorkspace> {
-  // Días expandidos — por defecto el primero está expandido
-  final Set<int> _expandedDays = {0};
+  // Día expandido — solo uno a la vez
+  int? _expandedDay = 0;
 
   @override
   void dispose() {
@@ -111,7 +111,8 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                 onPressed: () {
                   widget.controller.addDay();
                   final newIndex = widget.controller.dias.length - 1;
-                  setState(() => _expandedDays.add(newIndex));
+                  setState(() => _expandedDay = newIndex);
+                  widget.controller.selectDay(newIndex);
                 },
                 icon: const Icon(Icons.add, size: 14, color: AppColors.primary),
                 label: Text('Agregar día', style: AppTextStyles.titleMd),
@@ -156,7 +157,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
             itemCount: widget.controller.dias.length,
             itemBuilder: (context, dayIndex) {
               final dia = widget.controller.dias[dayIndex];
-              final isExpanded = _expandedDays.contains(dayIndex);
+              final isExpanded = _expandedDay == dayIndex;
 
               return RoutineDayAccordion(
                 key: ValueKey('day_$dayIndex'),
@@ -167,21 +168,15 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                 onToggle: () {
                   setState(() {
                     if (isExpanded) {
-                      _expandedDays.remove(dayIndex);
-                      // Si el día colapsado tenía el bloque activo,
-                      // seleccionar el último día que siga expandido.
+                      // Colapsar el día activo
+                      _expandedDay = null;
                       if (widget.controller.activeDayIndex == dayIndex) {
-                        if (_expandedDays.isEmpty) {
-                          widget.controller.deselectDay(); // deselecciona
-                        } else {
-                          final lastExpanded = _expandedDays.reduce(
-                            (a, b) => a > b ? a : b,
-                          );
-                          widget.controller.selectDay(lastExpanded);
-                        }
+                        widget.controller.deselectDay();
                       }
                     } else {
-                      _expandedDays.add(dayIndex);
+                      // Abrir este y cerrar el anterior automáticamente
+                      _expandedDay = dayIndex;
+                      widget.controller.selectDay(dayIndex);
                     }
                   });
                 },

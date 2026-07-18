@@ -14,6 +14,7 @@ import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_w
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/solicitud_rutina_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 
 class RutinasDashboardPage extends ConsumerStatefulWidget {
   const RutinasDashboardPage({super.key});
@@ -25,6 +26,7 @@ class RutinasDashboardPage extends ConsumerStatefulWidget {
 
 class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
   bool _isLoading = true;
+  bool _sidebarCollapsed = false;
   List<SolicitudRutina> _solicitudes = [];
   final List<SolicitudRutina> _recentlyCreatedSolicitudes = [];
   List<({Rutina rutina, Alumno alumno})> _rutinas = [];
@@ -126,144 +128,163 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
+      body: Row(
         children: [
-          TopBar(
-            onMenuPressed: () {},
-            pageTitle: 'Rutinas',
-            actionsCenter: [
-              SizedBox(
-                width: 320,
-                child: AlumnoSelector(
-                  alumnoRepository: ref.read(alumnoRepositoryProvider),
-                  alumnoSeleccionado: _alumnoFiltro,
-                  onAlumnoChanged: (alumno) {
-                    setState(() => _alumnoFiltro = alumno);
-                    if (alumno != null) {
-                      _filtrarPorAlumno(alumno);
-                    } else {
-                      _loadRutinas();
-                    }
-                  },
-                ),
-              ),
-            ],
-            actionsEnd: [
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final nuevaRutina = await context
-                      .push<({Rutina rutina, Alumno alumno})?>('/crear-rutina');
-                  if (nuevaRutina != null) {
-                    setState(() {
-                      _rutinas.insert(0, nuevaRutina);
-                      if (_rutinas.length > 10) {
-                        _rutinas.removeLast();
-                      }
-                    }); // 👈 agrega al inicio
-                  }
-                },
-                icon: const Icon(Icons.add, size: 16),
-                label: Text('Crear Rutina', style: AppTextStyles.buttonText),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  elevation: 0,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(AppRadius.md),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: 12,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  await SupabaseConfig.client.auth.signOut();
-                  if (context.mounted) context.go('/login');
-                },
-                child: const Text('Cerrar sesión'),
-              ),
-            ],
+          Sidebar(
+            currentRoute: '/',
+            isCollapsed: _sidebarCollapsed,
+            onCerrarSesion: () async {
+              await SupabaseConfig.client.auth.signOut();
+              if (mounted) context.go('/login');
+            },
+            onNavigate: (route) => context.go(route),
           ),
           Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 860),
-                        child: Column(
-                          children: [
-                            SolicitudesPanel(
-                              solicitudes: _solicitudes,
-                              onRegistrarSolicitud: _showRegistrarSolicitudForm,
-                              onResolverSolicitud: (solicitud) async {
-                                final resultado = await context.push(
-                                  '/crear-rutina',
-                                  extra: solicitud,
-                                );
-                                _loadRutinas();
-                                if (resultado != null) {
-                                  // 👇 elimina la solicitud de la lista local
-                                  _eliminarSolicitudLocal(solicitud);
-                                }
-                              },
-                              onEliminarSolicitud: (solicitud) async {
-                                final solicitudRepo = ref.read(
-                                  solicitudRutinaRepositoryProvider,
-                                );
-                                await solicitudRepo.deleteSolicitud(
-                                  solicitud.idSolicitud!,
-                                );
-                                _eliminarSolicitudLocal(solicitud);
-                              },
-                            ),
-                            const SizedBox(height: AppSpacing.lg),
-                            RutinasPanel(
-                              rutinas: _rutinas,
-                              onVerDetalle: (rutina) async {
-                                if (rutina.urlPdf != null) {
-                                  final uri = Uri.parse(rutina.urlPdf!);
-                                  if (await canLaunchUrl(uri)) {
-                                    await launchUrl(
-                                      uri,
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  }
-                                }
-                              },
-                              onEditarRutina: (rutina) async {
-                                debugPrint('Editar rutina: ${rutina.idRutina}');
-                                debugPrint('dias: ${rutina.dias}');
-                                final rutinaActualizada = await context
-                                    .push<({Rutina rutina, Alumno alumno})?>(
-                                      '/editar-rutina',
-                                      extra: rutina,
-                                    );
-                                if (rutinaActualizada != null) {
-                                  setState(() {
-                                    final index = _rutinas.indexWhere(
-                                      (r) =>
-                                          r.rutina.idRutina ==
-                                          rutinaActualizada.rutina.idRutina,
-                                    );
-                                    if (index != -1) {
-                                      _rutinas[index] =
-                                          rutinaActualizada; // 👈 actualiza en lugar
-                                    }
-                                  });
-                                }
-                              },
-                            ),
-                          ],
+            child: Column(
+              children: [
+                TopBar(
+                  onMenuPressed: () {},
+                  pageTitle: 'Rutinas',
+                  actionsCenter: [
+                    SizedBox(
+                      width: 320,
+                      child: AlumnoSelector(
+                        alumnoRepository: ref.read(alumnoRepositoryProvider),
+                        alumnoSeleccionado: _alumnoFiltro,
+                        hintText: 'Filtrar rutinas por alumno...',
+                        onAlumnoChanged: (alumno) {
+                          setState(() => _alumnoFiltro = alumno);
+                          if (alumno != null) {
+                            _filtrarPorAlumno(alumno);
+                          } else {
+                            _loadRutinas();
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                  actionsEnd: [
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final nuevaRutina = await context
+                            .push<({Rutina rutina, Alumno alumno})?>(
+                              '/crear-rutina',
+                            );
+                        if (nuevaRutina != null) {
+                          setState(() {
+                            _rutinas.insert(0, nuevaRutina);
+                            if (_rutinas.length > 10) {
+                              _rutinas.removeLast();
+                            }
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.add, size: 16),
+                      label: Text(
+                        'Crear Rutina',
+                        style: AppTextStyles.buttonText,
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.onPrimary,
+                        elevation: 0,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: 12,
                         ),
                       ),
                     ),
-                  ),
+                  ],
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.all(AppSpacing.lg),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 860),
+                              child: Column(
+                                children: [
+                                  SolicitudesPanel(
+                                    solicitudes: _solicitudes,
+                                    onRegistrarSolicitud:
+                                        _showRegistrarSolicitudForm,
+                                    onResolverSolicitud: (solicitud) async {
+                                      final resultado = await context.push(
+                                        '/crear-rutina',
+                                        extra: solicitud,
+                                      );
+                                      _loadRutinas();
+                                      if (resultado != null) {
+                                        _eliminarSolicitudLocal(solicitud);
+                                      }
+                                    },
+                                    onEliminarSolicitud: (solicitud) async {
+                                      final solicitudRepo = ref.read(
+                                        solicitudRutinaRepositoryProvider,
+                                      );
+                                      await solicitudRepo.deleteSolicitud(
+                                        solicitud.idSolicitud!,
+                                      );
+                                      _eliminarSolicitudLocal(solicitud);
+                                    },
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                  RutinasPanel(
+                                    rutinas: _rutinas,
+                                    onVerDetalle: (rutina) async {
+                                      if (rutina.urlPdf != null) {
+                                        final uri = Uri.parse(rutina.urlPdf!);
+                                        if (await canLaunchUrl(uri)) {
+                                          await launchUrl(
+                                            uri,
+                                            mode:
+                                                LaunchMode.externalApplication,
+                                          );
+                                        }
+                                      }
+                                    },
+                                    onEditarRutina: (rutina) async {
+                                      debugPrint(
+                                        'Editar rutina: ${rutina.idRutina}',
+                                      );
+                                      debugPrint('dias: ${rutina.dias}');
+                                      final rutinaActualizada = await context
+                                          .push<
+                                            ({Rutina rutina, Alumno alumno})?
+                                          >('/editar-rutina', extra: rutina);
+                                      if (rutinaActualizada != null) {
+                                        setState(() {
+                                          final index = _rutinas.indexWhere(
+                                            (r) =>
+                                                r.rutina.idRutina ==
+                                                rutinaActualizada
+                                                    .rutina
+                                                    .idRutina,
+                                          );
+                                          if (index != -1) {
+                                            _rutinas[index] = rutinaActualizada;
+                                          }
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

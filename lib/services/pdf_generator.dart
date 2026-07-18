@@ -155,45 +155,116 @@ class PdfGenerator {
     pw.Font boldFont,
     pw.Font blockSeparatorFont,
   ) {
-    return pw.TableHelper.fromTextArray(
-      headerStyle: pw.TextStyle(font: boldFont, color: PdfColors.white),
-      cellStyle: pw.TextStyle(font: font),
-      headerDecoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
-      cellDecoration: (_, _, rowNum) {
-        final row = _rowForTableIndex(filas, rowNum);
-        return pw.BoxDecoration(color: _backgroundColorForRow(row?.type));
-      },
-      textStyleBuilder: (_, _, rowNum) {
-        final row = _rowForTableIndex(filas, rowNum);
-        if (row?.type == _ExerciseTableRowType.dayHeader) {
-          return pw.TextStyle(
-            font: boldFont,
-            fontSize: 13,
-            color: style.dayHeaderTextColor,
+    final columnWidths = {
+      0: const pw.FlexColumnWidth(3),
+      1: const pw.FlexColumnWidth(1),
+      2: const pw.FlexColumnWidth(1),
+      3: const pw.FlexColumnWidth(1),
+      4: const pw.FlexColumnWidth(2),
+    };
+
+    return pw.Table(
+      columnWidths: columnWidths,
+      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.5),
+      children: [
+        // Header
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.blueGrey800),
+          children: ['Ejercicio', 'Series', 'Reps', 'Peso', 'Músculo']
+              .map(
+                (h) => pw.Padding(
+                  padding: const pw.EdgeInsets.all(6),
+                  child: pw.Text(
+                    h,
+                    style: pw.TextStyle(
+                      font: boldFont,
+                      color: PdfColors.white,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+
+        // Filas
+        ...filas.asMap().entries.map((entry) {
+          final index = entry.key;
+          final fila = entry.value;
+          final isNormal =
+              fila.type == _ExerciseTableRowType.normal ||
+              fila.type == _ExerciseTableRowType.superserie;
+
+          pw.TextStyle textStyle;
+          PdfColor? bgColor;
+
+          if (fila.type == _ExerciseTableRowType.blockSeparator) {
+            textStyle = pw.TextStyle(
+              font: blockSeparatorFont,
+              fontSize: style.blockSeparatorFontSize,
+              color: style.blockSeparatorTextColor,
+            );
+            bgColor = style.blockSeparatorBackgroundColor;
+          } else if (fila.type == _ExerciseTableRowType.superserie) {
+            textStyle = pw.TextStyle(
+              font: font,
+              fontSize: 10,
+              color: style.superserieTextColor,
+            );
+            bgColor = style.superserieBackgroundColor;
+          } else {
+            textStyle = pw.TextStyle(font: font, fontSize: 10);
+          }
+
+          return pw.TableRow(
+            decoration: bgColor != null
+                ? pw.BoxDecoration(color: bgColor)
+                : null,
+            children: [
+              // Columna 0 — Ejercicio
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Text(fila.cells[0], style: textStyle),
+              ),
+              // Columna 1 — Series
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Center(
+                  child: pw.Text(fila.cells[1], style: textStyle),
+                ),
+              ),
+              // Columna 2 — Reps
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Center(
+                  child: pw.Text(fila.cells[2], style: textStyle),
+                ),
+              ),
+              // Columna 3 — Peso (editable solo en filas de ejercicios)
+              isNormal
+                  ? pw.Padding(
+                      padding: const pw.EdgeInsets.all(4),
+                      child: pw.TextField(
+                        name: 'peso_$index',
+                        textStyle: pw.TextStyle(font: font, fontSize: 10),
+                        // 👇 sin border — el borde lo da la tabla
+                      ),
+                    )
+                  : pw.Padding(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text('', style: textStyle),
+                    ),
+              // Columna 4 — Músculo
+              pw.Padding(
+                padding: const pw.EdgeInsets.all(6),
+                child: pw.Center(
+                  child: pw.Text(fila.cells[4], style: textStyle),
+                ),
+              ),
+            ],
           );
-        }
-        if (row?.type == _ExerciseTableRowType.blockSeparator) {
-          return pw.TextStyle(
-            font: blockSeparatorFont,
-            fontSize: style.blockSeparatorFontSize,
-            color: style.blockSeparatorTextColor,
-          );
-        }
-        if (row?.type == _ExerciseTableRowType.superserie) {
-          return pw.TextStyle(font: font, color: style.superserieTextColor);
-        }
-        return pw.TextStyle(font: font);
-      },
-      cellHeight: 36,
-      cellAlignments: {
-        0: pw.Alignment.centerLeft,
-        1: pw.Alignment.center,
-        2: pw.Alignment.center,
-        3: pw.Alignment.center,
-        4: pw.Alignment.center,
-      },
-      headers: ['Ejercicio', 'Series', 'Repeticiones', 'Peso', 'Músculo'],
-      data: filas.map((fila) => fila.cells).toList(growable: false),
+        }),
+      ],
     );
   }
 

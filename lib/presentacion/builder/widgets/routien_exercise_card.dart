@@ -187,14 +187,18 @@ class RoutineExerciseCard extends StatelessWidget {
                 tooltip: 'Mover a otro bloque',
                 icon: Icon(
                   Icons.swap_horiz_rounded,
-                  color: AppColors.onSurfaceVariant.withOpacity(0.75),
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.75),
                   size: 20,
                 ),
                 style: IconButton.styleFrom(
                   padding: const EdgeInsets.all(7),
                   minimumSize: const Size(36, 36),
-                  hoverColor: AppColors.onSurfaceVariant.withOpacity(0.12),
-                  highlightColor: AppColors.onSurfaceVariant.withOpacity(0.2),
+                  hoverColor: AppColors.onSurfaceVariant.withValues(
+                    alpha: 0.12,
+                  ),
+                  highlightColor: AppColors.onSurfaceVariant.withValues(
+                    alpha: 0.2,
+                  ),
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(AppRadius.sm),
                   ),
@@ -224,13 +228,13 @@ class RoutineExerciseCard extends StatelessWidget {
               builder: (btnContext) => IconButton(
                 icon: const Icon(Icons.delete_rounded),
                 iconSize: 20,
-                color: AppColors.error.withOpacity(0.75),
+                color: AppColors.error.withValues(alpha: 0.75),
                 tooltip: 'Eliminar ejercicio',
                 style: IconButton.styleFrom(
                   padding: const EdgeInsets.all(7),
                   minimumSize: const Size(36, 36),
-                  hoverColor: AppColors.error.withOpacity(0.15),
-                  highlightColor: AppColors.error.withOpacity(0.25),
+                  hoverColor: AppColors.error.withValues(alpha: 0.15),
+                  highlightColor: AppColors.error.withValues(alpha: 0.25),
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(AppRadius.sm),
                   ),
@@ -243,11 +247,7 @@ class RoutineExerciseCard extends StatelessWidget {
                         '¿Estás seguro de que querés eliminar este ejercicio?',
                   );
                   if (!confirmed) return;
-                  controller.removeExercise(
-                    blockIndex,
-                    exerciseIndex,
-                  );
-
+                  controller.removeExercise(blockIndex, exerciseIndex);
                 },
               ),
             ),

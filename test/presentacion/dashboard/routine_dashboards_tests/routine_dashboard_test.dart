@@ -44,7 +44,9 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      // Use pump(duration) instead of pumpAndSettle() to avoid the infinite
+      // semantics loop caused by CompositedTransformTarget in AlumnoSelector.
+      await tester.pump(const Duration(seconds: 1));
 
       // Assert
       expect(find.byType(SolicitudesPanel), findsOneWidget);
@@ -57,7 +59,9 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      // Use pump(duration) instead of pumpAndSettle() to avoid the infinite
+      // semantics loop caused by CompositedTransformTarget in AlumnoSelector.
+      await tester.pump(const Duration(seconds: 1));
 
       // Assert
       expect(find.byType(RutinasPanel), findsOneWidget);
@@ -70,10 +74,13 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      // Use pump(duration) instead of pumpAndSettle() to avoid the infinite
+      // semantics loop caused by CompositedTransformTarget in AlumnoSelector.
+      await tester.pump(const Duration(seconds: 1));
 
       // Assert
-      expect(find.text('Rutinas'), findsOneWidget);
+      // 'Rutinas' aparece en el ítem del Sidebar y en el título del TopBar
+      expect(find.text('Rutinas'), findsWidgets);
 
       addTearDown(tester.view.resetPhysicalSize);
     });
@@ -81,20 +88,32 @@ void main() {
     testWidgets('debe abrir el formulario al registrar una solicitud', (
       tester,
     ) async {
-      // Arrange + Act
+      // 1. Configurar tamaño (SIEMPRE primero)
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
+
+      // 2. Registrar el reset de inmediato por si el test falla
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Arrange
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
+      // Act
       await tester.tap(find.text('Registrar solicitud'));
-      await tester.pumpAndSettle();
+
+      // 3. CAMBIO CLAVE: En lugar de pumpAndSettle, usamos un pump repetido o con duración
+      // Esto evita que si hay un loader, animación o dropdown abierto que mantenga
+      // tareas pendientes en el Scheduler, el test crashee.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       // Assert
       expect(find.byType(AddSolicitudRutinaForm), findsOneWidget);
       expect(find.text('Nueva Solicitud de Rutina'), findsOneWidget);
-
-      addTearDown(tester.view.resetPhysicalSize);
     });
 
     testWidgets('debe actualizar el contador luego de guardar una solicitud', (
@@ -103,12 +122,14 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      // Use pump(duration) instead of pumpAndSettle() to avoid the infinite
+      // semantics loop caused by CompositedTransformTarget in AlumnoSelector.
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('2 Rutinas Pendientes'), findsOneWidget);
 
       await tester.tap(find.text('Registrar solicitud'));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
 
       final alumnoField = find
           .descendant(
@@ -118,14 +139,14 @@ void main() {
           .first;
 
       await tester.enterText(alumnoField, 'Juan');
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pumpAndSettle();
+      // Wait for debounce (300ms) + a bit more so the overlay appears.
+      await tester.pump(const Duration(milliseconds: 400));
 
       // 👇 Juan Pérez se muestra en un Overlay (fuera del subárbol del formulario).
       // Pueden existir 2 instancias (overlay + chip de selección), tomamos .last
       // que corresponde al ítem del overlay insertado al final del árbol.
       await tester.tap(find.text('Juan Pérez').last);
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
         find.byKey(const Key('solicitud_rutina_name_field')),
@@ -134,7 +155,7 @@ void main() {
       await tester.pump();
 
       await tester.tap(find.byKey(const Key('guardar_solicitud_button')));
-      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('3 Rutinas Pendientes'), findsOneWidget);
 

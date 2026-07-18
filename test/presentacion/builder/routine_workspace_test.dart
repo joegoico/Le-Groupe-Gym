@@ -252,7 +252,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       // Act
-      await tester.tap(find.byIcon(Icons.swap_horiz).first);
+      await tester.tap(find.byIcon(Icons.swap_horiz_rounded).first);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Bloque B').last);
       await tester.pumpAndSettle();
@@ -344,8 +344,8 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — presionar ✕ del primer ejercicio
-          await tester.tap(find.byIcon(Icons.close).first);
+          // Act — presionar eliminar del primer ejercicio
+          await tester.tap(find.byIcon(Icons.delete_rounded).first);
           await tester.pumpAndSettle();
 
           // Assert — debe aparecer diálogo de confirmación
@@ -377,7 +377,7 @@ void main() {
           await tester.pumpWidget(createWidgetUnderTest());
 
           // Act
-          await tester.tap(find.byIcon(Icons.close).first);
+          await tester.tap(find.byIcon(Icons.delete_rounded).first);
           await tester.pumpAndSettle();
           await tester.tap(find.text('Cancelar'));
           await tester.pumpAndSettle();
@@ -409,7 +409,7 @@ void main() {
           await tester.pumpWidget(createWidgetUnderTest());
 
           // Act
-          await tester.tap(find.byIcon(Icons.close).first);
+          await tester.tap(find.byIcon(Icons.delete_rounded).first);
           await tester.pumpAndSettle();
           await tester.tap(find.text('Eliminar'));
           await tester.pumpAndSettle();
@@ -435,8 +435,9 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — delete_outline icons: 0=Limpiar Todo, 1=Día, 2=Bloque1, 3=Bloque2
-          final deleteButtons = find.byIcon(Icons.delete_outline);
+          // Act — los botones delete_rounded: 0=Día, 1=Ejercicio(Bloque1), 2=Bloque1, 3=Bloque2
+          // Usamos el de Bloque1 (index 2)
+          final deleteButtons = find.byIcon(Icons.delete_rounded);
           await tester.tap(deleteButtons.at(2));
           await tester.pumpAndSettle();
 
@@ -461,8 +462,8 @@ void main() {
 
         await tester.pumpWidget(createWidgetUnderTest());
 
-        // Act — delete_outline icons: 0=Limpiar Todo, 1=Día, 2=Bloque1, 3=Bloque2
-        final deleteButtons = find.byIcon(Icons.delete_outline);
+        // Act — los botones delete_rounded: 0=Día, 1=Ejercicio(Bloque1), 2=Bloque1, 3=Bloque2
+        final deleteButtons = find.byIcon(Icons.delete_rounded);
         await tester.tap(deleteButtons.at(2));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
@@ -486,8 +487,8 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — delete_outline icons: 0=Limpiar Todo, 1=Día1, 2=Día2
-          await tester.tap(find.byIcon(Icons.delete_outline).at(1));
+          // Act — delete_rounded icons cuando hay 2 días: 0=Día1, 1=Día2
+          await tester.tap(find.byIcon(Icons.delete_rounded).first);
           await tester.pumpAndSettle();
 
           // Assert
@@ -509,8 +510,8 @@ void main() {
 
         await tester.pumpWidget(createWidgetUnderTest());
 
-        // Act — delete_outline icons: 0=Limpiar Todo, 1=Día1, 2=Día2
-        await tester.tap(find.byIcon(Icons.delete_outline).at(1));
+        // Act — delete_rounded icons cuando hay 2 días: 0=Día1, 1=Día2
+        await tester.tap(find.byIcon(Icons.delete_rounded).first);
         await tester.pumpAndSettle();
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
@@ -607,15 +608,17 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — tap en el ícono de editar nombre del día
-          await tester.tap(find.byIcon(Icons.edit_outlined).first);
+          // Act — tap en el ícono de editar nombre del día (edit_rounded del InlineEditableText)
+          await tester.tap(find.byIcon(Icons.edit_rounded).first);
           await tester.pumpAndSettle();
 
           // Assert — debe aparecer el TextField inline (el de notas es el último)
           // Se espera exactamente 2: el inline + el de notas generales
           expect(find.byType(TextField), findsNWidgets(2));
           // El primero (inline) debe tener el texto 'Día 1'
-          final inlineField = tester.widget<TextField>(find.byType(TextField).first);
+          final inlineField = tester.widget<TextField>(
+            find.byType(TextField).first,
+          );
           expect(inlineField.controller?.text, 'Día 1');
 
           addTearDown(tester.view.resetPhysicalSize);
@@ -633,11 +636,14 @@ void main() {
           await tester.pumpWidget(createWidgetUnderTest());
 
           // Act — entrar en modo edición
-          await tester.tap(find.byIcon(Icons.edit_outlined).first);
+          await tester.tap(find.byIcon(Icons.edit_rounded).first);
           await tester.pumpAndSettle();
 
           // Escribir nuevo nombre en el TextField inline (el primero)
-          await tester.enterText(find.byType(TextField).first, 'Pecho y Tríceps');
+          await tester.enterText(
+            find.byType(TextField).first,
+            'Pecho y Tríceps',
+          );
           await tester.testTextInput.receiveAction(TextInputAction.done);
           await tester.pumpAndSettle();
 
@@ -660,15 +666,16 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — el primer edit_outlined es del día, el segundo del bloque
-          final editIcons = find.byIcon(Icons.edit_outlined);
-          await tester.tap(editIcons.at(1));
+          // Act — el ícono de editar del bloque es edit_rounded (el del día es el primero, el del bloque es el último)
+          await tester.tap(find.byIcon(Icons.edit_rounded).last);
           await tester.pumpAndSettle();
 
           // Assert — el inline + el de notas = 2 TextFields
           expect(find.byType(TextField), findsNWidgets(2));
           // El primero (inline) debe tener el texto 'Bloque 1'
-          final inlineField = tester.widget<TextField>(find.byType(TextField).first);
+          final inlineField = tester.widget<TextField>(
+            find.byType(TextField).first,
+          );
           expect(inlineField.controller?.text, 'Bloque 1');
 
           addTearDown(tester.view.resetPhysicalSize);
@@ -686,9 +693,8 @@ void main() {
 
           await tester.pumpWidget(createWidgetUnderTest());
 
-          // Act — tap en el ícono de editar del bloque (segundo edit_outlined)
-          final editIcons = find.byIcon(Icons.edit_outlined);
-          await tester.tap(editIcons.at(1));
+          // Act — el ícono de editar del bloque es edit_rounded (el del día es el primero, el del bloque es el último)
+          await tester.tap(find.byIcon(Icons.edit_rounded).last);
           await tester.pumpAndSettle();
 
           // Escribir nuevo nombre en el TextField inline (el primero)

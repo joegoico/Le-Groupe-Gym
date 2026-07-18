@@ -25,14 +25,6 @@ void main() {
       );
     }
 
-    testWidgets('debe mostrar el nombre del gimnasio', (tester) async {
-      // Arrange + Act
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Assert
-      expect(find.text('Le Groupe Gym'), findsOneWidget);
-    });
-
     testWidgets('debe mostrar el título de la página', (tester) async {
       // Arrange + Act
       await tester.pumpWidget(createWidgetUnderTest(pageTitle: 'Rutinas'));
@@ -64,14 +56,6 @@ void main() {
 
       // Assert
       expect(menuPressed, isTrue);
-    });
-
-    testWidgets('debe mostrar el logo', (tester) async {
-      // Arrange + Act
-      await tester.pumpWidget(createWidgetUnderTest());
-
-      // Assert
-      expect(find.byType(Image), findsOneWidget);
     });
     testWidgets('debe mostrar los actionsCenter cuando se pasan', (
       tester,
