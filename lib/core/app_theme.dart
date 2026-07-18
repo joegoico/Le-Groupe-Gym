@@ -32,6 +32,13 @@ class AppColors {
   // Status
   static const error = Color(0xFFFFB4AB);
   static const errorContainer = Color(0xFF93000A);
+
+  static const success = Color(0xFF219653);
+  static const successContainer = Color(0xFF7ECC3B);
+  static const successContent = Color(0xFF0D1F00);
+
+  static const warningLow = Color(0xFFFFD966);
+  static const warningLowContent = Color(0xFF332900);
 }
 
 class AppRadius {
@@ -63,6 +70,11 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.onSurface,
   );
+  static TextStyle get titleCards => GoogleFonts.inter(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: AppColors.primary,
+  );
 
   static TextStyle get buttonText => GoogleFonts.inter(
     fontSize: 15,
@@ -80,6 +92,11 @@ class AppTextStyles {
   static TextStyle get subtittles => GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w200,
+    color: AppColors.onSurface,
+  );
+  static TextStyle get subtittlesBold => GoogleFonts.inter(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
     color: AppColors.onSurface,
   );
 }

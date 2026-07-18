@@ -1,7 +1,6 @@
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
-import 'package:le_groupe_gym/data/models/paginated_exercise_model.dart';
 
 class MockExerciseRepository implements ExerciseRepository {
   final List<Ejercicio> _mockData = [
@@ -73,45 +72,5 @@ class MockExerciseRepository implements ExerciseRepository {
     required List<int> categoriaIds,
   }) async {
     return 99;
-  }
-
-  @override
-  Future<PaginatedExercises> getExercisesPaginated({
-    required int page,
-    int limit = 15,
-    String? searchQuery,
-    List<String>? gruposMusculares,
-    List<String>? subgrupos,
-  }) async {
-    var filtered = List<Ejercicio>.from(_mockData);
-
-    if (searchQuery != null && searchQuery.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (e) => e.nombre.toLowerCase().contains(searchQuery.toLowerCase()),
-          )
-          .toList();
-    }
-    if (gruposMusculares != null && gruposMusculares.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (e) => e.categorias.any(
-              (c) =>
-                  c.tipo == 'grupo_muscular' &&
-                  gruposMusculares.contains(c.nombre),
-            ),
-          )
-          .toList();
-    }
-
-    final offset = page * limit;
-    final pageItems = filtered.skip(offset).take(limit + 1).toList();
-    final hayMas = pageItems.length > limit;
-
-    return PaginatedExercises(
-      ejercicios: hayMas ? pageItems.take(limit).toList() : pageItems,
-      hayMas: hayMas,
-      page: page,
-    );
   }
 }

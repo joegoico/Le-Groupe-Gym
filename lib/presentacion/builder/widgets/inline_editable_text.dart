@@ -113,13 +113,20 @@ class _InlineEditableTextState extends State<InlineEditableText> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(child: Text(widget.text, style: widget.style)),
-        const SizedBox(width: 4),
-        GestureDetector(
-          onTap: _startEditing,
-          child: Icon(
-            Icons.edit_outlined,
-            size: 14,
-            color: AppColors.onSurfaceVariant.withOpacity(0.4),
+        IconButton(
+          onPressed: _startEditing,
+          tooltip: 'Editar nombre',
+          icon: const Icon(Icons.edit_rounded),
+          iconSize: 17,
+          color: AppColors.onSurfaceVariant.withOpacity(0.7),
+          style: IconButton.styleFrom(
+            padding: const EdgeInsets.all(6),
+            minimumSize: const Size(32, 32),
+            hoverColor: AppColors.onSurfaceVariant.withOpacity(0.12),
+            highlightColor: AppColors.onSurfaceVariant.withOpacity(0.2),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(AppRadius.sm),
+            ),
           ),
         ),
       ],
