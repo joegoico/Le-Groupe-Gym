@@ -32,21 +32,26 @@ class RoutineDayAccordion extends StatelessWidget {
       selector: () {
         if (dayIndex >= controller.dias.length) return "";
         final currentDia = controller.dias[dayIndex];
-        return "${currentDia.nombre}_${currentDia.bloques.length}_${currentDia.bloques.fold(0, (sum, b) => sum + b.ejercicios.length)}_${isExpanded}";
+        final isActive = controller.activeDayIndex == dayIndex;
+        return "${currentDia.nombre}_${currentDia.bloques.length}_${currentDia.bloques.fold(0, (sum, b) => sum + b.ejercicios.length)}_${isExpanded}_$isActive";
       },
       builder: (context, _, __) {
         if (dayIndex >= controller.dias.length) return const SizedBox.shrink();
         final currentDia = controller.dias[dayIndex];
+        final isActiveDay = controller.activeDayIndex == dayIndex;
 
         return Container(
           margin: const EdgeInsets.only(bottom: AppSpacing.md),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
+            color: isExpanded
+                ? AppColors.surfaceContainerHigh
+                : AppColors.surfaceContainerLow,
             borderRadius: const BorderRadius.all(AppRadius.lg),
             border: Border.all(
               color: isExpanded
-                  ? AppColors.primary.withValues(alpha: 0.3)
+                  ? AppColors.primary.withValues(alpha: 0.6)
                   : Colors.white.withValues(alpha: 0.05),
+              width: isExpanded ? 2 : 1,
             ),
           ),
           child: Column(
@@ -69,8 +74,10 @@ class RoutineDayAccordion extends StatelessWidget {
                         isExpanded
                             ? Icons.keyboard_arrow_down
                             : Icons.keyboard_arrow_right,
-                        color: AppColors.primary,
-                        size: 20,
+                        color: isExpanded
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant,
+                        size: isExpanded ? 22 : 20,
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -81,20 +88,67 @@ class RoutineDayAccordion extends StatelessWidget {
                               controller.renameDay(dayIndex, newName),
                         ),
                       ),
-                      Text(
-                        '${currentDia.bloques.fold(0, (sum, b) => sum + b.ejercicios.length)} ejercicios',
-                        style: AppTextStyles.titleMd,
+                      // Badge día activo
+                      if (isActiveDay) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.15),
+                            borderRadius: const BorderRadius.all(AppRadius.full),
+                            border: Border.all(
+                              color: AppColors.primary.withOpacity(0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 14,
+                                color: AppColors.primary,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                'ACTIVO',
+                                style: AppTextStyles.labelCaps.copyWith(
+                                  color: AppColors.primary,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                      ],
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerHighest,
+                          borderRadius: const BorderRadius.all(AppRadius.full),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.08),
+                          ),
+                        ),
+                        child: Text(
+                          '${currentDia.bloques.fold(0, (sum, b) => sum + b.ejercicios.length)} ejercicios',
+                          style: AppTextStyles.labelCaps.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                            fontSize: 13,
+                            letterSpacing: 0.03,
+                          ),
+                        ),
                       ),
                       if (controller.dias.length > 1)
                         Builder(
                           builder: (btnContext) => IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: AppColors.onSurfaceVariant.withOpacity(
-                                0.5,
-                              ),
-                              size: 16,
-                            ),
                             onPressed: () async {
                               final confirmed = await showConfirmDialog(
                                 btnContext,
@@ -109,8 +163,19 @@ class RoutineDayAccordion extends StatelessWidget {
                                   'No se puede eliminar el único día.',
                                 );
                             },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            tooltip: 'Eliminar día',
+                            icon: const Icon(Icons.delete_rounded),
+                            iconSize: 20,
+                            color: AppColors.error.withOpacity(0.75),
+                            style: IconButton.styleFrom(
+                              padding: const EdgeInsets.all(7),
+                              minimumSize: const Size(36, 36),
+                              hoverColor: AppColors.error.withOpacity(0.15),
+                              highlightColor: AppColors.error.withOpacity(0.25),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.sm),
+                              ),
+                            ),
                           ),
                         ),
                     ],

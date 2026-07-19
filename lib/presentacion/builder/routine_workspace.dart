@@ -22,8 +22,8 @@ class RoutineWorkspace extends StatefulWidget {
 }
 
 class _RoutineWorkspaceState extends State<RoutineWorkspace> {
-  // Días expandidos — por defecto el primero está expandido
-  final Set<int> _expandedDays = {0};
+  // Día expandido — solo uno a la vez
+  int? _expandedDay = 0;
 
   @override
   void dispose() {
@@ -111,7 +111,8 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                 onPressed: () {
                   widget.controller.addDay();
                   final newIndex = widget.controller.dias.length - 1;
-                  setState(() => _expandedDays.add(newIndex));
+                  setState(() => _expandedDay = newIndex);
+                  widget.controller.selectDay(newIndex);
                 },
                 icon: const Icon(Icons.add, size: 14, color: AppColors.primary),
                 label: Text('Agregar día', style: AppTextStyles.titleMd),
@@ -156,7 +157,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
             itemCount: widget.controller.dias.length,
             itemBuilder: (context, dayIndex) {
               final dia = widget.controller.dias[dayIndex];
-              final isExpanded = _expandedDays.contains(dayIndex);
+              final isExpanded = _expandedDay == dayIndex;
 
               return RoutineDayAccordion(
                 key: ValueKey('day_$dayIndex'),
@@ -167,21 +168,15 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                 onToggle: () {
                   setState(() {
                     if (isExpanded) {
-                      _expandedDays.remove(dayIndex);
-                      // Si el día colapsado tenía el bloque activo,
-                      // seleccionar el último día que siga expandido.
+                      // Colapsar el día activo
+                      _expandedDay = null;
                       if (widget.controller.activeDayIndex == dayIndex) {
-                        if (_expandedDays.isEmpty) {
-                          widget.controller.deselectDay(); // deselecciona
-                        } else {
-                          final lastExpanded = _expandedDays.reduce(
-                            (a, b) => a > b ? a : b,
-                          );
-                          widget.controller.selectDay(lastExpanded);
-                        }
+                        widget.controller.deselectDay();
                       }
                     } else {
-                      _expandedDays.add(dayIndex);
+                      // Abrir este y cerrar el anterior automáticamente
+                      _expandedDay = dayIndex;
+                      widget.controller.selectDay(dayIndex);
                     }
                   });
                 },
@@ -193,36 +188,56 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
         const SizedBox(height: AppSpacing.lg),
 
         // Campo de notas generales
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceContainerHigh,
+            borderRadius: const BorderRadius.all(AppRadius.lg),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.07),
+            ),
+          ),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('NOTAS GENERALES', style: AppTextStyles.labelCaps),
+              Row(
+                children: [
+                  Icon(
+                    Icons.notes_rounded,
+                    size: 16,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text('NOTAS GENERALES', style: AppTextStyles.labelCaps),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               TextField(
                 key: const Key('notas_generales_field'),
                 controller: widget.notasController,
-                maxLines: 3,
+                maxLines: 4,
                 style: AppTextStyles.subtittles,
                 decoration: InputDecoration(
                   hintText:
                       'Agregá notas o indicaciones generales para el alumno...',
                   hintStyle: AppTextStyles.subtittles.copyWith(
-                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                    color: AppColors.onSurfaceVariant.withValues(alpha: 0.4),
                   ),
                   filled: true,
-                  fillColor: AppColors.surfaceContainerLow,
+                  fillColor: AppColors.surfaceContainerHighest,
                   contentPadding: const EdgeInsets.all(AppSpacing.md),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(AppRadius.md),
                     borderSide: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.08),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(AppRadius.md),
-                    borderSide: const BorderSide(color: AppColors.primary),
+                    borderSide: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),

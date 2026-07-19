@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/app_snackbar.dart';
 import '../../data/models/exercise_model.dart';
 import '../../data/models/alumno_model.dart';
 import '../builder/exercise_sidebar.dart';
@@ -253,16 +254,11 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error al guardar: $e',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: AppColors.error,
-              ),
-            ),
-            backgroundColor: AppColors.errorContainer,
-          ),
+        AppSnackbar.show(
+          context,
+          message: 'Error al guardar: $e',
+          type: SnackbarType.error,
+          bottomMargin: 120,
         );
       }
     } finally {
@@ -541,68 +537,27 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                           null;
 
                                   if (sinDia || sinBloque) {
-                                    if (!mounted) return;
                                     ScaffoldMessenger.of(context)
-                                      ..clearSnackBars()
-                                      ..showSnackBar(
-                                        SnackBar(
-                                          content: Row(
-                                            children: [
-                                              const Icon(
-                                                Icons.info_outline_rounded,
-                                                size: 16,
-                                                color: AppColors.warningLow,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                sinDia
-                                                    ? 'Seleccioná un día y un bloque antes de agregar un ejercicio.'
-                                                    : 'Seleccioná un bloque antes de agregar un ejercicio.',
-                                                style: AppTextStyles
-                                                    .subtittlesBold
-                                                    .copyWith(
-                                                      fontSize: 13,
-                                                      color:
-                                                          AppColors.warningLow,
-                                                    ),
-                                              ),
-                                            ],
-                                          ),
-                                          backgroundColor:
-                                              AppColors.warningLowContent,
-                                          behavior: SnackBarBehavior.floating,
-                                          duration: const Duration(seconds: 3),
-                                          shape: const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.all(
-                                              AppRadius.md,
-                                            ),
-                                          ),
-                                        ),
-                                      );
+                                        .clearSnackBars();
+                                    AppSnackbar.show(
+                                      context,
+                                      message: sinDia
+                                          ? 'Seleccioná un día y un bloque antes de agregar un ejercicio.'
+                                          : 'Seleccioná un bloque antes de agregar un ejercicio.',
+                                      type: SnackbarType.warning,
+                                      bottomMargin: 120,
+                                    );
                                     return;
                                   }
 
                                   final agregado = _routineController
                                       .handleExerciseFromSidebar(ejercicio);
                                   if (!agregado && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Ese ejercicio ya está en el bloque activo.',
-                                          style: AppTextStyles.subtittlesBold
-                                              .copyWith(
-                                                color: AppColors.onSurface,
-                                              ),
-                                        ),
-                                        backgroundColor:
-                                            AppColors.surfaceContainerHighest,
-                                        behavior: SnackBarBehavior.floating,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.all(
-                                            AppRadius.md,
-                                          ),
-                                        ),
-                                      ),
+                                    AppSnackbar.show(
+                                      context,
+                                      message: 'Ese ejercicio ya está en el bloque activo.',
+                                      type: SnackbarType.warning,
+                                      bottomMargin: 120,
                                     );
                                   }
                                 },
@@ -617,22 +572,11 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                               notasController: _notasController,
                               onShowMessage: (msg) {
                                 if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      msg,
-                                      style: AppTextStyles.subtittlesBold
-                                          .copyWith(color: AppColors.onSurface),
-                                    ),
-                                    backgroundColor:
-                                        AppColors.surfaceContainerHighest,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(
-                                        AppRadius.md,
-                                      ),
-                                    ),
-                                  ),
+                                AppSnackbar.show(
+                                  context,
+                                  message: msg,
+                                  type: SnackbarType.info,
+                                  bottomMargin: 120,
                                 );
                               },
                             ),

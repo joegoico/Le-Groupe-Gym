@@ -218,7 +218,6 @@ class RoutineBuilderController extends ChangeNotifier {
     final dia = _diaActivo;
     if (dia == null) return false;
     if (!_isValidExerciseIndex(blockIndex, exerciseIndex)) return false;
-    if (dia.bloques[blockIndex].ejercicios.length <= 1) return false;
     dia.bloques[blockIndex].ejercicios.removeAt(exerciseIndex);
     _syncIndicesAfterExerciseRemoved(blockIndex, exerciseIndex);
     notifyListeners();

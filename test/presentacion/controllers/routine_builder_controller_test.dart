@@ -72,7 +72,7 @@ void main() {
       expect(controller.bloques.first.ejercicios.first.series, 4);
     });
 
-    test('no debe permitir eliminar el único ejercicio de un bloque', () {
+    test('debe permitir eliminar el único ejercicio de un bloque (queda vacío)', () {
       // Arrange
       controller.addBlock();
       controller.addExercise(ejercicioMock1);
@@ -81,8 +81,8 @@ void main() {
       final ok = controller.removeExercise(0, 0);
 
       // Assert
-      expect(ok, isFalse);
-      expect(controller.bloques.first.ejercicios.length, 1);
+      expect(ok, isTrue);
+      expect(controller.bloques.first.ejercicios, isEmpty);
     });
 
     test(

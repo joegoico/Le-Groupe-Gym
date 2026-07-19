@@ -60,16 +60,21 @@ class RoutineBlockSection extends StatelessWidget {
             controller.activeDayIndex == dayIndex;
         final canDeleteBlock = controller.bloques.length > 1;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () => controller.selectBlock(dayIndex, blockIndex),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.lg),
           decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
+            color: isActive
+                ? AppColors.surfaceContainerHigh
+                : AppColors.surfaceContainerLow,
             borderRadius: const BorderRadius.all(AppRadius.lg),
             border: Border.all(
               color: isActive
-                  ? AppColors.primary.withOpacity(0.4)
+                  ? AppColors.primary.withOpacity(0.75)
                   : Colors.white.withOpacity(0.05),
-              width: 1,
+              width: isActive ? 2 : 1,
             ),
           ),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
@@ -88,13 +93,22 @@ class RoutineBlockSection extends StatelessWidget {
                   child: Row(
                     children: [
                       Container(
-                        width: 6,
-                        height: 6,
+                        width: isActive ? 10 : 6,
+                        height: isActive ? 10 : 6,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isActive
                               ? AppColors.primary
                               : AppColors.onSurfaceVariant.withOpacity(0.3),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.primary.withOpacity(0.5),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -109,27 +123,26 @@ class RoutineBlockSection extends StatelessWidget {
                       if (isActive)
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
+                            horizontal: 10,
+                            vertical: 3,
                           ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: const BorderRadius.all(
-                              AppRadius.full,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.all(AppRadius.full),
+                          ),
+                          child: Text(
+                            'ACTIVO',
+                            style: AppTextStyles.labelCaps.copyWith(
+                              color: AppColors.onPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10,
+                              letterSpacing: 0.08,
                             ),
                           ),
-                          child: Text('activo', style: AppTextStyles.labelCaps),
                         ),
                       if (canDeleteBlock)
                         Builder(
                           builder: (btnContext) => IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: AppColors.onSurfaceVariant.withOpacity(
-                                0.5,
-                              ),
-                              size: 16,
-                            ),
                             onPressed: () async {
                               final confirmed = await showConfirmDialog(
                                 btnContext,
@@ -142,8 +155,19 @@ class RoutineBlockSection extends StatelessWidget {
                               if (!ok)
                                 onShowMessage?.call('No se pudo eliminar.');
                             },
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                            tooltip: 'Eliminar bloque',
+                            icon: const Icon(Icons.delete_rounded),
+                            iconSize: 20,
+                            color: AppColors.error.withOpacity(0.75),
+                            style: IconButton.styleFrom(
+                              padding: const EdgeInsets.all(7),
+                              minimumSize: const Size(36, 36),
+                              hoverColor: AppColors.error.withOpacity(0.15),
+                              highlightColor: AppColors.error.withOpacity(0.25),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.sm),
+                              ),
+                            ),
                           ),
                         ),
                     ],
@@ -194,8 +218,9 @@ class RoutineBlockSection extends StatelessWidget {
                 ),
             ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
   }
 }

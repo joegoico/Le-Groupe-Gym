@@ -47,26 +47,30 @@ class TopBar extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
 
-                // Logo
-                Image.asset('assets/logo.png', height: 28, width: 28),
                 const SizedBox(width: AppSpacing.sm),
 
-                // Nombre gimnasio
-                Text(
-                  'Le Groupe Gym',
-                  style: AppTextStyles.headlineLg.copyWith(
-                    fontSize: 15,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-
-                // Título de la página
+                // Título de la página con subrayado primario
                 Flexible(
-                  child: Text(
-                    pageTitle,
-                    style: AppTextStyles.headlineLg,
-                    overflow: TextOverflow.ellipsis,
+                  child: IntrinsicWidth(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          pageTitle,
+                          style: AppTextStyles.headlineLg,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Container(
+                          height: 3,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.all(AppRadius.full),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
