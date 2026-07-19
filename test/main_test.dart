@@ -8,6 +8,7 @@ import 'mocks/mock_exercise_repository.dart';
 import 'mocks/mock_routine_repository.dart';
 import 'mocks/mock_alumno_repository.dart';
 import 'mocks/mock_category_exercise_repository.dart';
+import 'mocks/mock_solicitud_rutina_repository.dart';
 
 void main() {
   group('Inicialización de Entorno (main.dart)', () {
@@ -49,6 +50,9 @@ void main() {
           ), // ✅
           categoryExerciseRepositoryProvider.overrideWithValue(
             MockCategoryExerciseRepository(),
+          ),
+          solicitudRutinaRepositoryProvider.overrideWithValue(
+            MockSolicitudRutinaRepository(),
           ),
         ],
         child: const MyApp(),

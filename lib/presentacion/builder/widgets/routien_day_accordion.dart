@@ -45,8 +45,8 @@ class RoutineDayAccordion extends StatelessWidget {
             borderRadius: const BorderRadius.all(AppRadius.lg),
             border: Border.all(
               color: isExpanded
-                  ? AppColors.primary.withOpacity(0.3)
-                  : Colors.white.withOpacity(0.05),
+                  ? AppColors.primary.withValues(alpha: 0.3)
+                  : Colors.white.withValues(alpha: 0.05),
             ),
           ),
           child: Column(
@@ -120,7 +120,7 @@ class RoutineDayAccordion extends StatelessWidget {
 
               // Contenido colapsable
               if (isExpanded) ...[
-                Divider(height: 1, color: Colors.white.withOpacity(0.05)),
+                Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
                   child: Column(

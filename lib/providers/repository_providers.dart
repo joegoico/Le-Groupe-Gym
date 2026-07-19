@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
 import 'package:le_groupe_gym/data/repositories/routine_repository.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
+import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/category_exercise_repository.dart';
 
@@ -23,3 +24,11 @@ final categoryExerciseRepositoryProvider =
         supabaseClient: Supabase.instance.client,
       );
     });
+
+final solicitudRutinaRepositoryProvider = Provider<SolicitudRutinaRepository>((
+  ref,
+) {
+  return SupabaseSolicitudRutinaRepository(
+    supabaseClient: Supabase.instance.client,
+  );
+});

@@ -11,6 +11,13 @@ class MockAlumnoRepository implements AlumnoRepository {
       aplicaDescuento: false,
     ),
     Alumno(
+      idAlumno: 'luc-001',
+      nombre: 'Lucas',
+      apellido: 'Benítez',
+      mail: 'lucas@mail.com',
+      aplicaDescuento: false,
+    ),
+    Alumno(
       idAlumno: 'def-456',
       nombre: 'María',
       apellido: 'García',
@@ -127,5 +134,13 @@ class MockAlumnoRepository implements AlumnoRepository {
         .take(limit)
         .toList();
     return filtered;
+  }
+
+  @override
+  Future<Alumno?> getAlumnoById(String idAlumno) async {
+    return _alumnos.firstWhere(
+      (a) => a.idAlumno == idAlumno,
+      orElse: () => _alumnos.first,
+    );
   }
 }

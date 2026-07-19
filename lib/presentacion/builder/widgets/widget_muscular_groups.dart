@@ -5,16 +5,16 @@ import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 
 class MuscleCategorySelector extends StatelessWidget {
   final List<CategoriaEjercicio> categorias;
-  final Set<String> selectedGroups;
-  final Set<String> selectedSubgroups;
+  final String? selectedGroup;
+  final String? selectedSubgroup;
   final Function(String) onToggleGroup;
   final Function(String) onToggleSubgroup;
 
   const MuscleCategorySelector({
     super.key,
     required this.categorias,
-    required this.selectedGroups,
-    required this.selectedSubgroups,
+    required this.selectedGroup,
+    required this.selectedSubgroup,
     required this.onToggleGroup,
     required this.onToggleSubgroup,
   });
@@ -29,13 +29,10 @@ class MuscleCategorySelector extends StatelessWidget {
 
   // 👇 solo subgrupos de ejercicios que pertenecen al grupo seleccionado
   List<String> get _subgruposDisponibles {
-    if (selectedGroups.isEmpty) return [];
+    if (selectedGroup == null) return [];
 
     final idsPadresSeleccionados = categorias
-        .where(
-          (c) =>
-              c.tipo == 'grupo_muscular' && selectedGroups.contains(c.nombre),
-        )
+        .where((c) => c.tipo == 'grupo_muscular' && selectedGroup == c.nombre)
         .map((c) => c.idCategoria)
         .toSet();
 
@@ -71,7 +68,7 @@ class MuscleCategorySelector extends StatelessWidget {
           spacing: 6,
           runSpacing: 6,
           children: _grupos.map((grupo) {
-            final isSelected = selectedGroups.contains(grupo);
+            final isSelected = selectedGroup == grupo;
             return GestureDetector(
               onTap: () => onToggleGroup(grupo),
               child: Container(
@@ -124,7 +121,7 @@ class MuscleCategorySelector extends StatelessWidget {
             spacing: 6,
             runSpacing: 6,
             children: _subgruposDisponibles.map((sub) {
-              final isSelected = selectedSubgroups.contains(sub);
+              final isSelected = selectedSubgroup == sub;
               return GestureDetector(
                 onTap: () => onToggleSubgroup(sub),
                 child: Container(

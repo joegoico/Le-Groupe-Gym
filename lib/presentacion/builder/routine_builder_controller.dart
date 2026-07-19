@@ -379,6 +379,7 @@ class RoutineBuilderController extends ChangeNotifier {
     required String nombre,
     String? idAlumno,
     int? idRutina,
+    String? notasGenerales,
   }) {
     return Rutina(
       idRutina: idRutina,
@@ -394,6 +395,7 @@ class RoutineBuilderController extends ChangeNotifier {
             ),
           )
           .toList(),
+      notasGenerales: notasGenerales,
     );
   }
 

@@ -8,6 +8,7 @@ class Rutina {
   final List<DiaRutina> dias; // 👈 cambia de bloques a dias
   final DateTime? fechaCreacion;
   final String? notasGenerales;
+  final String? urlPdf;
 
   Rutina({
     this.idRutina,
@@ -16,6 +17,7 @@ class Rutina {
     List<DiaRutina>? dias,
     this.fechaCreacion,
     this.notasGenerales,
+    this.urlPdf,
   }) : dias = dias ?? [];
 
   // Getter de compatibilidad para acceder a todos los ejercicios
@@ -29,6 +31,7 @@ class Rutina {
     List<DiaRutina>? dias,
     DateTime? fechaCreacion,
     String? notasGenerales,
+    String? urlPdf,
   }) {
     return Rutina(
       idRutina: idRutina ?? this.idRutina,
@@ -37,6 +40,7 @@ class Rutina {
       dias: dias ?? this.dias,
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
       notasGenerales: notasGenerales ?? this.notasGenerales,
+      urlPdf: urlPdf ?? this.urlPdf,
     );
   }
 
@@ -50,6 +54,7 @@ class Rutina {
           ? DateTime.parse(map['fecha_creacion'] as String)
           : null,
       notasGenerales: map['notas_generales'] as String?,
+      urlPdf: map['url_pdf'] as String?,
     );
   }
 
@@ -59,6 +64,7 @@ class Rutina {
       if (idRutina != null) 'id_rutina': idRutina,
       if (idAlumno != null) 'id_alumno': idAlumno,
       if (notasGenerales != null) 'notas_generales': notasGenerales,
+      if (urlPdf != null) 'url_pdf': urlPdf,
     };
   }
 }
