@@ -84,3 +84,4 @@ android/key.properties
 # Instalador y binarios locales de AWS CLI
 aws/
 awscliv2.zip
+.vercel
