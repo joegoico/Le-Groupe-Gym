@@ -5,6 +5,8 @@ import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/category_exercise_repository.dart';
+import 'package:le_groupe_gym/data/repositories/precio_repository.dart';
+import 'package:le_groupe_gym/data/repositories/descuento_repository.dart';
 
 final exerciseRepositoryProvider = Provider<ExerciseRepository>((ref) {
   return SupabaseExerciseRepository(supabaseClient: Supabase.instance.client);
@@ -31,4 +33,11 @@ final solicitudRutinaRepositoryProvider = Provider<SolicitudRutinaRepository>((
   return SupabaseSolicitudRutinaRepository(
     supabaseClient: Supabase.instance.client,
   );
+});
+final precioRepositoryProvider = Provider<PrecioRepository>((ref) {
+  return SupabasePrecioRepository(supabaseClient: Supabase.instance.client);
+});
+
+final descuentoRepositoryProvider = Provider<DescuentoRepository>((ref) {
+  return SupabaseDescuentoRepository(supabaseClient: Supabase.instance.client);
 });
