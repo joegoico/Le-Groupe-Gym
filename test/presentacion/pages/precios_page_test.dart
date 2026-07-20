@@ -37,7 +37,9 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      await tester.pump(
+        Duration(milliseconds: 100),
+      ); // Simula la espera de la carga
 
       // Assert — mock tiene 3 precios
       expect(find.text('2 días'), findsOneWidget);
@@ -52,7 +54,9 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      await tester.pump(
+        Duration(milliseconds: 100),
+      ); // Simula la espera de la carga
 
       // Assert — mock tiene 2 descuentos
       expect(find.text('-15%'), findsOneWidget);
@@ -66,7 +70,9 @@ void main() {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
+      await tester.pump(
+        Duration(milliseconds: 100),
+      ); // Simula la espera de la carga
 
       // Assert
       expect(find.text('Nuevo Plan'), findsOneWidget);

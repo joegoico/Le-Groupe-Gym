@@ -40,7 +40,7 @@ const _items = [
     label: 'Precios',
     icon: Icons.sell_outlined,
     route: '/precios',
-    enabled: false,
+    enabled: true,
   ),
   _SidebarItem(
     label: 'Rutinas',
@@ -66,8 +66,7 @@ class Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+    return Container(
       width: isCollapsed ? 72 : 260,
       decoration: BoxDecoration(
         color: AppColors.surfaceContainer,
