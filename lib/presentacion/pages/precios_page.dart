@@ -5,6 +5,9 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/descuento_model.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
+import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:go_router/go_router.dart';
 
 class PreciosPage extends ConsumerStatefulWidget {
   const PreciosPage({super.key});
@@ -15,6 +18,7 @@ class PreciosPage extends ConsumerStatefulWidget {
 
 class _PreciosPageState extends ConsumerState<PreciosPage> {
   bool _isLoading = true;
+  bool _sidebarCollapsed = false;
   List<Precio> _precios = [];
   List<Descuento> _descuentos = [];
 
@@ -54,6 +58,15 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
         children: [
           // TopBar
           _buildTopBar(),
+          Sidebar(
+            currentRoute: '/precios',
+            isCollapsed: _sidebarCollapsed,
+            onCerrarSesion: () async {
+              await SupabaseConfig.client.auth.signOut();
+              if (mounted) context.go('/login');
+            },
+            onNavigate: (route) => context.go(route),
+          ),
 
           // Contenido
           Expanded(
@@ -80,6 +93,11 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       ),
       child: Row(
         children: [
+          IconButton(
+            icon: const Icon(Icons.menu, color: AppColors.onSurface, size: 22),
+            onPressed: () =>
+                setState(() => _sidebarCollapsed = !_sidebarCollapsed),
+          ),
           Text(
             'Planes y Tarifas',
             style: GoogleFonts.hankenGrotesk(
@@ -268,19 +286,29 @@ class _DescuentosPanel extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Gestión de Descuentos',
-                style: GoogleFonts.hankenGrotesk(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.onSurface,
+              Expanded(
+                child: Text(
+                  'Gestión de Descuentos',
+                  style: GoogleFonts.hankenGrotesk(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onSurface,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              IconButton(
-                onPressed: onAgregarDescuento,
-                icon: const Icon(Icons.add, color: AppColors.primary, size: 20),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton(
+                  onPressed: onAgregarDescuento,
+                  icon: const Icon(
+                    Icons.add,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
               ),
             ],
           ),
@@ -317,27 +345,29 @@ class _DescuentoItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.12),
-              borderRadius: const BorderRadius.all(AppRadius.sm),
-            ),
-            child: Text(
-              '-${descuento.valor}%',
-              style: GoogleFonts.robotoMono(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.12),
+                borderRadius: const BorderRadius.all(AppRadius.sm),
+              ),
+              child: Text(
+                '-${descuento.valor}%',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: AppSpacing.sm),
           IconButton(
             onPressed: onEliminar,
             icon: Icon(Icons.delete_outline, size: 16, color: AppColors.error),
             padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
           ),
         ],
       ),

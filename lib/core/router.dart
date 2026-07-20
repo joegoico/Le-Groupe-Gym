@@ -6,6 +6,7 @@ import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:le_groupe_gym/presentacion/auth/login_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/routine_work_page.dart';
 import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_dashbord_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/precios_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -27,6 +28,7 @@ final appRouter = GoRouter(
       path: '/',
       builder: (context, state) => const RutinasDashboardPage(),
     ),
+    GoRoute(path: '/precios', builder: (context, state) => const PreciosPage()),
     GoRoute(
       path: '/crear-rutina',
       builder: (context, state) {
