@@ -11,5 +11,9 @@ export PATH="$PATH:`pwd`/flutter/bin"
 # 3. Habilitar soporte web
 flutter config --enable-web
 
-# 4. Compilar para producción
+# 4. Generar el archivo .env con las variables de entorno de Vercel
+echo "SUPABASE_URL=$SUPABASE_URL" > .env
+echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+
+# 5. Compilar para producción
 flutter build web --release
