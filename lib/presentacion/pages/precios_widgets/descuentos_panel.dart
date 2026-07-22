@@ -8,17 +8,23 @@ class DescuentosPanel extends StatelessWidget {
   final List<Descuento> descuentos;
   final VoidCallback onAgregarDescuento;
   final Function(Descuento) onEliminarDescuento;
+  final Function(Descuento) onEditarDescuento;
 
   const DescuentosPanel({
     required this.descuentos,
     required this.onAgregarDescuento,
     required this.onEliminarDescuento,
+    required this.onEditarDescuento,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(AppSpacing.lg),
+      margin: const EdgeInsets.only(
+        top: AppSpacing.lg,
+        right: AppSpacing.md,
+        bottom: AppSpacing.lg,
+      ),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surfaceContainer,
@@ -27,15 +33,17 @@ class DescuentosPanel extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
-                  'Gestión de Descuentos',
+                  'Descuentos',
                   style: GoogleFonts.hankenGrotesk(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: AppColors.onSurface,
                   ),
@@ -43,35 +51,49 @@ class DescuentosPanel extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 child: IconButton(
                   onPressed: onAgregarDescuento,
+                  tooltip: 'Agregar descuento',
                   icon: const Icon(
                     Icons.add,
                     color: AppColors.primary,
-                    size: 20,
+                    size: 18,
                   ),
                   padding: EdgeInsets.zero,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.primary.withOpacity(0.10),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(AppRadius.sm),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            'Descuentos Aplicables',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: AppColors.onSurfaceVariant,
+
+          // Items o empty state
+          if (descuentos.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Text(
+                'Sin descuentos activos',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            )
+          else
+            ...descuentos.map(
+              (descuento) => DescuentoItem(
+                descuento: descuento,
+                onEliminar: () => onEliminarDescuento(descuento),
+                onEditar: () => onEditarDescuento(descuento),
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ...descuentos.map(
-            (descuento) => DescuentoItem(
-              descuento: descuento,
-              onEliminar: () => onEliminarDescuento(descuento),
-            ),
-          ),
         ],
       ),
     );

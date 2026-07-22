@@ -6,40 +6,88 @@ import 'package:le_groupe_gym/data/models/descuento_model.dart';
 class DescuentoItem extends StatelessWidget {
   final Descuento descuento;
   final VoidCallback onEliminar;
+  final VoidCallback onEditar;
 
-  const DescuentoItem({required this.descuento, required this.onEliminar});
+  const DescuentoItem({
+    required this.descuento,
+    required this.onEliminar,
+    required this.onEditar,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.12),
-                borderRadius: const BorderRadius.all(AppRadius.sm),
-              ),
-              child: Text(
-                '${descuento.valor}',
-                style: GoogleFonts.robotoMono(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm + 2,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerHigh,
+          borderRadius: const BorderRadius.all(AppRadius.md),
+          border: Border.all(color: Colors.white.withOpacity(0.06)),
+        ),
+        child: Row(
+          children: [
+            // Badge de monto — ocupa el espacio disponible
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
                 ),
-                overflow: TextOverflow.ellipsis,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.12),
+                  borderRadius: const BorderRadius.all(AppRadius.sm),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.25),
+                  ),
+                ),
+                child: Text(
+                  '\$${descuento.valor}',
+                  style: GoogleFonts.robotoMono(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          IconButton(
-            onPressed: onEliminar,
-            icon: Icon(Icons.delete_outline, size: 16, color: AppColors.error),
-            padding: EdgeInsets.zero,
-          ),
-        ],
+            const SizedBox(width: AppSpacing.xs),
+            // Botón editar
+            IconButton(
+              onPressed: onEditar,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              color: AppColors.primary,
+              style: IconButton.styleFrom(
+                padding: const EdgeInsets.all(AppSpacing.xs),
+                minimumSize: const Size(32, 32),
+                hoverColor: AppColors.primary.withOpacity(0.10),
+                highlightColor: AppColors.primary.withOpacity(0.18),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.sm),
+                ),
+              ),
+            ),
+            // Botón eliminar
+            IconButton(
+              onPressed: onEliminar,
+              icon: const Icon(Icons.delete_outline, size: 18),
+              color: AppColors.error,
+              style: IconButton.styleFrom(
+                padding: const EdgeInsets.all(AppSpacing.xs),
+                minimumSize: const Size(32, 32),
+                hoverColor: AppColors.error.withOpacity(0.10),
+                highlightColor: AppColors.error.withOpacity(0.18),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.sm),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

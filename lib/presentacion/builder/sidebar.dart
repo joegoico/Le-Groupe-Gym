@@ -90,12 +90,7 @@ class Sidebar extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Le Groupe Gym',
-                      style: GoogleFonts.hankenGrotesk(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.onSurface,
-                        letterSpacing: -0.3,
-                      ),
+                      style: AppTextStyles.headlineLg.copyWith(fontSize: 20),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -104,7 +99,7 @@ class Sidebar extends StatelessWidget {
             ),
           ),
 
-          Divider(height: 1, color: Colors.white.withOpacity(0.05)),
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
           const SizedBox(height: AppSpacing.sm),
 
           // Items de navegación
@@ -121,7 +116,7 @@ class Sidebar extends StatelessWidget {
             ),
           ),
 
-          Divider(height: 1, color: Colors.white.withOpacity(0.05)),
+          Divider(height: 1, color: Colors.white.withValues(alpha: 0.05)),
 
           // Cerrar sesión
           Padding(

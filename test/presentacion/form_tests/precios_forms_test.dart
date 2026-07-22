@@ -27,9 +27,10 @@ void main() {
         createWidgetUnderTest(precioRepository: MockPrecioRepository()),
       );
 
-      expect(find.text('Nuevo Precio'), findsOneWidget);
+      expect(find.text('Registrar Nuevo Plan'), findsOneWidget);
       expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(find.byType(ElevatedButton), findsNWidgets(2));
+      expect(find.byType(OutlinedButton), findsOneWidget);
+      expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
     testWidgets('debe validar que todos los campos sean requeridos', (
@@ -55,7 +56,7 @@ void main() {
       await tester.tap(find.byType(ElevatedButton).last);
       await tester.pump();
 
-      expect(find.text('El precio debe ser mayor a 0'), findsOneWidget);
+      expect(find.text('Debe ser mayor a 0'), findsOneWidget);
     });
 
     testWidgets('debe validar que el precio sea numérico', (tester) async {
@@ -67,7 +68,7 @@ void main() {
       await tester.tap(find.byType(ElevatedButton).last);
       await tester.pump();
 
-      expect(find.text('El precio debe ser un número válido'), findsOneWidget);
+      expect(find.text('Debe ser un número válido'), findsOneWidget);
     });
 
     testWidgets('debe llamar a onGuardar al presionar el botón de guardar', (
@@ -107,7 +108,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.tap(find.text('Cancelar'));
       await tester.pump();
 
       expect(cancelado, isTrue);

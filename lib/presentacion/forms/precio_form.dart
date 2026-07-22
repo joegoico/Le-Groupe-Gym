@@ -76,102 +76,289 @@ class _PrecioFormState extends State<PrecioForm> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              widget.precio == null ? 'Nuevo Precio' : 'Editar Precio',
-              style: AppTextStyles.titleMd,
+      width: 480,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: const BorderRadius.all(AppRadius.md),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── HEADER ──────────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
             ),
-            const SizedBox(height: 24),
-            TextFormField(
-              controller: _precioController,
-              decoration: const InputDecoration(
-                labelText: 'Precio',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
-                suffixIcon: Icon(Icons.money),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: const BorderRadius.vertical(top: AppRadius.md),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.onSurface.withValues(alpha: 0.10),
+                ),
               ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El precio es requerido';
-                }
-                final valorInt = int.tryParse(value.trim());
-                if (valorInt == null) {
-                  return 'El precio debe ser un número válido';
-                }
-                if (valorInt <= 0) {
-                  return 'El precio debe ser mayor a 0';
-                }
-                return null;
-              },
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _cantidadDiasController,
-              decoration: const InputDecoration(
-                labelText: 'Cantidad de Días',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.calendar_today),
-                suffixIcon: Icon(Icons.calendar_month_outlined),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'La cantidad de días es requerida';
-                }
-                final dias = int.tryParse(value);
-                if (dias == null || dias <= 0) {
-                  return 'La cantidad de días debe ser mayor a 0';
-                }
-                return null;
-              },
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.all(AppRadius.sm),
+                  ),
+                  child: const Icon(
+                    Icons.monetization_on_outlined,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    widget.precio == null
+                        ? 'Registrar Nuevo Plan'
+                        : 'Editar Plan',
+                    style: AppTextStyles.titleMd.copyWith(fontSize: 15),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _isLoading ? null : widget.onCancelar,
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.onSurfaceVariant,
+                    size: 18,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else
-              Row(
+          ),
+
+          // ── BODY ────────────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: widget.onCancelar,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(
-                          color: Colors.white.withValues(alpha: 0.1),
+                  const _FieldLabel('Valor del plan', icon: Icons.attach_money),
+                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(
+                    height: 44,
+                    child: TextFormField(
+                      controller: _precioController,
+                      style: AppTextStyles.subtittles.copyWith(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Ej. 18000',
+                        hintStyle: AppTextStyles.subtittles.copyWith(
+                          fontSize: 14,
+                          color: AppColors.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.circular(8),
+                        filled: true,
+                        fillColor: AppColors.surfaceContainer,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: 10,
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 1,
+                          ),
                         ),
                       ),
-                      child: const Text('Cancelar'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'El precio es requerido';
+                        }
+                        final valorInt = int.tryParse(value.trim());
+                        if (valorInt == null) {
+                          return 'Debe ser un número válido';
+                        }
+                        if (valorInt <= 0) {
+                          return 'Debe ser mayor a 0';
+                        }
+                        return null;
+                      },
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadiusGeometry.circular(8),
+                  const SizedBox(height: AppSpacing.lg),
+
+                  const _FieldLabel(
+                    'Duración (días)',
+                    icon: Icons.calendar_today,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(
+                    height: 44,
+                    child: TextFormField(
+                      controller: _cantidadDiasController,
+                      style: AppTextStyles.subtittles.copyWith(fontSize: 14),
+                      decoration: InputDecoration(
+                        hintText: 'Ej. 30',
+                        hintStyle: AppTextStyles.subtittles.copyWith(
+                          fontSize: 14,
+                          color: AppColors.onSurfaceVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceContainer,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: 10,
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                          ),
+                        ),
+                        focusedBorder: const OutlineInputBorder(
+                          borderRadius: BorderRadius.all(AppRadius.md),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 1,
+                          ),
                         ),
                       ),
-                      child: const Text('Guardar'),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'La cantidad de días es requerida';
+                        }
+                        final dias = int.tryParse(value);
+                        if (dias == null || dias <= 0) {
+                          return 'Debe ser mayor a 0';
+                        }
+                        return null;
+                      },
                     ),
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // Botones
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton(
+                            onPressed: _isLoading ? null : widget.onCancelar,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.onSurfaceVariant,
+                              side: const BorderSide(
+                                color: AppColors.outlineVariant,
+                              ),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            onPressed: _isLoading ? null : _submit,
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.onPrimary,
+                                    ),
+                                  )
+                                : const Icon(Icons.check, size: 16),
+                            label: Text(
+                              _isLoading
+                                  ? 'Guardando...'
+                                  : (widget.precio == null
+                                        ? 'Crear Plan'
+                                        : 'Guardar'),
+                              style: AppTextStyles.buttonText.copyWith(
+                                color: AppColors.onPrimary,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.surfaceContainerHigh,
+                              disabledForegroundColor:
+                                  AppColors.onSurfaceVariant,
+                              elevation: 0,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+}
+
+/// Label de sección con acento izquierdo en lime primario.
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  final IconData? icon;
+
+  const _FieldLabel(this.text, {this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.all(AppRadius.full),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        if (icon != null) ...[
+          Icon(icon, size: 14, color: AppColors.onSurface),
+          const SizedBox(width: 4),
+        ],
+        Text(
+          text,
+          style: AppTextStyles.subtittlesBold.copyWith(
+            fontSize: 13,
+            color: AppColors.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }
