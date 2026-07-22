@@ -228,6 +228,8 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
                     key: const Key('solicitud_rutina_name_field'),
                     controller: _nombreRutinaController,
                     style: AppTextStyles.subtittles.copyWith(fontSize: 13),
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _guardarSolicitudRutina(),
                     decoration: InputDecoration(
                       hintText: 'Ej: Hipertrofia',
                       hintStyle: AppTextStyles.subtittles.copyWith(
@@ -375,7 +377,7 @@ class _FieldLabel extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        if (icon != null) ...[  
+        if (icon != null) ...[
           Icon(icon, size: 14, color: AppColors.onSurface),
           const SizedBox(width: 4),
         ],

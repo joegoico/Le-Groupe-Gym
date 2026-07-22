@@ -66,5 +66,30 @@ void main() {
 
       expect(guardarButton.onPressed, isNull);
     });
+    testWidgets(
+      'presionar Enter sin alumno seleccionado no debe enviar el formulario',
+      (tester) async {
+        // Arrange
+        SolicitudRutina? guardado;
+        await tester.pumpWidget(
+          createWidgetUnderTest(onGuardar: (d) => guardado = d),
+        );
+
+        // Act — completamos el nombre pero NO seleccionamos alumno
+        await tester.enterText(
+          find.byKey(const Key('solicitud_rutina_name_field')),
+          'Rutina 1',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        // Assert — sin alumno el formulario no debe enviarse
+        expect(guardado, isNull);
+        final guardarButton = tester.widget<ElevatedButton>(
+          find.byKey(const Key('guardar_solicitud_button')),
+        );
+        expect(guardarButton.onPressed, isNull);
+      },
+    );
   });
 }

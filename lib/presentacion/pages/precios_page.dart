@@ -148,16 +148,27 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
   }
 
   Future<void> _guardarDescuento(Descuento descuento) async {
-    final repo = ref.read(descuentoRepositoryProvider);
-    if (descuento.id != null) {
-      await repo.updateDescuento(descuento);
-      setState(() {
-        final index = _descuentos.indexWhere((d) => d.id == descuento.id);
-        if (index != -1) _descuentos[index] = descuento;
-      });
-    } else {
-      final id = await repo.createDescuento(descuento);
-      setState(() => _descuentos.add(descuento.copyWith(id: id)));
+    try {
+      final repo = ref.read(descuentoRepositoryProvider);
+      if (descuento.id != null) {
+        await repo.updateDescuento(descuento);
+        setState(() {
+          final index = _descuentos.indexWhere((d) => d.id == descuento.id);
+          if (index != -1) _descuentos[index] = descuento;
+        });
+      } else {
+        final id = await repo.createDescuento(descuento);
+        setState(() => _descuentos.add(descuento.copyWith(id: id)));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')),
+            backgroundColor: AppColors.errorContainer,
+          ),
+        );
+      }
     }
   }
 

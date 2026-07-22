@@ -127,5 +127,46 @@ void main() {
       expect(guardado, isNotNull);
       expect(guardado!.valor, 20);
     });
+    testWidgets('debe mostrar error si el valor es 0', (tester) async {
+      // Arrange
+      await tester.pumpWidget(createWidgetUnderTest());
+
+      // Act
+      await tester.enterText(
+        find.byKey(const Key('descuento_valor_field')),
+        '0',
+      );
+      await tester.pump();
+
+      // Assert
+      expect(find.text('El valor debe ser mayor a 0'), findsOneWidget);
+      final boton = tester.widget<ElevatedButton>(
+        find.ancestor(
+          of: find.text('Guardar'),
+          matching: find.byType(ElevatedButton),
+        ),
+      );
+      expect(boton.onPressed, isNull);
+    });
+
+    testWidgets('debe enviar el formulario al presionar Enter', (tester) async {
+      // Arrange
+      Descuento? guardado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onGuardar: (d) => guardado = d),
+      );
+
+      // Act
+      await tester.enterText(
+        find.byKey(const Key('descuento_valor_field')),
+        '15',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      // Assert
+      expect(guardado, isNotNull);
+      expect(guardado!.valor, 15);
+    });
   });
 }

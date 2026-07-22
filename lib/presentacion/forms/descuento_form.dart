@@ -22,9 +22,11 @@ class DescuentoForm extends StatefulWidget {
 
 class _DescuentoFormState extends State<DescuentoForm> {
   final TextEditingController _valorController = TextEditingController();
+  String? _errorValor;
 
   bool get _canSave =>
       _valorController.text.isNotEmpty &&
+      _errorValor == null &&
       int.tryParse(_valorController.text) != null;
 
   @override
@@ -33,7 +35,35 @@ class _DescuentoFormState extends State<DescuentoForm> {
     if (widget.descuento != null) {
       _valorController.text = widget.descuento!.valor.toString();
     }
-    _valorController.addListener(() => setState(() {}));
+    _valorController.addListener(_validar);
+  }
+
+  void _validar() {
+    final text = _valorController.text;
+    if (text.isEmpty) {
+      setState(() => _errorValor = null);
+      return;
+    }
+    final valor = int.tryParse(text);
+    if (valor == null) {
+      setState(() => _errorValor = 'Ingresá un número válido');
+      return;
+    }
+    if (valor <= 0) {
+      setState(() => _errorValor = 'El valor debe ser mayor a 0');
+      return;
+    }
+    setState(() => _errorValor = null);
+  }
+
+  void _guardar() {
+    if (!_canSave) return;
+    widget.onGuardar(
+      Descuento(
+        id: widget.descuento?.id,
+        valor: int.parse(_valorController.text),
+      ),
+    );
   }
 
   @override
@@ -70,10 +100,12 @@ class _DescuentoFormState extends State<DescuentoForm> {
             controller: _valorController,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onSubmitted: (_) => _guardar(),
             style: AppTextStyles.titleMd,
             decoration: InputDecoration(
               hintText: 'Ej. 1500',
               hintStyle: AppTextStyles.titleMd,
+              errorText: _errorValor,
               suffixIcon: const Icon(Icons.attach_money),
               suffixStyle: AppTextStyles.titleMd,
               filled: true,

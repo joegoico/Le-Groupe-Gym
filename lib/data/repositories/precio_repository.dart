@@ -46,6 +46,12 @@ class SupabasePrecioRepository implements PrecioRepository {
 
       return response['id_precio'] as String;
     } on PostgrestException catch (e) {
+      if (e.message.contains('check_precio_dias')) {
+        throw Exception('La cantidad de días debe estar entre 1 y 7');
+      }
+      if (e.message.contains('check_precio_valor')) {
+        throw Exception('El valor debe ser mayor a 0');
+      }
       throw Exception('Error al crear precio: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
@@ -60,6 +66,12 @@ class SupabasePrecioRepository implements PrecioRepository {
           .update(precio.toMap())
           .eq('id_precio', precio.idPrecio!);
     } on PostgrestException catch (e) {
+      if (e.message.contains('check_precio_dias')) {
+        throw Exception('La cantidad de días debe estar entre 1 y 7');
+      }
+      if (e.message.contains('check_precio_valor')) {
+        throw Exception('El valor debe ser mayor a 0');
+      }
       throw Exception('Error al actualizar precio: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');

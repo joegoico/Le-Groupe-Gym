@@ -45,6 +45,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
 
       return response['id'] as String;
     } on PostgrestException catch (e) {
+      if (e.message.contains('check_descuento_valor')) {
+        throw Exception('El valor del descuento debe ser mayor a 0');
+      }
       throw Exception('Error al crear descuento: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
@@ -59,6 +62,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
           .update(descuento.toMap())
           .eq('id', descuento.id!);
     } on PostgrestException catch (e) {
+      if (e.message.contains('check_descuento_valor')) {
+        throw Exception('El valor del descuento debe ser mayor a 0');
+      }
       throw Exception('Error al actualizar descuento: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
