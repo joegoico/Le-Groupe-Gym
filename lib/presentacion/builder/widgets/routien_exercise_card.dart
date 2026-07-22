@@ -49,7 +49,7 @@ class RoutineExerciseCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(AppRadius.md),
         border: Border.all(
           color: item.esSuperserie
-              ? AppColors.tertiary.withOpacity(0.3)
+              ? AppColors.tertiary.withOpacity(0.65)
               : isCombining
               ? AppColors.primary.withOpacity(0.3)
               : Colors.white.withOpacity(0.05),

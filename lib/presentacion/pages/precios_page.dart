@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/precio_form.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
@@ -11,6 +12,7 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:go_router/go_router.dart';
+import 'package:le_groupe_gym/presentacion/forms/descuento_form.dart';
 
 class PreciosPage extends ConsumerStatefulWidget {
   const PreciosPage({super.key});
@@ -58,15 +60,11 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => Dialog(
-        backgroundColor: AppColors.surfaceContainerHigh,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.lg,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: PrecioForm(
           precioRepository: ref.read(precioRepositoryProvider),
@@ -85,15 +83,11 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => Dialog(
-        backgroundColor: AppColors.surfaceContainerHigh,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         insetPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.xl,
           vertical: AppSpacing.lg,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: PrecioForm(
           precio: precio,
@@ -109,37 +103,11 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
   }
 
   Future<void> _eliminarPrecio(Precio precio) async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surfaceContainerHigh,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        title: Text('Eliminar plan', style: AppTextStyles.titleMd),
-        content: Text(
+    final confirmar = await showConfirmDialog(
+      context,
+      titulo: 'Eliminar plan',
+      mensaje:
           '¿Seguro que querés eliminar el plan de ${precio.cantidadDias} días? Esta acción no se puede deshacer.',
-          style: AppTextStyles.labelCaps,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text('Cancelar', style: AppTextStyles.labelCaps),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.onPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
     );
 
     if (confirmar != true) return;
@@ -156,6 +124,56 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
           context,
         ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
       }
+    }
+  }
+
+  void _mostrarFormDescuento(BuildContext context, {Descuento? descuento}) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: SizedBox(
+          width: 400,
+          child: DescuentoForm(
+            descuento: descuento,
+            onCancelar: () => Navigator.pop(context),
+            onGuardar: (d) async {
+              Navigator.pop(context);
+              await _guardarDescuento(d);
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _guardarDescuento(Descuento descuento) async {
+    final repo = ref.read(descuentoRepositoryProvider);
+    if (descuento.id != null) {
+      await repo.updateDescuento(descuento);
+      setState(() {
+        final index = _descuentos.indexWhere((d) => d.id == descuento.id);
+        if (index != -1) _descuentos[index] = descuento;
+      });
+    } else {
+      final id = await repo.createDescuento(descuento);
+      setState(() => _descuentos.add(descuento.copyWith(id: id)));
+    }
+  }
+
+  Future<void> _eliminarDescuento(Descuento descuento) async {
+    final confirmar = await showConfirmDialog(
+      context,
+      titulo: 'Eliminar descuento',
+      mensaje:
+          '¿Seguro que querés eliminar este descuento? Esta acción no se puede deshacer.',
+    );
+    if (confirmar != true) return;
+
+    final repo = ref.read(descuentoRepositoryProvider);
+    await repo.deleteDescuento(descuento.id!);
+    if (mounted) {
+      setState(() => _descuentos.removeWhere((d) => d.id == descuento.id));
     }
   }
 
@@ -250,13 +268,15 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
           ),
         ),
 
-        // Panel de descuentos
+        // Panel de descuentos — ancho responsivo (18% de pantalla, mín 180 / máx 240)
         SizedBox(
-          width: 280,
+          width: (MediaQuery.of(context).size.width * 0.18).clamp(180.0, 240.0),
           child: DescuentosPanel(
             descuentos: _descuentos,
-            onAgregarDescuento: () {},
-            onEliminarDescuento: (_) {},
+            onAgregarDescuento: () => _mostrarFormDescuento(context),
+            onEliminarDescuento: (descuento) => _eliminarDescuento(descuento),
+            onEditarDescuento: (descuento) =>
+                _mostrarFormDescuento(context, descuento: descuento),
           ),
         ),
       ],

@@ -29,8 +29,7 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
   final Set<String> _selectedSubgroups = {};
   bool _isSaving = false;
 
-  bool get _canSave =>
-      !_isSaving && _nombreController.text.trim().isNotEmpty;
+  bool get _canSave => !_isSaving && _nombreController.text.trim().isNotEmpty;
 
   @override
   void initState() {
@@ -184,7 +183,10 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Campo: Nombre
-                const _FieldLabel('Nombre del ejercicio', icon: Icons.edit_outlined),
+                const _FieldLabel(
+                  'Nombre del ejercicio',
+                  icon: Icons.edit_outlined,
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 SizedBox(
                   height: 44,
@@ -196,7 +198,9 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
                       hintText: 'Ej. Press de Banca Inclinado',
                       hintStyle: AppTextStyles.subtittles.copyWith(
                         fontSize: 14,
-                        color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
+                        color: AppColors.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                       filled: true,
                       fillColor: AppColors.surfaceContainer,
@@ -222,7 +226,10 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
                 const SizedBox(height: AppSpacing.lg),
 
                 // Campo: Grupo muscular
-                const _FieldLabel('Grupo muscular', icon: Icons.accessibility_new),
+                const _FieldLabel(
+                  'Grupo muscular',
+                  icon: Icons.accessibility_new,
+                ),
                 const SizedBox(height: AppSpacing.sm),
                 MuscleCategorySelector(
                   // Solo pasamos grupos musculares: los subgrupos los maneja
@@ -423,7 +430,7 @@ class _MultiSubgrupoChips extends StatelessWidget {
               '(seleccioná uno o más)',
               style: GoogleFonts.inter(
                 fontSize: 10,
-                color: AppColors.onSurfaceVariant.withOpacity(0.6),
+                color: AppColors.onSurfaceVariant.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -443,35 +450,35 @@ class _MultiSubgrupoChips extends StatelessWidget {
               onTap: () => onToggle(sub),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? Colors.teal.withOpacity(0.15)
+                      ? Colors.teal.withValues(alpha: 0.15)
                       : AppColors.surfaceContainer,
                   borderRadius: const BorderRadius.all(AppRadius.full),
                   border: Border.all(
                     color: isSelected
-                        ? Colors.teal.withOpacity(0.6)
-                        : Colors.white.withOpacity(0.08),
+                        ? Colors.teal.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (isSelected) ...[
-                      Icon(
-                        Icons.check,
-                        size: 11,
-                        color: Colors.teal[300],
-                      ),
+                      Icon(Icons.check, size: 11, color: Colors.teal[300]),
                       const SizedBox(width: 4),
                     ],
                     Text(
                       sub,
                       style: GoogleFonts.inter(
                         fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
                         color: isSelected
                             ? Colors.teal[300]
                             : AppColors.onSurfaceVariant,
