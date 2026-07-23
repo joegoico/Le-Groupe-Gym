@@ -9,6 +9,15 @@ abstract class AlumnoRepository {
   /// Retorna como máximo [limit] resultados (default 10).
   Future<List<Alumno>> searchAlumnos(String query, {int limit = 10});
   Future<Alumno?> getAlumnoById(String idAlumno);
+
+  /// Crea un nuevo alumno y retorna el id generado.
+  Future<String> createAlumno(Alumno alumno);
+
+  /// Actualiza los datos de un alumno existente.
+  Future<void> updateAlumno(Alumno alumno);
+
+  /// Elimina el alumno con [idAlumno].
+  Future<void> deleteAlumno(String idAlumno);
 }
 
 class SupabaseAlumnoRepository implements AlumnoRepository {
@@ -77,6 +86,66 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
       throw Exception('Error al obtener alumno: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<String> createAlumno(Alumno alumno) async {
+    try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final response = await supabaseClient
+          .from('Alumno')
+          .insert({
+            'Nombre': alumno.nombre,
+            'Apellido': alumno.apellido,
+            'Mail': alumno.mail,
+            'aplica_descuento': alumno.aplicaDescuento,
+            'user_id': userId,
+          })
+          .select('id_alumno')
+          .single();
+      return response['id_alumno'] as String;
+    } on PostgrestException catch (e) {
+      throw Exception('Error al crear alumno: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al crear alumno: $e');
+    }
+  }
+
+  @override
+  Future<void> updateAlumno(Alumno alumno) async {
+    try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      await supabaseClient
+          .from('Alumno')
+          .update({
+            'Nombre': alumno.nombre,
+            'Apellido': alumno.apellido,
+            'Mail': alumno.mail,
+            'aplica_descuento': alumno.aplicaDescuento,
+          })
+          .eq('id_alumno', alumno.idAlumno)
+          .eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al actualizar alumno: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al actualizar alumno: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAlumno(String idAlumno) async {
+    try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      await supabaseClient
+          .from('Alumno')
+          .delete()
+          .eq('id_alumno', idAlumno)
+          .eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al eliminar alumno: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al eliminar alumno: $e');
     }
   }
 }

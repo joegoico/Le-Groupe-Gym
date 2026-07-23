@@ -22,7 +22,7 @@ const _items = [
     label: 'Alumnos',
     icon: Icons.group_outlined,
     route: '/alumnos',
-    enabled: false,
+    enabled: true,
   ),
   _SidebarItem(
     label: 'Deudores',

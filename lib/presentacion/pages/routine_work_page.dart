@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/data/repositories/routine_repository.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/app_snackbar.dart';
 import '../../data/models/exercise_model.dart';
@@ -192,18 +193,40 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
+  Future<void> _deleteOldRoutines(RoutineRepository routineRepo) async {
+    final storageService = StorageService();
+
+    // 👇 Verificar si el alumno ya tiene 3 rutinas
+    final rutinasAlumno = await routineRepo.getRutinasPorAlumno(
+      _alumnoSeleccionado!.idAlumno,
+    );
+
+    // Si tiene 3, obtener la más antigua para borrar su PDF
+    if (rutinasAlumno.length >= 3 && widget.rutinaExistente == null) {
+      final masAntigua =
+          rutinasAlumno.last; // ya vienen ordenadas por fecha desc
+      if (masAntigua.rutina.urlPdf != null) {
+        await storageService.deletePdf(
+          idRutina: masAntigua.rutina.idRutina!,
+          idAlumno: _alumnoSeleccionado!.idAlumno,
+        );
+      }
+    }
+  }
+
   Future<void> _saveRoutine() async {
     if (_alumnoSeleccionado == null) return;
     setState(() => _isSaving = true);
 
     try {
       final routineRepo = ref.read(routineRepositoryProvider);
+
       final rutina = _routineController.buildRutina(
         nombre: _routineNameController.text.isEmpty
             ? 'Rutina sin nombre'
             : _routineNameController.text,
         idAlumno: _alumnoSeleccionado!.idAlumno,
-        idRutina: widget.rutinaExistente?.idRutina, // 👈
+        idRutina: widget.rutinaExistente?.idRutina,
         notasGenerales: _notasController.text.isEmpty
             ? null
             : _notasController.text,
@@ -211,11 +234,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
       int idRutina;
       if (widget.rutinaExistente != null) {
-        // 👇 Modo edición — actualizar
         await routineRepo.updateRoutine(rutina);
         idRutina = widget.rutinaExistente!.idRutina!;
       } else {
-        // 👇 Modo creación — insertar
         idRutina = await routineRepo.saveRoutine(rutina);
       }
 
@@ -285,10 +306,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.lg),
-          side: BorderSide(
-            color: AppColors.surfaceContainerHighest,
-            width: 1,
-          ),
+          side: BorderSide(color: AppColors.surfaceContainerHighest, width: 1),
         ),
         contentPadding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -323,10 +341,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              '¿Salir sin guardar?',
-              style: AppTextStyles.titleMd,
-            ),
+            Text('¿Salir sin guardar?', style: AppTextStyles.titleMd),
           ],
         ),
         content: Column(
@@ -537,8 +552,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                           null;
 
                                   if (sinDia || sinBloque) {
-                                    ScaffoldMessenger.of(context)
-                                        .clearSnackBars();
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).clearSnackBars();
                                     AppSnackbar.show(
                                       context,
                                       message: sinDia
@@ -555,7 +571,8 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                   if (!agregado && mounted) {
                                     AppSnackbar.show(
                                       context,
-                                      message: 'Ese ejercicio ya está en el bloque activo.',
+                                      message:
+                                          'Ese ejercicio ya está en el bloque activo.',
                                       type: SnackbarType.warning,
                                       bottomMargin: 120,
                                     );

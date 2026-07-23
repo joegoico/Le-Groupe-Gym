@@ -143,4 +143,30 @@ class MockAlumnoRepository implements AlumnoRepository {
       orElse: () => _alumnos.first,
     );
   }
+
+  @override
+  Future<String> createAlumno(Alumno alumno) async {
+    final newId = 'mock-${_alumnos.length + 1}';
+    _alumnos.add(
+      Alumno(
+        idAlumno: newId,
+        nombre: alumno.nombre,
+        apellido: alumno.apellido,
+        mail: alumno.mail,
+        aplicaDescuento: alumno.aplicaDescuento,
+      ),
+    );
+    return newId;
+  }
+
+  @override
+  Future<void> updateAlumno(Alumno alumno) async {
+    final index = _alumnos.indexWhere((a) => a.idAlumno == alumno.idAlumno);
+    if (index != -1) _alumnos[index] = alumno;
+  }
+
+  @override
+  Future<void> deleteAlumno(String idAlumno) async {
+    _alumnos.removeWhere((a) => a.idAlumno == idAlumno);
+  }
 }

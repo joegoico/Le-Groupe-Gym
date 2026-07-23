@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StorageService {
@@ -21,15 +22,30 @@ class StorageService {
     final client = supabaseClient ?? Supabase.instance.client;
     final path = buildFilePath(idRutina: idRutina, idAlumno: idAlumno);
 
-    await client.storage.from(_bucket).uploadBinary(
-      path,
-      bytes,
-      fileOptions: const FileOptions(
-        contentType: 'application/pdf',
-        upsert: true, // sobreescribe si ya existe
-      ),
-    );
+    await client.storage
+        .from(_bucket)
+        .uploadBinary(
+          path,
+          bytes,
+          fileOptions: const FileOptions(
+            contentType: 'application/pdf',
+            upsert: true, // sobreescribe si ya existe
+          ),
+        );
 
     return client.storage.from(_bucket).getPublicUrl(path);
+  }
+
+  Future<void> deletePdf({
+    required int idRutina,
+    required String idAlumno,
+  }) async {
+    try {
+      await Supabase.instance.client.storage.from('rutinas-pdf').remove([
+        'alumnos/$idAlumno/rutina_$idRutina.pdf',
+      ]);
+    } catch (e) {
+      debugPrint('Error al eliminar PDF: $e');
+    }
   }
 }
