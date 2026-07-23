@@ -81,7 +81,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .maybeSingle();
 
       if (response == null) return null;
-      return Alumno.fromMap(response as Map<String, dynamic>);
+      return Alumno.fromMap(response);
     } on PostgrestException catch (e) {
       throw Exception('Error al obtener alumno: ${e.message}');
     } catch (e) {

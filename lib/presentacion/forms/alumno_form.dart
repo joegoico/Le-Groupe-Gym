@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
+import 'package:le_groupe_gym/presentacion/forms/alumno_forms_widgets/descuento_switch.dart';
 
 class AlumnoForm extends StatefulWidget {
   /// Si es null, el formulario funciona en modo creación.
@@ -50,7 +50,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
     super.dispose();
   }
 
-  // ── Validaciones ──────────────────────────────────────────────────────────
+  // ── Validaciones ────────────────────────────────────────────────────────────
 
   String? _validateNombre(String? v) {
     if (v == null || v.trim().isEmpty) return 'El nombre es requerido';
@@ -71,7 +71,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
     return null;
   }
 
-  // ── Submit ────────────────────────────────────────────────────────────────
+  // ── Submit ──────────────────────────────────────────────────────────────────
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -104,7 +104,9 @@ class _AlumnoFormState extends State<AlumnoForm> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Error: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: AppColors.errorContainer,
           ),
         );
@@ -114,92 +116,225 @@ class _AlumnoFormState extends State<AlumnoForm> {
     }
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
+  // ── Build ───────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 440,
+      width: 480,
       decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: const BorderRadius.all(AppRadius.lg),
+        color: AppColors.background,
+        borderRadius: const BorderRadius.all(AppRadius.md),
         border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // ── Header ────────────────────────────────────────────────────
-          _FormHeader(
-            titulo: _esEdicion ? 'Editar Alumno' : 'Nuevo Alumno',
-            onClose: widget.onCancelar,
+          // ── HEADER ──────────────────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: const BorderRadius.vertical(top: AppRadius.md),
+              border: Border(
+                bottom: BorderSide(
+                  color: AppColors.onSurface.withValues(alpha: 0.10),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceContainerHigh,
+                    borderRadius: BorderRadius.all(AppRadius.sm),
+                  ),
+                  child: const Icon(
+                    Icons.person_add_outlined,
+                    color: AppColors.primary,
+                    size: 18,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    _esEdicion ? 'Editar Alumno' : 'Nuevo Alumno',
+                    style: AppTextStyles.titleMd.copyWith(fontSize: 15),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  onPressed: _isLoading ? null : widget.onCancelar,
+                  icon: const Icon(
+                    Icons.close,
+                    color: AppColors.onSurfaceVariant,
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
           ),
 
-          // ── Cuerpo ────────────────────────────────────────────────────
+          // ── BODY ────────────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.md),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Nombre
-                  _FieldLabel('Nombre'),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    key: const Key('alumno_nombre_field'),
-                    controller: _nombreCtrl,
-                    validator: _validateNombre,
-                    textInputAction: TextInputAction.next,
-                    decoration: _inputDecoration(hintText: 'Ej. Juan'),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Apellido
-                  _FieldLabel('Apellido'),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    key: const Key('alumno_apellido_field'),
-                    controller: _apellidoCtrl,
-                    validator: _validateApellido,
-                    textInputAction: TextInputAction.next,
-                    decoration: _inputDecoration(hintText: 'Ej. Pérez'),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Mail (opcional)
-                  _FieldLabel('Mail (opcional)'),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    key: const Key('alumno_mail_field'),
-                    controller: _mailCtrl,
-                    validator: _validateMail,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                    decoration: _inputDecoration(
-                      hintText: 'Ej. juan@mail.com',
-                      prefixIcon: Icons.mail_outline,
-                    ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Switch — aplica descuento
-                  _DescuentoSwitch(
-                    value: _aplicaDescuento,
-                    onChanged: (v) => setState(() => _aplicaDescuento = v),
+                  // ── Nombre + Apellido en fila ──────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel('Nombre', icon: Icons.person_outline),
+                            const SizedBox(height: AppSpacing.xs),
+                            SizedBox(
+                              height: 44,
+                              child: TextFormField(
+                                key: const Key('alumno_nombre_field'),
+                                controller: _nombreCtrl,
+                                validator: _validateNombre,
+                                textInputAction: TextInputAction.next,
+                                style: AppTextStyles.subtittles.copyWith(fontSize: 14),
+                                decoration: _inputDecoration(hintText: 'Ej. Juan'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _FieldLabel('Apellido', icon: Icons.badge_outlined),
+                            const SizedBox(height: AppSpacing.xs),
+                            SizedBox(
+                              height: 44,
+                              child: TextFormField(
+                                key: const Key('alumno_apellido_field'),
+                                controller: _apellidoCtrl,
+                                validator: _validateApellido,
+                                textInputAction: TextInputAction.next,
+                                style: AppTextStyles.subtittles.copyWith(fontSize: 14),
+                                decoration: _inputDecoration(hintText: 'Ej. Pérez'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Botones
-                  _FormActions(
-                    isLoading: _isLoading,
-                    onCancelar: widget.onCancelar,
-                    onGuardar: _submit,
+                  // ── Mail ────────────────────────────────────────────────────
+                  const _FieldLabel(
+                    'Email (opcional)',
+                    icon: Icons.mail_outline,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  SizedBox(
+                    height: 44,
+                    child: TextFormField(
+                      key: const Key('alumno_mail_field'),
+                      controller: _mailCtrl,
+                      validator: _validateMail,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                      style: AppTextStyles.subtittles.copyWith(fontSize: 14),
+                      decoration: _inputDecoration(
+                        hintText: 'Ej. juan@mail.com',
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ── Descuento ────────────────────────────────────────────────
+                  DescuentoSwitch(
+                    value: _aplicaDescuento,
+                    onChanged: (v) => setState(() => _aplicaDescuento = v),
+                  ),
+
+                  const SizedBox(height: AppSpacing.xl),
+
+                  // ── Botones ──────────────────────────────────────────────────
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: OutlinedButton(
+                            onPressed: _isLoading ? null : widget.onCancelar,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.onSurfaceVariant,
+                              side: const BorderSide(
+                                color: AppColors.outlineVariant,
+                              ),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: SizedBox(
+                          height: 44,
+                          child: ElevatedButton.icon(
+                            key: const Key('alumno_guardar_button'),
+                            onPressed: _isLoading ? null : _submit,
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.onPrimary,
+                                    ),
+                                  )
+                                : const Icon(Icons.check, size: 16),
+                            label: Text(
+                              _isLoading
+                                  ? 'Guardando...'
+                                  : (_esEdicion
+                                        ? 'Guardar cambios'
+                                        : 'Crear Alumno'),
+                              style: AppTextStyles.buttonText.copyWith(
+                                color: AppColors.onPrimary,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.onPrimary,
+                              disabledBackgroundColor:
+                                  AppColors.surfaceContainerHigh,
+                              disabledForegroundColor:
+                                  AppColors.onSurfaceVariant,
+                              elevation: 0,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -210,27 +345,26 @@ class _AlumnoFormState extends State<AlumnoForm> {
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String hintText,
-    IconData? prefixIcon,
-  }) {
+  InputDecoration _inputDecoration({required String hintText}) {
     return InputDecoration(
       hintText: hintText,
-      prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 18) : null,
-      isDense: true,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 14,
-        vertical: 12,
+      hintStyle: AppTextStyles.subtittles.copyWith(
+        fontSize: 14,
+        color: AppColors.onSurfaceVariant.withValues(alpha: 0.5),
       ),
       filled: true,
-      fillColor: AppColors.surfaceContainerHigh,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: const BorderRadius.all(AppRadius.md),
-        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+      fillColor: AppColors.surfaceContainer,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 10,
+      ),
+      enabledBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(AppRadius.md),
+        borderSide: BorderSide(color: AppColors.outlineVariant),
       ),
       focusedBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(AppRadius.md),
-        borderSide: BorderSide(color: AppColors.primaryDim),
+        borderSide: BorderSide(color: AppColors.primary, width: 1),
       ),
       errorBorder: const OutlineInputBorder(
         borderRadius: BorderRadius.all(AppRadius.md),
@@ -244,177 +378,38 @@ class _AlumnoFormState extends State<AlumnoForm> {
   }
 }
 
-// ── Widgets auxiliares ───────────────────────────────────────────────────────
-
-class _FormHeader extends StatelessWidget {
-  final String titulo;
-  final VoidCallback onClose;
-
-  const _FormHeader({required this.titulo, required this.onClose});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
-        borderRadius: const BorderRadius.vertical(top: AppRadius.lg),
-        border: Border(
-          bottom: BorderSide(color: Colors.white.withValues(alpha: 0.06)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              borderRadius: const BorderRadius.all(AppRadius.sm),
-            ),
-            child: const Icon(
-              Icons.person_add_outlined,
-              color: AppColors.primary,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(titulo, style: AppTextStyles.subtittlesBold),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            onPressed: onClose,
-            icon: const Icon(
-              Icons.close,
-              size: 18,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Label de campo con barra acento izquierda ────────────────────────────────
 
 class _FieldLabel extends StatelessWidget {
-  final String label;
-  const _FieldLabel(this.label);
+  final String text;
+  final IconData? icon;
 
-  @override
-  Widget build(BuildContext context) {
-    return Text(label, style: AppTextStyles.labelCaps);
-  }
-}
-
-class _DescuentoSwitch extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _DescuentoSwitch({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh,
-        borderRadius: const BorderRadius.all(AppRadius.md),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Aplica Descuento', style: AppTextStyles.subtittlesBold),
-                const SizedBox(height: 2),
-                Text(
-                  'El alumno recibe un precio reducido',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            key: const Key('alumno_descuento_switch'),
-            value: value,
-            onChanged: onChanged,
-            activeColor: AppColors.primary,
-            activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FormActions extends StatelessWidget {
-  final bool isLoading;
-  final VoidCallback onCancelar;
-  final VoidCallback onGuardar;
-
-  const _FormActions({
-    required this.isLoading,
-    required this.onCancelar,
-    required this.onGuardar,
-  });
+  const _FieldLabel(this.text, {this.icon});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        TextButton(
-          onPressed: isLoading ? null : onCancelar,
-          child: Text(
-            'Cancelar',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
-            ),
+        Container(
+          width: 3,
+          height: 14,
+          decoration: const BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.all(AppRadius.full),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        ElevatedButton(
-          key: const Key('alumno_guardar_button'),
-          onPressed: isLoading ? null : onGuardar,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.onPrimary,
-            disabledBackgroundColor: AppColors.surfaceContainerHigh,
-            disabledForegroundColor: AppColors.onSurfaceVariant,
-            elevation: 0,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
+        if (icon != null) ...[
+          Icon(icon, size: 14, color: AppColors.onSurface),
+          const SizedBox(width: 4),
+        ],
+        Text(
+          text,
+          style: AppTextStyles.subtittlesBold.copyWith(
+            fontSize: 13,
+            color: AppColors.onSurface,
           ),
-          child: isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.onPrimary,
-                  ),
-                )
-              : Text(
-                  'Guardar',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
         ),
       ],
     );

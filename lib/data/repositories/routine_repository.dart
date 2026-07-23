@@ -249,7 +249,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
         );
       }).toList()..sort((a, b) => a.orden.compareTo(b.orden));
 
-      return Rutina.fromMap(response as Map<String, dynamic>, dias: dias);
+      return Rutina.fromMap(response, dias: dias);
     } on PostgrestException catch (e) {
       throw Exception('Error al obtener rutina completa: ${e.message}');
     } catch (e) {

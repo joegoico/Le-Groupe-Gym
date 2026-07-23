@@ -10,23 +10,7 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.d
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-// ── Paleta de colores para avatares ─────────────────────────────────────────
-const _avatarColors = [
-  Color(0xFF5C6BC0), // índigo
-  Color(0xFF26A69A), // teal
-  Color(0xFFEF5350), // rojo
-  Color(0xFF42A5F5), // azul
-  Color(0xFFAB47BC), // púrpura
-  Color(0xFF66BB6A), // verde
-  Color(0xFFFFA726), // naranja
-  Color(0xFF26C6DA), // cyan
-];
-
-Color _avatarColor(String nombre) =>
-    _avatarColors[nombre.codeUnitAt(0) % _avatarColors.length];
-
+import 'alumnos_widgets/alumnos_card.dart';
 // ── Página ───────────────────────────────────────────────────────────────────
 
 class AlumnosPage extends ConsumerStatefulWidget {
@@ -56,7 +40,7 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
       if (mounted) {
         setState(() {
           _alumnos = alumnos;
-          _alumnosFiltrados = alumnos;
+          _alumnosFiltrados = List<Alumno>.from(alumnos); // copia independiente
           _isLoading = false;
         });
       }
@@ -68,14 +52,16 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   void _onAlumnoChanged(Alumno? alumno) {
     setState(() {
       _alumnoSeleccionado = alumno;
-      _alumnosFiltrados = alumno != null ? [alumno] : _alumnos;
+      _alumnosFiltrados = alumno != null
+          ? [alumno]
+          : List<Alumno>.from(_alumnos);
     });
   }
 
   // ── Acciones ──────────────────────────────────────────────────────────────
 
   Future<void> _abrirFormulario({Alumno? alumno}) async {
-    await showDialog<void>(
+    final alumnoGuardado = await showDialog<Alumno>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => Dialog(
@@ -88,13 +74,14 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
           alumno: alumno,
           alumnoRepository: ref.read(alumnoRepositoryProvider),
           onCancelar: () => Navigator.of(dialogContext).pop(),
-          onGuardar: (alumnoGuardado) {
-            Navigator.of(dialogContext).pop();
-            _onAlumnoGuardado(alumnoGuardado, esEdicion: alumno != null);
-          },
+          onGuardar: (saved) => Navigator.of(dialogContext).pop(saved),
         ),
       ),
     );
+
+    if (alumnoGuardado != null) {
+      _onAlumnoGuardado(alumnoGuardado, esEdicion: alumno != null);
+    }
   }
 
   void _onAlumnoGuardado(Alumno alumno, {required bool esEdicion}) {
@@ -102,15 +89,18 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
       setState(() {
         final idx = _alumnos.indexWhere((a) => a.idAlumno == alumno.idAlumno);
         if (idx != -1) _alumnos[idx] = alumno;
-        final idxF = _alumnosFiltrados.indexWhere(
-          (a) => a.idAlumno == alumno.idAlumno,
-        );
-        if (idxF != -1) _alumnosFiltrados[idxF] = alumno;
+        // _alumnosFiltrados se deriva de _alumnos para mantener consistencia
+        _alumnosFiltrados = _alumnoSeleccionado == null
+            ? List<Alumno>.from(_alumnos)
+            : [alumno];
       });
     } else {
       setState(() {
         _alumnos.insert(0, alumno);
-        _alumnosFiltrados.insert(0, alumno);
+        // deriva la lista filtrada a partir de la fuente de verdad
+        if (_alumnoSeleccionado == null) {
+          _alumnosFiltrados = List<Alumno>.from(_alumnos);
+        }
       });
     }
     if (mounted) {
@@ -168,9 +158,9 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
       }
     }
   }
@@ -280,184 +270,17 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
                           alumno: alumno,
                           onEliminar: () => _eliminarAlumno(alumno),
                           onEditar: () => _abrirFormulario(alumno: alumno),
-                          onVerPagos: () {/* TODO */},
-                          onVerRutinas: () {/* TODO */},
+                          onVerDetalles: () {
+                            context.push('/alumnos/detalle', extra: alumno);
+                          },
+                          onVerRutinas: () {
+                            /* TODO */
+                          },
                         ),
                       )
                       .toList(),
                 ),
         ],
-      ),
-    );
-  }
-}
-
-// ── AlumnoCard ───────────────────────────────────────────────────────────────
-
-class AlumnoCard extends StatelessWidget {
-  final Alumno alumno;
-  final VoidCallback onEliminar;
-  final VoidCallback onEditar;
-  final VoidCallback onVerPagos;
-  final VoidCallback onVerRutinas;
-
-  const AlumnoCard({
-    super.key,
-    required this.alumno,
-    required this.onEliminar,
-    required this.onEditar,
-    required this.onVerPagos,
-    required this.onVerRutinas,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final initials =
-        '${alumno.nombre.isNotEmpty ? alumno.nombre[0] : ''}${alumno.apellido.isNotEmpty ? alumno.apellido[0] : ''}'
-            .toUpperCase();
-    final avatarColor = _avatarColor(alumno.nombre);
-
-    return Container(
-      width: 180,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: const BorderRadius.all(AppRadius.lg),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Fila superior: avatar + acciones ──────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: avatarColor,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  initials,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              _ActionIcon(
-                key: Key('eliminar_${alumno.idAlumno}'),
-                icon: Icons.delete_outline,
-                onTap: onEliminar,
-              ),
-              const SizedBox(width: 4),
-              _ActionIcon(
-                key: Key('editar_${alumno.idAlumno}'),
-                icon: Icons.edit_outlined,
-                onTap: onEditar,
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // ── Nombre ────────────────────────────────────────────────────
-          Text(
-            alumno.nombreCompleto,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-
-          const SizedBox(height: 2),
-
-          // ── Subtítulo ─────────────────────────────────────────────────
-          Text(
-            alumno.aplicaDescuento ? 'Con descuento' : 'Sin descuento',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: alumno.aplicaDescuento
-                  ? AppColors.primary
-                  : AppColors.onSurfaceVariant,
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-
-          // ── Acciones inferiores ───────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  key: Key('ver_pagos_${alumno.idAlumno}'),
-                  onPressed: onVerPagos,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(AppRadius.sm),
-                    ),
-                    textStyle: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  child: const Text('VER PAGOS'),
-                ),
-              ),
-              const SizedBox(width: 6),
-              _ActionIcon(
-                key: Key('rutinas_${alumno.idAlumno}'),
-                icon: Icons.fitness_center_outlined,
-                onTap: onVerRutinas,
-                size: 18,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Widget auxiliar: ícono de acción pequeño ─────────────────────────────────
-
-class _ActionIcon extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final double size;
-
-  const _ActionIcon({
-    super.key,
-    required this.icon,
-    required this.onTap,
-    this.size = 16,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: const BorderRadius.all(AppRadius.sm),
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: Icon(
-          icon,
-          size: size,
-          color: AppColors.onSurfaceVariant,
-        ),
       ),
     );
   }

@@ -51,7 +51,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
 
       expect(find.text('Cancelar'), findsOneWidget);
-      expect(find.text('Guardar'), findsOneWidget);
+      expect(find.text('Crear Alumno'), findsOneWidget);
     });
 
     testWidgets('debe mostrar título "Nuevo Alumno" en modo creación', (
@@ -167,63 +167,61 @@ void main() {
       expect(cancelado, isTrue);
     });
 
-    testWidgets(
-      'debe llamar onGuardar con datos correctos al crear alumno',
-      (tester) async {
-        Alumno? guardado;
-        await tester.pumpWidget(
-          createWidgetUnderTest(onGuardar: (a) => guardado = a),
-        );
+    testWidgets('debe llamar onGuardar con datos correctos al crear alumno', (
+      tester,
+    ) async {
+      Alumno? guardado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onGuardar: (a) => guardado = a),
+      );
 
-        await tester.enterText(
-          find.byKey(const Key('alumno_nombre_field')),
-          'María',
-        );
-        await tester.enterText(
-          find.byKey(const Key('alumno_apellido_field')),
-          'García',
-        );
-        await tester.enterText(
-          find.byKey(const Key('alumno_mail_field')),
-          'maria@mail.com',
-        );
-        await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-        await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('alumno_nombre_field')),
+        'María',
+      );
+      await tester.enterText(
+        find.byKey(const Key('alumno_apellido_field')),
+        'García',
+      );
+      await tester.enterText(
+        find.byKey(const Key('alumno_mail_field')),
+        'maria@mail.com',
+      );
+      await tester.tap(find.byKey(const Key('alumno_guardar_button')));
+      await tester.pump();
 
-        expect(guardado, isNotNull);
-        expect(guardado!.nombre, 'María');
-        expect(guardado!.apellido, 'García');
-        expect(guardado!.mail, 'maria@mail.com');
-        expect(guardado!.aplicaDescuento, isFalse);
-      },
-    );
+      expect(guardado, isNotNull);
+      expect(guardado!.nombre, 'María');
+      expect(guardado!.apellido, 'García');
+      expect(guardado!.mail, 'maria@mail.com');
+      expect(guardado!.aplicaDescuento, isFalse);
+    });
 
-    testWidgets(
-      'debe incluir aplicaDescuento=true al activar el switch',
-      (tester) async {
-        Alumno? guardado;
-        await tester.pumpWidget(
-          createWidgetUnderTest(onGuardar: (a) => guardado = a),
-        );
+    testWidgets('debe incluir aplicaDescuento=true al activar el switch', (
+      tester,
+    ) async {
+      Alumno? guardado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(onGuardar: (a) => guardado = a),
+      );
 
-        await tester.enterText(
-          find.byKey(const Key('alumno_nombre_field')),
-          'Pedro',
-        );
-        await tester.enterText(
-          find.byKey(const Key('alumno_apellido_field')),
-          'Gómez',
-        );
-        // Activamos el switch
-        await tester.tap(find.byKey(const Key('alumno_descuento_switch')));
-        await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('alumno_nombre_field')),
+        'Pedro',
+      );
+      await tester.enterText(
+        find.byKey(const Key('alumno_apellido_field')),
+        'Gómez',
+      );
+      // Activamos el switch
+      await tester.tap(find.byKey(const Key('alumno_descuento_switch')));
+      await tester.pump();
 
-        await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-        await tester.pump();
+      await tester.tap(find.byKey(const Key('alumno_guardar_button')));
+      await tester.pump();
 
-        expect(guardado!.aplicaDescuento, isTrue);
-      },
-    );
+      expect(guardado!.aplicaDescuento, isTrue);
+    });
 
     // ── Modo edición ──────────────────────────────────────────────────────────
 
@@ -244,9 +242,7 @@ void main() {
 
       expect(
         tester
-            .widget<TextFormField>(
-              find.byKey(const Key('alumno_nombre_field')),
-            )
+            .widget<TextFormField>(find.byKey(const Key('alumno_nombre_field')))
             .controller
             ?.text,
         'Lucas',
@@ -262,9 +258,7 @@ void main() {
       );
       expect(
         tester
-            .widget<TextFormField>(
-              find.byKey(const Key('alumno_mail_field')),
-            )
+            .widget<TextFormField>(find.byKey(const Key('alumno_mail_field')))
             .controller
             ?.text,
         'lucas@mail.com',
@@ -277,34 +271,33 @@ void main() {
       expect(switchWidget.value, isTrue);
     });
 
-    testWidgets(
-      'debe llamar onGuardar con id del alumno existente al editar',
-      (tester) async {
-        Alumno? guardado;
-        await tester.pumpWidget(
-          createWidgetUnderTest(
-            alumno: Alumno(
-              idAlumno: 'abc-123',
-              nombre: 'Lucas',
-              apellido: 'Benítez',
-              mail: 'lucas@mail.com',
-              aplicaDescuento: false,
-            ),
-            onGuardar: (a) => guardado = a,
+    testWidgets('debe llamar onGuardar con id del alumno existente al editar', (
+      tester,
+    ) async {
+      Alumno? guardado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          alumno: Alumno(
+            idAlumno: 'abc-123',
+            nombre: 'Lucas',
+            apellido: 'Benítez',
+            mail: 'lucas@mail.com',
+            aplicaDescuento: false,
           ),
-        );
+          onGuardar: (a) => guardado = a,
+        ),
+      );
 
-        // Modificamos el nombre
-        await tester.enterText(
-          find.byKey(const Key('alumno_nombre_field')),
-          'Luca',
-        );
-        await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-        await tester.pump();
+      // Modificamos el nombre
+      await tester.enterText(
+        find.byKey(const Key('alumno_nombre_field')),
+        'Luca',
+      );
+      await tester.tap(find.byKey(const Key('alumno_guardar_button')));
+      await tester.pump();
 
-        expect(guardado!.idAlumno, 'abc-123');
-        expect(guardado!.nombre, 'Luca');
-      },
-    );
+      expect(guardado!.idAlumno, 'abc-123');
+      expect(guardado!.nombre, 'Luca');
+    });
   });
 }

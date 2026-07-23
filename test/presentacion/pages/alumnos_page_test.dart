@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumnos_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/alumnos_widgets/alumnos_card.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import '../../mocks/mock_alumno_repository.dart';
 
@@ -59,9 +60,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('cards con descuento muestran "Con descuento"', (
-      tester,
-    ) async {
+    testWidgets('cards con descuento muestran "Con descuento"', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
@@ -80,14 +79,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Assert — 16 alumnos → 16 botones "VER PAGOS"
-      expect(find.text('VER PAGOS'), findsNWidgets(16));
+      expect(find.text('VER DETALLES'), findsNWidgets(16));
 
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('cada card tiene botones de editar y eliminar', (
-      tester,
-    ) async {
+    testWidgets('cada card tiene botones de editar y eliminar', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
@@ -128,29 +125,28 @@ void main() {
 
     // ── Filtrado por selección ────────────────────────────────────────────────
 
-    testWidgets(
-      'al seleccionar un alumno la lista se filtra a ese alumno',
-      (tester) async {
-        tester.view.physicalSize = const Size(1280, 800);
-        tester.view.devicePixelRatio = 1.0;
-        await tester.pumpWidget(createWidgetUnderTest());
-        await tester.pump(const Duration(milliseconds: 100));
+    testWidgets('al seleccionar un alumno la lista se filtra a ese alumno', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pump(const Duration(milliseconds: 100));
 
-        // Act — escribimos en el AlumnoSelector para disparar la búsqueda
-        final selectorField = find.descendant(
-          of: find.byKey(const Key('alumnos_search_selector')),
-          matching: find.byType(TextField),
-        );
-        await tester.enterText(selectorField, 'Juan');
-        // Esperamos debounce (300ms) + frame del mock
-        await tester.pump(const Duration(milliseconds: 400));
+      // Act — escribimos en el AlumnoSelector para disparar la búsqueda
+      final selectorField = find.descendant(
+        of: find.byKey(const Key('alumnos_search_selector')),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(selectorField, 'Juan');
+      // Esperamos debounce (300ms) + frame del mock
+      await tester.pump(const Duration(milliseconds: 400));
 
-        // El overlay del AlumnoSelector debe aparecer con "Juan Pérez"
-        expect(find.text('Juan Pérez'), findsWidgets);
+      // El overlay del AlumnoSelector debe aparecer con "Juan Pérez"
+      expect(find.text('Juan Pérez'), findsWidgets);
 
-        addTearDown(tester.view.resetPhysicalSize);
-      },
-    );
+      addTearDown(tester.view.resetPhysicalSize);
+    });
 
     // ── Layout / overflow ─────────────────────────────────────────────────────
 

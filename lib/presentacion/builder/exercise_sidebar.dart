@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
-import 'package:le_groupe_gym/core/app_theme.dart';
 import '../../data/models/exercise_model.dart';
 import 'routine_builder_controller.dart';
 import '../controllers/sidebar_exercise_controller.dart';
@@ -118,7 +117,7 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.primary.withValues(alpha: 0.15),
                           borderRadius: const BorderRadius.all(AppRadius.full),
                         ),
                         child: Text(
@@ -162,7 +161,7 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: const BorderRadius.all(AppRadius.md),
                       borderSide: BorderSide(
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
@@ -211,10 +210,10 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                     vertical: AppSpacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.08),
+                    color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: const BorderRadius.all(AppRadius.md),
                     border: Border.all(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -291,9 +290,13 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                         child: InkWell(
                           onTap: () => widget.onAddExercise(exercise),
                           borderRadius: const BorderRadius.all(AppRadius.md),
-                          hoverColor: AppColors.primary.withOpacity(0.06),
-                          highlightColor: AppColors.primary.withOpacity(0.1),
-                          splashColor: AppColors.primary.withOpacity(0.08),
+                          hoverColor: AppColors.primary.withValues(alpha: 0.06),
+                          highlightColor: AppColors.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          splashColor: AppColors.primary.withValues(
+                            alpha: 0.08,
+                          ),
                           child: ListTile(
                             dense: true,
                             contentPadding: const EdgeInsets.symmetric(
@@ -347,9 +350,11 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                               style: IconButton.styleFrom(
                                 padding: const EdgeInsets.all(4),
                                 minimumSize: const Size(28, 28),
-                                hoverColor: AppColors.primary.withOpacity(0.15),
-                                highlightColor: AppColors.primary.withOpacity(
-                                  0.25,
+                                hoverColor: AppColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
+                                highlightColor: AppColors.primary.withValues(
+                                  alpha: 0.25,
                                 ),
                                 shape: const RoundedRectangleBorder(
                                   borderRadius: BorderRadius.all(AppRadius.sm),
