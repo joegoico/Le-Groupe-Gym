@@ -98,7 +98,9 @@ class _InlineEditableTextState extends State<InlineEditableText> {
             fillColor: AppColors.surfaceContainerHigh,
             enabledBorder: OutlineInputBorder(
               borderRadius: const BorderRadius.all(AppRadius.sm),
-              borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: const BorderRadius.all(AppRadius.sm),
@@ -118,12 +120,12 @@ class _InlineEditableTextState extends State<InlineEditableText> {
           tooltip: 'Editar nombre',
           icon: const Icon(Icons.edit_rounded),
           iconSize: 17,
-          color: AppColors.onSurfaceVariant.withOpacity(0.7),
+          color: AppColors.onSurfaceVariant.withValues(alpha: 0.7),
           style: IconButton.styleFrom(
             padding: const EdgeInsets.all(6),
             minimumSize: const Size(32, 32),
-            hoverColor: AppColors.onSurfaceVariant.withOpacity(0.12),
-            highlightColor: AppColors.onSurfaceVariant.withOpacity(0.2),
+            hoverColor: AppColors.onSurfaceVariant.withValues(alpha: 0.12),
+            highlightColor: AppColors.onSurfaceVariant.withValues(alpha: 0.2),
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(AppRadius.sm),
             ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
-import 'package:le_groupe_gym/data/models/pago_model.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
@@ -60,24 +59,32 @@ void main() {
     expect(find.text('Pago Personalizado'), findsOneWidget);
   });
 
-  testWidgets('seleccionar pago personalizado habilita monto y comentario obligatorio', (tester) async {
-    await tester.pumpWidget(createWidgetUnderTest());
-    await tester.tap(find.text('Abrir'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'seleccionar pago personalizado habilita monto y comentario obligatorio',
+    (tester) async {
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.tap(find.text('Abrir'));
+      await tester.pumpAndSettle();
 
-    // Ya está seleccionado personalizado por defecto.
-    
-    // Tocar guardar sin comentarios ni monto
-    await tester.ensureVisible(find.text('Guardar Pago'));
-    await tester.tap(find.text('Guardar Pago'));
-    await tester.pumpAndSettle();
+      // Ya está seleccionado personalizado por defecto.
 
-    // Debería mostrar error en monto y comentario
-    expect(find.text('El monto es obligatorio'), findsOneWidget);
-    expect(find.text('El comentario es obligatorio para pagos personalizados'), findsOneWidget);
-  });
+      // Tocar guardar sin comentarios ni monto
+      await tester.ensureVisible(find.text('Guardar Pago'));
+      await tester.tap(find.text('Guardar Pago'));
+      await tester.pumpAndSettle();
 
-  testWidgets('guarda el pago correctamente cuando es un plan normal', (tester) async {
+      // Debería mostrar error en monto y comentario
+      expect(find.text('El monto es obligatorio'), findsOneWidget);
+      expect(
+        find.text('El comentario es obligatorio para pagos personalizados'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('guarda el pago correctamente cuando es un plan normal', (
+    tester,
+  ) async {
     await tester.pumpWidget(createWidgetUnderTest());
     await tester.tap(find.text('Abrir'));
     await tester.pumpAndSettle();
@@ -85,7 +92,7 @@ void main() {
     // Abrir dropdown y seleccionar plan
     await tester.tap(find.byType(DropdownButtonFormField<Precio?>));
     await tester.pumpAndSettle();
-    
+
     await tester.tap(find.text('3 días - \$15000').last);
     await tester.pumpAndSettle();
 

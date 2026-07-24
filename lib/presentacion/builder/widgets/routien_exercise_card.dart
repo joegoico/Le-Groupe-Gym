@@ -49,10 +49,10 @@ class RoutineExerciseCard extends StatelessWidget {
         borderRadius: const BorderRadius.all(AppRadius.md),
         border: Border.all(
           color: item.esSuperserie
-              ? AppColors.tertiary.withOpacity(0.65)
+              ? AppColors.tertiary.withValues(alpha: 0.65)
               : isCombining
-              ? AppColors.primary.withOpacity(0.3)
-              : Colors.white.withOpacity(0.05),
+              ? AppColors.primary.withValues(alpha: 0.3)
+              : Colors.white.withValues(alpha: 0.05),
           width: 1,
         ),
       ),
@@ -70,7 +70,7 @@ class RoutineExerciseCard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2, right: AppSpacing.sm),
                 child: Icon(
                   Icons.drag_handle,
-                  color: AppColors.onSurfaceVariant.withOpacity(0.3),
+                  color: AppColors.onSurfaceVariant.withValues(alpha: 0.3),
                   size: 18,
                 ),
               ),
@@ -136,7 +136,7 @@ class RoutineExerciseCard extends StatelessWidget {
                         Icon(
                           Icons.arrow_back,
                           size: 12,
-                          color: AppColors.primary.withOpacity(0.8),
+                          color: AppColors.primary.withValues(alpha: 0.8),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
@@ -384,7 +384,9 @@ class RoutineExerciseCard extends StatelessWidget {
               contentPadding: EdgeInsets.zero,
               enabledBorder: OutlineInputBorder(
                 borderRadius: const BorderRadius.all(AppRadius.sm),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+                borderSide: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.08),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: const BorderRadius.all(AppRadius.sm),

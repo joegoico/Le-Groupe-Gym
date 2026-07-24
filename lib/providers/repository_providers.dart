@@ -20,10 +20,14 @@ final routineRepositoryProvider = Provider<RoutineRepository>((ref) {
   return SupabaseRoutineRepository(supabaseClient: Supabase.instance.client);
 });
 
-final rutinasAlumnoProvider = FutureProvider.family<List<({Rutina rutina, Alumno alumno})>, String>((ref, idAlumno) async {
-  final repository = ref.watch(routineRepositoryProvider);
-  return repository.getRutinasPorAlumno(idAlumno);
-});
+final rutinasAlumnoProvider =
+    FutureProvider.family<List<({Rutina rutina, Alumno alumno})>, String>((
+      ref,
+      idAlumno,
+    ) async {
+      final repository = ref.watch(routineRepositoryProvider);
+      return repository.getRutinasPorAlumno(idAlumno);
+    });
 
 final alumnoRepositoryProvider = Provider<AlumnoRepository>((ref) {
   return SupabaseAlumnoRepository(supabaseClient: Supabase.instance.client);
@@ -55,7 +59,10 @@ final pagoRepositoryProvider = Provider<PagoRepository>((ref) {
   return SupabasePagoRepository(supabaseClient: Supabase.instance.client);
 });
 
-final ultimoPagoAlumnoProvider = FutureProvider.family<Pago?, String>((ref, idAlumno) async {
+final ultimoPagoAlumnoProvider = FutureProvider.family<Pago?, String>((
+  ref,
+  idAlumno,
+) async {
   final repository = ref.watch(pagoRepositoryProvider);
   return repository.getUltimoPago(idAlumno);
 });

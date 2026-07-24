@@ -29,7 +29,7 @@ class DescuentosPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainer,
         borderRadius: const BorderRadius.all(AppRadius.lg),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +63,7 @@ class DescuentosPanel extends StatelessWidget {
                   ),
                   padding: EdgeInsets.zero,
                   style: IconButton.styleFrom(
-                    backgroundColor: AppColors.primary.withOpacity(0.10),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.10),
                     shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(AppRadius.sm),
                     ),

@@ -97,10 +97,12 @@ class RoutineDayAccordion extends StatelessWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.15),
-                            borderRadius: const BorderRadius.all(AppRadius.full),
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                            borderRadius: const BorderRadius.all(
+                              AppRadius.full,
+                            ),
                             border: Border.all(
-                              color: AppColors.primary.withOpacity(0.4),
+                              color: AppColors.primary.withValues(alpha: 0.4),
                             ),
                           ),
                           child: Row(
@@ -134,7 +136,7 @@ class RoutineDayAccordion extends StatelessWidget {
                           color: AppColors.surfaceContainerHighest,
                           borderRadius: const BorderRadius.all(AppRadius.full),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                           ),
                         ),
                         child: Text(
@@ -158,20 +160,25 @@ class RoutineDayAccordion extends StatelessWidget {
                               );
                               if (!confirmed) return;
                               final ok = controller.removeDay(dayIndex);
-                              if (!ok)
+                              if (!ok) {
                                 onShowMessage?.call(
                                   'No se puede eliminar el único día.',
                                 );
+                              }
                             },
                             tooltip: 'Eliminar día',
                             icon: const Icon(Icons.delete_rounded),
                             iconSize: 20,
-                            color: AppColors.error.withOpacity(0.75),
+                            color: AppColors.error.withValues(alpha: 0.75),
                             style: IconButton.styleFrom(
                               padding: const EdgeInsets.all(7),
                               minimumSize: const Size(36, 36),
-                              hoverColor: AppColors.error.withOpacity(0.15),
-                              highlightColor: AppColors.error.withOpacity(0.25),
+                              hoverColor: AppColors.error.withValues(
+                                alpha: 0.15,
+                              ),
+                              highlightColor: AppColors.error.withValues(
+                                alpha: 0.25,
+                              ),
                               shape: const RoundedRectangleBorder(
                                 borderRadius: BorderRadius.all(AppRadius.sm),
                               ),

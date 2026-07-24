@@ -78,13 +78,13 @@ class MuscleCategorySelector extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.primary.withOpacity(0.12)
+                      ? AppColors.primary.withValues(alpha: 0.12)
                       : AppColors.surfaceContainer,
                   borderRadius: const BorderRadius.all(AppRadius.full),
                   border: Border.all(
                     color: isSelected
-                        ? AppColors.primary.withOpacity(0.6)
-                        : Colors.white.withOpacity(0.08),
+                        ? AppColors.primary.withValues(alpha: 0.6)
+                        : Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
                 child: Text(
@@ -131,13 +131,13 @@ class MuscleCategorySelector extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Colors.teal.withOpacity(0.12)
+                        ? Colors.teal.withValues(alpha: 0.12)
                         : AppColors.surfaceContainer,
                     borderRadius: const BorderRadius.all(AppRadius.full),
                     border: Border.all(
                       color: isSelected
-                          ? Colors.teal.withOpacity(0.5)
-                          : Colors.white.withOpacity(0.08),
+                          ? Colors.teal.withValues(alpha: 0.5)
+                          : Colors.white.withValues(alpha: 0.08),
                     ),
                   ),
                   child: Text(

@@ -94,13 +94,13 @@ void main() {
     });
 
     // ── Rutinas Asignadas ─────────────────────────────────────────────────────
-    
+
     testWidgets('debe cargar y mostrar las rutinas', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest(alumnoConMail));
       // Esperar a que el FutureProvider resuelva
       await tester.pumpAndSettle();
-      
-      // En el MockRoutineRepository actualmente devuelve 1 rutina ("Rutina de prueba") 
+
+      // En el MockRoutineRepository actualmente devuelve 1 rutina ("Rutina de prueba")
       // cuando se llama a getRutinas() o debemos chequearlo.
       // Aquí solo chequeamos que diga RUTINAS ASIGNADAS
       expect(find.text('RUTINAS ASIGNADAS'), findsOneWidget);

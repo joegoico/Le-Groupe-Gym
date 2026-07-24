@@ -11,6 +11,7 @@ class AppSnackbar {
     required String message,
     SnackbarType type = SnackbarType.info,
     Duration duration = const Duration(seconds: 3),
+
     /// Margen desde el borde inferior. Aumentar para acercarlo al centro.
     double bottomMargin = 80,
   }) {
@@ -38,11 +39,7 @@ class AppSnackbar {
           backgroundColor: config.backgroundColor,
           behavior: SnackBarBehavior.floating,
           duration: duration,
-          margin: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            bottom: bottomMargin,
-          ),
+          margin: EdgeInsets.only(left: 24, right: 24, bottom: bottomMargin),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm + 2,
@@ -64,7 +61,7 @@ class AppSnackbar {
           iconColor: AppColors.warningLow,
           textColor: AppColors.warningLow,
           backgroundColor: AppColors.warningLowContent,
-          borderColor: AppColors.warningLow.withOpacity(0.35),
+          borderColor: AppColors.warningLow.withValues(alpha: 0.35),
         );
       case SnackbarType.error:
         return _SnackbarConfig(
@@ -72,7 +69,7 @@ class AppSnackbar {
           iconColor: AppColors.error,
           textColor: AppColors.error,
           backgroundColor: AppColors.errorContainer,
-          borderColor: AppColors.error.withOpacity(0.35),
+          borderColor: AppColors.error.withValues(alpha: 0.35),
         );
       case SnackbarType.info:
         return _SnackbarConfig(
@@ -80,7 +77,7 @@ class AppSnackbar {
           iconColor: AppColors.onSurface,
           textColor: AppColors.onSurface,
           backgroundColor: AppColors.surfaceContainerHighest,
-          borderColor: Colors.white.withOpacity(0.15),
+          borderColor: Colors.white.withValues(alpha: 0.15),
         );
     }
   }

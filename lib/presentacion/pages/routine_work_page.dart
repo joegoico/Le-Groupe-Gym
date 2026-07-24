@@ -92,7 +92,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         }
       } else if (widget.solicitudOrigen != null) {
         final alumno = await alumnoRepo.getAlumnoById(
-          widget.solicitudOrigen!.idAlumno!,
+          widget.solicitudOrigen!.idAlumno,
         );
         if (mounted) {
           setState(() {
@@ -203,13 +203,19 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
     // Si tiene 3, obtener la más antigua para borrar su PDF
     if (rutinasAlumno.length >= 3 && widget.rutinaExistente == null) {
-      final masAntigua =
-          rutinasAlumno.last; // ya vienen ordenadas por fecha desc
+      final masAntigua = rutinasAlumno.last;
+      debugPrint('🗑️ Rutinas del alumno: ${rutinasAlumno.length}');
+      debugPrint('🗑️ Rutina más antigua: ${masAntigua.rutina.idRutina}');
+      debugPrint('🗑️ URL PDF: ${masAntigua.rutina.urlPdf}');
+
       if (masAntigua.rutina.urlPdf != null) {
         await storageService.deletePdf(
           idRutina: masAntigua.rutina.idRutina!,
           idAlumno: _alumnoSeleccionado!.idAlumno,
         );
+        debugPrint('✅ PDF eliminado');
+      } else {
+        debugPrint('⚠️ La rutina más antigua no tiene PDF');
       }
     }
   }
@@ -233,6 +239,8 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       );
 
       int idRutina;
+      await _deleteOldRoutines(routineRepo);
+
       if (widget.rutinaExistente != null) {
         await routineRepo.updateRoutine(rutina);
         idRutina = widget.rutinaExistente!.idRutina!;

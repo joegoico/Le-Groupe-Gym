@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
-import 'package:mocktail/mocktail.dart';
 
 void main() {
   group('Routine Builder Controller - Tests de Lógica de Negocio', () {
@@ -72,18 +71,21 @@ void main() {
       expect(controller.bloques.first.ejercicios.first.series, 4);
     });
 
-    test('debe permitir eliminar el único ejercicio de un bloque (queda vacío)', () {
-      // Arrange
-      controller.addBlock();
-      controller.addExercise(ejercicioMock1);
+    test(
+      'debe permitir eliminar el único ejercicio de un bloque (queda vacío)',
+      () {
+        // Arrange
+        controller.addBlock();
+        controller.addExercise(ejercicioMock1);
 
-      // Act
-      final ok = controller.removeExercise(0, 0);
+        // Act
+        final ok = controller.removeExercise(0, 0);
 
-      // Assert
-      expect(ok, isTrue);
-      expect(controller.bloques.first.ejercicios, isEmpty);
-    });
+        // Assert
+        expect(ok, isTrue);
+        expect(controller.bloques.first.ejercicios, isEmpty);
+      },
+    );
 
     test(
       'debe permitir eliminar un ejercicio si el bloque tiene más de uno',

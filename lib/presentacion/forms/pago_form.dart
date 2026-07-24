@@ -41,33 +41,35 @@ class _PagoFormState extends ConsumerState<PagoForm> {
 
   Future<void> _guardarPago() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isLoading = true);
-    
+
     try {
       final monto = double.parse(_montoController.text);
       final dias = int.parse(_diasController.text);
-      
+
       final nuevoPago = Pago(
         idPago: '', // Supabase generará el UUID automáticamente
         idAlumno: widget.alumno.idAlumno,
         fechaDePago: _fechaPago,
         monto: monto,
         medioDePago: _medioPago,
-        comentarios: _comentariosController.text.isNotEmpty ? _comentariosController.text : null,
+        comentarios: _comentariosController.text.isNotEmpty
+            ? _comentariosController.text
+            : null,
         cantidadDias: dias,
       );
 
       await ref.read(pagoRepositoryProvider).insertarPago(nuevoPago);
-      
+
       if (mounted) {
         Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -80,7 +82,9 @@ class _PagoFormState extends ConsumerState<PagoForm> {
 
     return AlertDialog(
       backgroundColor: AppColors.surfaceContainer,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(AppRadius.lg)),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(AppRadius.lg),
+      ),
       title: Text(
         'Registrar Pago',
         style: GoogleFonts.inter(
@@ -105,26 +109,40 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                
+
                 // Selector de Plan
-                Text('Plan', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 14)),
+                Text(
+                  'Plan',
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 planesAsync.when(
                   data: (planes) {
                     return DropdownButtonFormField<Precio?>(
-                      value: _planSeleccionado,
+                      initialValue: _planSeleccionado,
                       dropdownColor: AppColors.surfaceContainerHigh,
                       style: GoogleFonts.inter(color: AppColors.onSurface),
                       decoration: _buildInputDecoration(),
                       items: [
                         DropdownMenuItem(
                           value: null,
-                          child: Text('Pago Personalizado', style: GoogleFonts.inter()),
+                          child: Text(
+                            'Pago Personalizado',
+                            style: GoogleFonts.inter(),
+                          ),
                         ),
-                        ...planes.map((p) => DropdownMenuItem(
-                          value: p,
-                          child: Text('${p.cantidadDias} días - \$${p.valor.toInt()}', style: GoogleFonts.inter()),
-                        )),
+                        ...planes.map(
+                          (p) => DropdownMenuItem(
+                            value: p,
+                            child: Text(
+                              '${p.cantidadDias} días - \$${p.valor.toInt()}',
+                              style: GoogleFonts.inter(),
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: (val) {
                         setState(() {
@@ -141,12 +159,21 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                     );
                   },
                   loading: () => const CircularProgressIndicator(),
-                  error: (err, stack) => Text('Error: $err', style: const TextStyle(color: Colors.red)),
+                  error: (err, stack) => Text(
+                    'Error: $err',
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // Monto
-                Text('Monto', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 14)),
+                Text(
+                  'Monto',
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 TextFormField(
                   controller: _montoController,
@@ -155,33 +182,52 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   decoration: _buildInputDecoration(prefixText: '\$ '),
                   enabled: _planSeleccionado == null,
                   validator: (val) {
-                    if (val == null || val.isEmpty) return 'El monto es obligatorio';
+                    if (val == null || val.isEmpty)
+                      return 'El monto es obligatorio';
                     if (double.tryParse(val) == null) return 'Monto inválido';
                     return null;
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // Medio de Pago
-                Text('Medio de Pago', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 14)),
+                Text(
+                  'Medio de Pago',
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 DropdownButtonFormField<String>(
-                  value: _medioPago,
+                  initialValue: _medioPago,
                   dropdownColor: AppColors.surfaceContainerHigh,
                   style: GoogleFonts.inter(color: AppColors.onSurface),
                   decoration: _buildInputDecoration(),
                   items: const [
-                    DropdownMenuItem(value: 'Efectivo', child: Text('Efectivo')),
-                    DropdownMenuItem(value: 'Transferencia', child: Text('Transferencia')),
+                    DropdownMenuItem(
+                      value: 'Efectivo',
+                      child: Text('Efectivo'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Transferencia',
+                      child: Text('Transferencia'),
+                    ),
                   ],
                   onChanged: (val) {
                     if (val != null) setState(() => _medioPago = val);
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // Cantidad de Días
-                Text('Cantidad de días', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 14)),
+                Text(
+                  'Cantidad de días',
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 TextFormField(
                   key: const Key('pago_dias_input'),
@@ -197,9 +243,15 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
-                
+
                 // Comentarios
-                Text('Comentarios', style: GoogleFonts.inter(color: AppColors.onSurfaceVariant, fontSize: 14)),
+                Text(
+                  'Comentarios',
+                  style: GoogleFonts.inter(
+                    color: AppColors.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 TextFormField(
                   controller: _comentariosController,
@@ -207,7 +259,8 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   decoration: _buildInputDecoration(),
                   maxLines: 2,
                   validator: (val) {
-                    if (_planSeleccionado == null && (val == null || val.isEmpty)) {
+                    if (_planSeleccionado == null &&
+                        (val == null || val.isEmpty)) {
                       return 'El comentario es obligatorio para pagos personalizados';
                     }
                     return null;
@@ -221,18 +274,30 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Cancelar', style: GoogleFonts.inter(color: AppColors.primary)),
+          child: Text(
+            'Cancelar',
+            style: GoogleFonts.inter(color: AppColors.primary),
+          ),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _guardarPago,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.black,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(AppRadius.md)),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(AppRadius.md),
+            ),
           ),
-          child: _isLoading 
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) 
-            : Text('Guardar Pago', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+          child: _isLoading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(
+                  'Guardar Pago',
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                ),
         ),
       ],
     );
@@ -256,7 +321,10 @@ class _PagoFormState extends ConsumerState<PagoForm> {
         borderRadius: BorderRadius.circular(8),
         borderSide: const BorderSide(color: AppColors.primary, width: 1),
       ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
     );
   }
 }

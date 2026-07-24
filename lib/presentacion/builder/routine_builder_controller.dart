@@ -43,8 +43,9 @@ class RoutineBuilderController extends ChangeNotifier {
   bool get isSelectingForCombine => _combiningBlockIndex != null;
 
   String? get combiningTargetExerciseName {
-    if (_combiningBlockIndex == null || _combiningExerciseIndex == null)
+    if (_combiningBlockIndex == null || _combiningExerciseIndex == null) {
       return null;
+    }
     final dia = _diaActivo;
     if (dia == null) return null;
     return dia
@@ -190,8 +191,9 @@ class RoutineBuilderController extends ChangeNotifier {
   bool _combineFromSidebar(Ejercicio ejercicio) {
     final blockIndex = _combiningBlockIndex!;
     final exerciseIndex = _combiningExerciseIndex!;
-    if (_ejercicioYaEnTarjeta(blockIndex, exerciseIndex, ejercicio))
+    if (_ejercicioYaEnTarjeta(blockIndex, exerciseIndex, ejercicio)) {
       return false;
+    }
     confirmCombine(
       blockIndex: blockIndex,
       exerciseIndex: exerciseIndex,

@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/presentacion/pages/routine_work_page.dart';
 import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
-import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
-import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';

@@ -79,7 +79,7 @@ class _DescuentoFormState extends State<DescuentoForm> {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: const BorderRadius.all(AppRadius.lg),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

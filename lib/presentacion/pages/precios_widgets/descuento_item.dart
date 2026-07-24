@@ -26,7 +26,7 @@ class DescuentoItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceContainerHigh,
           borderRadius: const BorderRadius.all(AppRadius.md),
-          border: Border.all(color: Colors.white.withOpacity(0.06)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
         child: Row(
           children: [
@@ -38,10 +38,10 @@ class DescuentoItem extends StatelessWidget {
                   vertical: AppSpacing.sm,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.12),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: const BorderRadius.all(AppRadius.sm),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.25),
+                    color: AppColors.primary.withValues(alpha: 0.25),
                   ),
                 ),
                 child: Text(
@@ -64,8 +64,8 @@ class DescuentoItem extends StatelessWidget {
               style: IconButton.styleFrom(
                 padding: const EdgeInsets.all(AppSpacing.xs),
                 minimumSize: const Size(32, 32),
-                hoverColor: AppColors.primary.withOpacity(0.10),
-                highlightColor: AppColors.primary.withOpacity(0.18),
+                hoverColor: AppColors.primary.withValues(alpha: 0.10),
+                highlightColor: AppColors.primary.withValues(alpha: 0.18),
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(AppRadius.sm),
                 ),
@@ -79,8 +79,8 @@ class DescuentoItem extends StatelessWidget {
               style: IconButton.styleFrom(
                 padding: const EdgeInsets.all(AppSpacing.xs),
                 minimumSize: const Size(32, 32),
-                hoverColor: AppColors.error.withOpacity(0.10),
-                highlightColor: AppColors.error.withOpacity(0.18),
+                hoverColor: AppColors.error.withValues(alpha: 0.10),
+                highlightColor: AppColors.error.withValues(alpha: 0.18),
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(AppRadius.sm),
                 ),

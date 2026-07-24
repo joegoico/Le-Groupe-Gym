@@ -42,7 +42,7 @@ class DescuentoSwitch extends StatelessWidget {
             key: const Key('alumno_descuento_switch'),
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.primary,
+            activeThumbColor: AppColors.primary,
             activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
           ),
         ],

@@ -11,14 +11,16 @@ class MockPagoRepository implements PagoRepository {
 
   @override
   Future<List<Pago>> getPagosPorAlumnoAno(String idAlumno, int anio) async {
-    return _pagos.where((p) => p.idAlumno == idAlumno && p.fechaDePago.year == anio).toList();
+    return _pagos
+        .where((p) => p.idAlumno == idAlumno && p.fechaDePago.year == anio)
+        .toList();
   }
 
   @override
   Future<Pago?> getUltimoPago(String idAlumno) async {
     final alumnoPagos = _pagos.where((p) => p.idAlumno == idAlumno).toList();
     if (alumnoPagos.isEmpty) return null;
-    
+
     alumnoPagos.sort((a, b) => b.fechaDePago.compareTo(a.fechaDePago));
     return alumnoPagos.first;
   }
