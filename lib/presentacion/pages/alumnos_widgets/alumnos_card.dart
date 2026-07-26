@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
-import 'package:le_groupe_gym/presentacion/pages/alumnos_widgets/alumnos_action_icon.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ── Paleta de colores para avatares ─────────────────────────────────────────
@@ -24,7 +23,7 @@ class AlumnoCard extends StatelessWidget {
   final VoidCallback onEliminar;
   final VoidCallback onEditar;
   final VoidCallback onVerDetalles;
-  final VoidCallback onVerRutinas;
+  final VoidCallback onVerPagos;
 
   const AlumnoCard({
     super.key,
@@ -32,7 +31,7 @@ class AlumnoCard extends StatelessWidget {
     required this.onEliminar,
     required this.onEditar,
     required this.onVerDetalles,
-    required this.onVerRutinas,
+    required this.onVerPagos,
   });
 
   @override
@@ -75,17 +74,29 @@ class AlumnoCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              ActionIcon(
-                key: Key('eliminar_${alumno.idAlumno}'),
-                icon: Icons.delete_outline,
-                onTap: onEliminar,
-                isDestructive: true,
-              ),
-              const SizedBox(width: 4),
-              ActionIcon(
-                key: Key('editar_${alumno.idAlumno}'),
-                icon: Icons.edit_outlined,
-                onTap: onEditar,
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant),
+                color: AppColors.surfaceContainerHigh,
+                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(AppRadius.md)),
+                onSelected: (value) {
+                  if (value == 'editar') onEditar();
+                  if (value == 'eliminar') onEliminar();
+                  if (value == 'detalles') onVerDetalles();
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'editar',
+                    child: Text('Editar', style: GoogleFonts.inter(color: AppColors.onSurface)),
+                  ),
+                  PopupMenuItem(
+                    value: 'eliminar',
+                    child: Text('Eliminar', style: GoogleFonts.inter(color: AppColors.error)),
+                  ),
+                  PopupMenuItem(
+                    value: 'detalles',
+                    child: Text('Ver detalles', style: GoogleFonts.inter(color: AppColors.onSurface)),
+                  ),
+                ],
               ),
             ],
           ),
@@ -120,37 +131,27 @@ class AlumnoCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
 
           // ── Acciones inferiores ───────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  key: Key('ver_detalles_${alumno.idAlumno}'),
-                  onPressed: onVerDetalles,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(AppRadius.lg),
-                    ),
-                    textStyle: GoogleFonts.inter(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  child: const Text('VER DETALLES'),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              key: Key('ver_pagos_${alumno.idAlumno}'),
+              onPressed: onVerPagos,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.onPrimary,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.lg),
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(width: 6),
-              ActionIcon(
-                key: Key('rutinas_${alumno.idAlumno}'),
-                icon: Icons.fitness_center_outlined,
-                onTap: onVerRutinas,
-                size: 18,
-              ),
-            ],
+              child: const Text('VER PAGOS'),
+            ),
           ),
         ],
       ),

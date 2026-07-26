@@ -201,21 +201,14 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       _alumnoSeleccionado!.idAlumno,
     );
 
-    // Si tiene 3, obtener la más antigua para borrar su PDF
     if (rutinasAlumno.length >= 3 && widget.rutinaExistente == null) {
       final masAntigua = rutinasAlumno.last;
-      debugPrint('🗑️ Rutinas del alumno: ${rutinasAlumno.length}');
-      debugPrint('🗑️ Rutina más antigua: ${masAntigua.rutina.idRutina}');
-      debugPrint('🗑️ URL PDF: ${masAntigua.rutina.urlPdf}');
 
       if (masAntigua.rutina.urlPdf != null) {
         await storageService.deletePdf(
           idRutina: masAntigua.rutina.idRutina!,
           idAlumno: _alumnoSeleccionado!.idAlumno,
         );
-        debugPrint('✅ PDF eliminado');
-      } else {
-        debugPrint('⚠️ La rutina más antigua no tiene PDF');
       }
     }
   }

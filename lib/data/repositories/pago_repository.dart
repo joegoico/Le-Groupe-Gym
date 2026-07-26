@@ -4,8 +4,10 @@ import 'package:le_groupe_gym/data/models/pago_model.dart';
 
 abstract class PagoRepository {
   Future<void> insertarPago(Pago pago);
-  Future<List<Pago>> getPagosPorAlumnoAno(String idAlumno, int anio);
+  Future<List<Pago>> getPagosPorAlumno(String idAlumno, {int? anio, int? mes});
   Future<Pago?> getUltimoPago(String idAlumno);
+  Future<void> updatePago(Pago pago);
+  Future<void> deletePago(String idPago);
 }
 
 class SupabasePagoRepository implements PagoRepository {
@@ -17,17 +19,15 @@ class SupabasePagoRepository implements PagoRepository {
   Future<void> insertarPago(Pago pago) async {
     try {
       final userId = SupabaseConfig.client.auth.currentUser!.id;
-      await supabaseClient
-          .from('Pagos')
-          .insert({
-            'Fecha_de_pago': pago.fechaDePago.toIso8601String(),
-            'monto': pago.monto,
-            'medio_de_pago': pago.medioDePago,
-            'comentarios': pago.comentarios,
-            'id_alumno': pago.idAlumno,
-            'cantidad_dias': pago.cantidadDias,
-            'user_id': userId,
-          });
+      await supabaseClient.from('Pagos').insert({
+        'Fecha_de_pago': pago.fechaDePago.toIso8601String(),
+        'monto': pago.monto,
+        'medio_de_pago': pago.medioDePago,
+        'comentarios': pago.comentarios,
+        'id_alumno': pago.idAlumno,
+        'cantidad_dias': pago.cantidadDias,
+        'user_id': userId,
+      });
     } on PostgrestException catch (e) {
       throw Exception('Error al insertar pago: ${e.message}');
     } catch (e) {
@@ -36,21 +36,44 @@ class SupabasePagoRepository implements PagoRepository {
   }
 
   @override
-  Future<List<Pago>> getPagosPorAlumnoAno(String idAlumno, int anio) async {
+  Future<List<Pago>> getPagosPorAlumno(
+    String idAlumno, {
+    int? anio,
+    int? mes,
+  }) async {
     try {
       final userId = SupabaseConfig.client.auth.currentUser!.id;
-      
-      final startOfYear = '$anio-01-01';
-      final endOfYear = '$anio-12-31';
 
-      final response = await supabaseClient
+      var query = supabaseClient
           .from('Pagos')
-          .select()
+          .select(
+            '"Fecha_de_pago",monto,medio_de_pago,comentarios,id_pago,id_alumno,cantidad_dias',
+          )
           .eq('id_alumno', idAlumno)
-          .eq('user_id', userId)
-          .gte('Fecha_de_pago', startOfYear)
-          .lte('Fecha_de_pago', endOfYear)
-          .order('Fecha_de_pago', ascending: false);
+          .eq('user_id', userId);
+
+      if (anio != null) {
+        if (mes != null) {
+          final startOfMonth = '$anio-${mes.toString().padLeft(2, '0')}-01';
+          // Calculamos el último día del mes
+          final lastDay = DateTime(anio, mes + 1, 0).day;
+          final endOfMonth =
+              '$anio-${mes.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
+
+          query = query
+              .gte('"Fecha_de_pago"', startOfMonth)
+              .lte('"Fecha_de_pago"', endOfMonth);
+        } else {
+          final startOfYear = '$anio-01-01';
+          final endOfYear = '$anio-12-31';
+
+          query = query
+              .gte('"Fecha_de_pago"', startOfYear)
+              .lte('"Fecha_de_pago"', endOfYear);
+        }
+      }
+
+      final response = await query.order('"Fecha_de_pago"', ascending: false);
 
       return (response as List<dynamic>)
           .map((json) => Pago.fromMap(json as Map<String, dynamic>))
@@ -75,11 +98,41 @@ class SupabasePagoRepository implements PagoRepository {
           .order('Fecha_de_pago', ascending: false)
           .limit(1)
           .maybeSingle();
-
       if (response == null) return null;
       return Pago.fromMap(response);
     } on PostgrestException catch (e) {
       throw Exception('Error al obtener el último pago: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<void> updatePago(Pago pago) async {
+    try {
+      await supabaseClient
+          .from('Pagos')
+          .update({
+            'Fecha_de_pago': pago.fechaDePago.toIso8601String(),
+            'monto': pago.monto,
+            'medio_de_pago': pago.medioDePago,
+            'comentarios': pago.comentarios,
+            'cantidad_dias': pago.cantidadDias,
+          })
+          .eq('id_pago', pago.idPago);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al actualizar pago: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<void> deletePago(String idPago) async {
+    try {
+      await supabaseClient.from('Pagos').delete().eq('id_pago', idPago);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al eliminar pago: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }

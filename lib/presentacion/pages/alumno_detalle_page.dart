@@ -4,10 +4,13 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
-import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/providers/alumno_view_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
+import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/detalle_card.dart';
+import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/detalle_info_row.dart';
+import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/estado_cuenta_card.dart';
+import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/rutinas_asignadas_card.dart';
 
 const _avatarColors = [
   Color(0xFF5C6BC0), // índigo
@@ -158,7 +161,7 @@ class AlumnoDetallePage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.xl),
 
                 // Información Personal Card
-                _buildCard(
+                DetalleCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -172,14 +175,14 @@ class AlumnoDetallePage extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _buildInfoRow(
-                        Icons.mail_outline,
-                        alumno.mail ?? 'Sin email registrado',
+                      DetalleInfoRow(
+                        icon: Icons.mail_outline,
+                        text: alumno.mail ?? 'Sin email registrado',
                       ),
                       const SizedBox(height: AppSpacing.md),
-                      _buildInfoRow(
-                        Icons.person_outline,
-                        alumno.nombreCompleto,
+                      DetalleInfoRow(
+                        icon: Icons.person_outline,
+                        text: alumno.nombreCompleto,
                       ),
                     ],
                   ),
@@ -187,209 +190,14 @@ class AlumnoDetallePage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
 
                 // Estado de Cuenta Card
-                _buildCard(
-                  accentLeft: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'ESTADO DE CUENTA',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            'Próximo Venc.',
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                'Cuota al Día',
-                                style: GoogleFonts.inter(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.onSurface,
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              const Icon(
-                                Icons.check_circle_outline,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                            ],
-                          ),
-                          Text(
-                            ultimoPago != null
-                                ? DateFormat(
-                                    'dd/MM/yyyy',
-                                  ).format(ultimoPago.fechaDePago)
-                                : '-',
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Divider(color: Colors.white.withValues(alpha: 0.05)),
-                      const SizedBox(height: AppSpacing.md),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Último pago: ${ultimoPago != null ? DateFormat('MM/yyyy').format(ultimoPago.fechaDePago) : 'N/A'}',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            ultimoPago != null
-                                ? '\$${ultimoPago.monto.toInt()}'
-                                : '\$0',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                EstadoCuentaCard(ultimoPago: ultimoPago),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Rutinas Asignadas Card
-                _buildCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'RUTINAS ASIGNADAS',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                          ),
-                          IconButton(
-                            visualDensity: VisualDensity.compact,
-                            icon: const Icon(
-                              Icons.add_circle_outline,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                            onPressed: () {},
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      rutinasAsync.when(
-                        data: (lista) {
-                          if (lista.isEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md,
-                              ),
-                              child: Text(
-                                'No tiene rutinas asignadas',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: AppColors.onSurfaceVariant,
-                                ),
-                              ),
-                            );
-                          }
-                          return Column(
-                            children: lista.map((item) {
-                              final rutina = item.rutina;
-                              final diasText =
-                                  '${rutina.dias.length} días/semana';
-                              return Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppSpacing.sm,
-                                ),
-                                child: _buildRutinaTile(
-                                  icon: Icons.fitness_center,
-                                  title: rutina.nombre,
-                                  subtitle: diasText,
-                                ),
-                              );
-                            }).toList(),
-                          );
-                        },
-                        loading: () => const Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: AppSpacing.md,
-                          ),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                        error: (err, stack) => Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.md,
-                          ),
-                          child: Text(
-                            'Error cargando rutinas: $err',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              color: AppColors.error,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                RutinasAsignadasCard(rutinasAsync: rutinasAsync),
                 const SizedBox(height: AppSpacing.xl),
 
-                // Botones de Acción Inferiores
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    key: const Key('detalle_asignar_rutina_btn'),
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.black87,
-                      elevation: 0,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(AppRadius.md),
-                      ),
-                    ),
-                    child: Text(
-                      'Asignar Nueva Rutina',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
+                // Botones de Acción Inferior
                 const SizedBox(height: AppSpacing.md),
                 SizedBox(
                   width: double.infinity,
@@ -429,92 +237,6 @@ class AlumnoDetallePage extends ConsumerWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildCard({required Widget child, bool accentLeft = false}) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.all(AppRadius.md),
-      ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.all(AppRadius.md),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (accentLeft) Container(width: 4, color: AppColors.primary),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: child,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, color: AppColors.onSurfaceVariant, size: 20),
-        const SizedBox(width: AppSpacing.md),
-        Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: AppColors.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRutinaTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerHigh.withValues(alpha: 0.5),
-        borderRadius: const BorderRadius.all(AppRadius.md),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.primary, size: 22),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -273,8 +273,8 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
                           onVerDetalles: () {
                             context.push('/alumnos/detalle', extra: alumno);
                           },
-                          onVerRutinas: () {
-                            /* TODO */
+                          onVerPagos: () {
+                            context.push('/alumnos/pagos', extra: alumno);
                           },
                         ),
                       )

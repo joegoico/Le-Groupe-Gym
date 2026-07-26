@@ -32,7 +32,8 @@ class Pago {
   Map<String, dynamic> toMap() {
     return {
       'id_alumno': idAlumno,
-      'Fecha_de_pago': "${fechaDePago.year.toString().padLeft(4, '0')}-${fechaDePago.month.toString().padLeft(2, '0')}-${fechaDePago.day.toString().padLeft(2, '0')}",
+      'Fecha_de_pago':
+          "${fechaDePago.year.toString().padLeft(4, '0')}-${fechaDePago.month.toString().padLeft(2, '0')}-${fechaDePago.day.toString().padLeft(2, '0')}",
       'monto': monto,
       'medio_de_pago': medioDePago,
       'comentarios': comentarios,

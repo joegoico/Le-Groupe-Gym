@@ -3,9 +3,11 @@ import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'; // falta esto
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importamos dotenv para cargar variables de entorno
 import 'package:le_groupe_gym/core/router.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('es', null);
   await dotenv.load(fileName: '.env');
   await SupabaseConfig.initialize();
   runApp(const ProviderScope(child: MyApp()));

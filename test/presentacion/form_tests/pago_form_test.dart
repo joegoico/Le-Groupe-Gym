@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
-import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import '../../mocks/mock_pago_repository.dart';
 import '../../mocks/mock_precio_repository.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() {
   late MockPagoRepository mockPagoRepository;
@@ -19,7 +19,8 @@ void main() {
     aplicaDescuento: false,
   );
 
-  setUp(() {
+  setUp(() async {
+    await initializeDateFormatting('es', null);
     mockPagoRepository = MockPagoRepository();
     mockPrecioRepository = MockPrecioRepository();
   });
@@ -56,7 +57,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Registrar Pago'), findsOneWidget);
-    expect(find.text('Pago Personalizado'), findsOneWidget);
+    expect(find.text('Personalizado'), findsOneWidget);
   });
 
   testWidgets(
@@ -69,12 +70,12 @@ void main() {
       // Ya está seleccionado personalizado por defecto.
 
       // Tocar guardar sin comentarios ni monto
-      await tester.ensureVisible(find.text('Guardar Pago'));
-      await tester.tap(find.text('Guardar Pago'));
+      await tester.ensureVisible(find.text('Confirmar Pago'));
+      await tester.tap(find.text('Confirmar Pago'));
       await tester.pumpAndSettle();
 
       // Debería mostrar error en monto y comentario
-      expect(find.text('El monto es obligatorio'), findsOneWidget);
+      expect(find.text('Requerido'), findsNWidgets(2)); // Monto y Días
       expect(
         find.text('El comentario es obligatorio para pagos personalizados'),
         findsOneWidget,
@@ -89,16 +90,14 @@ void main() {
     await tester.tap(find.text('Abrir'));
     await tester.pumpAndSettle();
 
-    // Abrir dropdown y seleccionar plan
-    await tester.tap(find.byType(DropdownButtonFormField<Precio?>));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('3 días - \$15000').last);
+    // Seleccionar plan usando ChoiceChip
+    await tester.ensureVisible(find.text('3 días'));
+    await tester.tap(find.text('3 días'));
     await tester.pumpAndSettle();
 
     // Guardar
-    await tester.ensureVisible(find.text('Guardar Pago'));
-    await tester.tap(find.text('Guardar Pago'));
+    await tester.ensureVisible(find.text('Confirmar Pago'));
+    await tester.tap(find.text('Confirmar Pago'));
     await tester.pumpAndSettle();
 
     final ultimoPago = await mockPagoRepository.getUltimoPago('abc');

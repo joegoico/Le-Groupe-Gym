@@ -10,18 +10,34 @@ class MockPagoRepository implements PagoRepository {
   }
 
   @override
-  Future<List<Pago>> getPagosPorAlumnoAno(String idAlumno, int anio) async {
-    return _pagos
-        .where((p) => p.idAlumno == idAlumno && p.fechaDePago.year == anio)
-        .toList();
+  Future<List<Pago>> getPagosPorAlumno(String idAlumno, {int? anio, int? mes}) async {
+    return _pagos.where((p) {
+      if (p.idAlumno != idAlumno) return false;
+      if (anio != null && p.fechaDePago.year != anio) return false;
+      if (mes != null && p.fechaDePago.month != mes) return false;
+      return true;
+    }).toList();
   }
 
   @override
   Future<Pago?> getUltimoPago(String idAlumno) async {
-    final alumnoPagos = _pagos.where((p) => p.idAlumno == idAlumno).toList();
-    if (alumnoPagos.isEmpty) return null;
+    final pagosAlumno =
+        _pagos.where((p) => p.idAlumno == idAlumno).toList();
+    if (pagosAlumno.isEmpty) return null;
+    pagosAlumno.sort((a, b) => b.fechaDePago.compareTo(a.fechaDePago));
+    return pagosAlumno.first;
+  }
 
-    alumnoPagos.sort((a, b) => b.fechaDePago.compareTo(a.fechaDePago));
-    return alumnoPagos.first;
+  @override
+  Future<void> updatePago(Pago pago) async {
+    final index = _pagos.indexWhere((p) => p.idPago == pago.idPago);
+    if (index != -1) {
+      _pagos[index] = pago;
+    }
+  }
+
+  @override
+  Future<void> deletePago(String idPago) async {
+    _pagos.removeWhere((p) => p.idPago == idPago);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -35,7 +36,6 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
           .eq('user_id', userId)
           .order('"Apellido"', ascending: true);
-
       return (response as List<dynamic>)
           .map((json) => Alumno.fromMap(json as Map<String, dynamic>))
           .toList();

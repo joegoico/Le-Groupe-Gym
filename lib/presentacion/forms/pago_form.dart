@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
@@ -13,8 +14,9 @@ final planesProvider = FutureProvider.autoDispose<List<Precio>>((ref) async {
 
 class PagoForm extends ConsumerStatefulWidget {
   final Alumno alumno;
+  final Pago? pagoAEditar;
 
-  const PagoForm({super.key, required this.alumno});
+  const PagoForm({super.key, required this.alumno, this.pagoAEditar});
 
   @override
   ConsumerState<PagoForm> createState() => _PagoFormState();
@@ -32,6 +34,20 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.pagoAEditar != null) {
+      _montoController.text = (widget.pagoAEditar!.monto % 1 == 0)
+          ? widget.pagoAEditar!.monto.toInt().toString()
+          : widget.pagoAEditar!.monto.toString();
+      _comentariosController.text = widget.pagoAEditar!.comentarios ?? '';
+      _diasController.text = widget.pagoAEditar!.cantidadDias.toString();
+      _medioPago = widget.pagoAEditar!.medioDePago;
+      _fechaPago = widget.pagoAEditar!.fechaDePago;
+    }
+  }
+
+  @override
   void dispose() {
     _montoController.dispose();
     _comentariosController.dispose();
@@ -40,7 +56,22 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   }
 
   Future<void> _guardarPago() async {
-    if (!_formKey.currentState!.validate()) return;
+    final isValid = _formKey.currentState!.validate();
+
+    if (_planSeleccionado == null &&
+        widget.pagoAEditar == null &&
+        _comentariosController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'El comentario es obligatorio para pagos personalizados',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (!isValid) return;
 
     setState(() => _isLoading = true);
 
@@ -49,7 +80,9 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       final dias = int.parse(_diasController.text);
 
       final nuevoPago = Pago(
-        idPago: '', // Supabase generará el UUID automáticamente
+        idPago:
+            widget.pagoAEditar?.idPago ??
+            '', // Supabase generará el UUID automáticamente al crear
         idAlumno: widget.alumno.idAlumno,
         fechaDePago: _fechaPago,
         monto: monto,
@@ -60,7 +93,11 @@ class _PagoFormState extends ConsumerState<PagoForm> {
         cantidadDias: dias,
       );
 
-      await ref.read(pagoRepositoryProvider).insertarPago(nuevoPago);
+      if (widget.pagoAEditar == null) {
+        await ref.read(pagoRepositoryProvider).insertarPago(nuevoPago);
+      } else {
+        await ref.read(pagoRepositoryProvider).updatePago(nuevoPago);
+      }
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -76,6 +113,21 @@ class _PagoFormState extends ConsumerState<PagoForm> {
     }
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, top: 16.0),
+      child: Text(
+        title.toUpperCase(),
+        style: GoogleFonts.inter(
+          color: AppColors.onSurfaceVariant,
+          fontSize: 11,
+          letterSpacing: 1.2,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final planesAsync = ref.watch(planesProvider);
@@ -85,15 +137,27 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(AppRadius.lg),
       ),
-      title: Text(
-        'Registrar Pago',
-        style: GoogleFonts.inter(
-          color: AppColors.onSurface,
-          fontWeight: FontWeight.w600,
-        ),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            widget.pagoAEditar != null ? 'Editar Pago' : 'Registrar Pago',
+            style: GoogleFonts.inter(
+              color: AppColors.onSurface,
+              fontWeight: FontWeight.w700,
+              fontSize: 20,
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, color: AppColors.onSurfaceVariant),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       content: SizedBox(
-        width: 400,
+        width: 480,
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
@@ -101,230 +165,326 @@ class _PagoFormState extends ConsumerState<PagoForm> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Alumno: ${widget.alumno.nombreCompleto}',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      child: const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      widget.alumno.nombreCompleto,
+                      style: GoogleFonts.inter(
+                        color: AppColors.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: 24),
 
-                // Selector de Plan
-                Text(
-                  'Plan',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
+                // Monto a Cobrar (Display de Gran Tamaño)
+                _buildSectionTitle('Monto a Cobrar'),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF141414),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '\$',
+                        style: GoogleFonts.inter(
+                          color: AppColors.primary,
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _montoController,
+                          keyboardType: TextInputType.number,
+                          style: GoogleFonts.inter(
+                            color: AppColors.primary,
+                            fontSize: 34,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '0',
+                            hintStyle: TextStyle(color: Colors.white24),
+                          ),
+                          enabled: _planSeleccionado == null,
+                          validator: (val) {
+                            if (val == null || val.isEmpty) return 'Requerido';
+                            if (double.tryParse(val) == null) return 'Inválido';
+                            return null;
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                planesAsync.when(
-                  data: (planes) {
-                    return DropdownButtonFormField<Precio?>(
-                      initialValue: _planSeleccionado,
-                      dropdownColor: AppColors.surfaceContainerHigh,
-                      style: GoogleFonts.inter(color: AppColors.onSurface),
-                      decoration: _buildInputDecoration(),
-                      items: [
-                        DropdownMenuItem(
-                          value: null,
-                          child: Text(
-                            'Pago Personalizado',
-                            style: GoogleFonts.inter(),
-                          ),
+
+                // Fecha de Pago
+                _buildSectionTitle('Fecha de Pago'),
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _fechaPago,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                    );
+                    if (date != null) {
+                      setState(() => _fechaPago = date);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF141414),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          color: AppColors.primary,
+                          size: 20,
                         ),
-                        ...planes.map(
-                          (p) => DropdownMenuItem(
-                            value: p,
-                            child: Text(
-                              '${p.cantidadDias} días - \$${p.valor.toInt()}',
-                              style: GoogleFonts.inter(),
-                            ),
+                        const SizedBox(width: 12),
+                        Text(
+                          '${DateFormat('E, d MMMM yyyy', 'es').format(_fechaPago)}',
+                          style: GoogleFonts.inter(
+                            color: Colors.white,
+                            fontSize: 14,
                           ),
                         ),
                       ],
-                      onChanged: (val) {
-                        setState(() {
-                          _planSeleccionado = val;
-                          if (val != null) {
-                            _montoController.text = val.valor.toString();
-                            _diasController.text = val.cantidadDias.toString();
-                          } else {
-                            _montoController.clear();
-                            _diasController.clear();
-                          }
-                        });
-                      },
+                    ),
+                  ),
+                ),
+
+                // Concepto / Plan
+                _buildSectionTitle('Concepto / Plan'),
+                planesAsync.when(
+                  data: (planes) {
+                    return Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ChoiceChip(
+                          label: Text(
+                            'Personalizado',
+                            style: TextStyle(
+                              color: _planSeleccionado == null
+                                  ? Colors.black
+                                  : Colors.white,
+                              fontWeight: _planSeleccionado == null
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                          selected: _planSeleccionado == null,
+                          selectedColor: AppColors.primary,
+                          backgroundColor: AppColors.surfaceContainerHigh,
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _planSeleccionado = null;
+                                if (widget.pagoAEditar != null) {
+                                  _montoController.text =
+                                      (widget.pagoAEditar!.monto % 1 == 0)
+                                      ? widget.pagoAEditar!.monto
+                                            .toInt()
+                                            .toString()
+                                      : widget.pagoAEditar!.monto.toString();
+                                  _diasController.text = widget
+                                      .pagoAEditar!
+                                      .cantidadDias
+                                      .toString();
+                                } else {
+                                  _montoController.clear();
+                                  _diasController.clear();
+                                }
+                              });
+                            }
+                          },
+                        ),
+                        ...planes.map((p) {
+                          final isSelected =
+                              _planSeleccionado?.idPrecio == p.idPrecio;
+                          return ChoiceChip(
+                            label: Text(
+                              '${p.cantidadDias} días',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                            selected: isSelected,
+                            selectedColor: AppColors.primary,
+                            backgroundColor: AppColors.surfaceContainerHigh,
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _planSeleccionado = p;
+                                  _montoController.text = (p.valor % 1 == 0)
+                                      ? p.valor.toInt().toString()
+                                      : p.valor.toString();
+                                  _diasController.text = p.cantidadDias
+                                      .toString();
+                                });
+                              }
+                            },
+                          );
+                        }),
+                      ],
                     );
                   },
                   loading: () => const CircularProgressIndicator(),
-                  error: (err, stack) => Text(
-                    'Error: $err',
+                  error: (e, _) => Text(
+                    'Error: $e',
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
 
-                // Monto
-                Text(
-                  'Monto',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                TextFormField(
-                  controller: _montoController,
-                  keyboardType: TextInputType.number,
-                  style: GoogleFonts.inter(color: AppColors.onSurface),
-                  decoration: _buildInputDecoration(prefixText: '\$ '),
-                  enabled: _planSeleccionado == null,
-                  validator: (val) {
-                    if (val == null || val.isEmpty)
-                      return 'El monto es obligatorio';
-                    if (double.tryParse(val) == null) return 'Monto inválido';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Medio de Pago
-                Text(
-                  'Medio de Pago',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                DropdownButtonFormField<String>(
-                  initialValue: _medioPago,
-                  dropdownColor: AppColors.surfaceContainerHigh,
-                  style: GoogleFonts.inter(color: AppColors.onSurface),
-                  decoration: _buildInputDecoration(),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Efectivo',
-                      child: Text('Efectivo'),
+                // Cantidad de Días (solo visible si es personalizado y estamos editando/creando)
+                if (_planSeleccionado == null) ...[
+                  _buildSectionTitle('Cantidad de días'),
+                  TextFormField(
+                    controller: _diasController,
+                    keyboardType: TextInputType.number,
+                    style: GoogleFonts.inter(color: AppColors.onSurface),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFF141414),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      hintText: 'Ej: 30',
+                      hintStyle: const TextStyle(color: Colors.white24),
                     ),
-                    DropdownMenuItem(
+                    validator: (val) {
+                      if (val == null || val.isEmpty) return 'Requerido';
+                      if (int.tryParse(val) == null) return 'Número inválido';
+                      return null;
+                    },
+                  ),
+                ],
+
+                // Método de Pago
+                _buildSectionTitle('Método de Pago'),
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'Efectivo',
+                      label: Text('Efectivo'),
+                      icon: Icon(Icons.money),
+                    ),
+                    ButtonSegment(
                       value: 'Transferencia',
-                      child: Text('Transferencia'),
+                      label: Text('Transferencia'),
+                      icon: Icon(Icons.account_balance),
+                    ),
+                    ButtonSegment(
+                      value: 'Combinado',
+                      label: Text('Combinado'),
+                      icon: Icon(Icons.credit_card),
                     ),
                   ],
-                  onChanged: (val) {
-                    if (val != null) setState(() => _medioPago = val);
+                  selected: {_medioPago},
+                  onSelectionChanged: (Set<String> newSelection) {
+                    setState(() {
+                      _medioPago = newSelection.first;
+                    });
                   },
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Cantidad de Días
-                Text(
-                  'Cantidad de días',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
+                      if (states.contains(WidgetState.selected)) {
+                        return AppColors.primary;
+                      }
+                      return AppColors.surfaceContainerHigh;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Colors.black;
+                      }
+                      return Colors.white;
+                    }),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                TextFormField(
-                  key: const Key('pago_dias_input'),
-                  controller: _diasController,
-                  keyboardType: TextInputType.number,
-                  style: GoogleFonts.inter(color: AppColors.onSurface),
-                  decoration: _buildInputDecoration(),
-                  validator: (val) {
-                    if (val == null || val.isEmpty) return 'Requerido';
-                    final num = int.tryParse(val);
-                    if (num == null || num < 1 || num > 7) return 'Entre 1 y 7';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
 
                 // Comentarios
-                Text(
-                  'Comentarios',
-                  style: GoogleFonts.inter(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
+                _buildSectionTitle('Comentarios (Opcional)'),
                 TextFormField(
                   controller: _comentariosController,
-                  style: GoogleFonts.inter(color: AppColors.onSurface),
-                  decoration: _buildInputDecoration(),
                   maxLines: 2,
-                  validator: (val) {
-                    if (_planSeleccionado == null &&
-                        (val == null || val.isEmpty)) {
-                      return 'El comentario es obligatorio para pagos personalizados';
-                    }
-                    return null;
-                  },
+                  style: GoogleFonts.inter(color: AppColors.onSurface),
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: const Color(0xFF141414),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    hintText: 'Nota para el pago...',
+                    hintStyle: const TextStyle(color: Colors.white24),
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancelar',
-            style: GoogleFonts.inter(color: AppColors.primary),
-          ),
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          child: const Text('Cancelar'),
         ),
-        ElevatedButton(
+        ElevatedButton.icon(
           onPressed: _isLoading ? null : _guardarPago,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.black,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
-          ),
-          child: _isLoading
+          icon: _isLoading
               ? const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(
-                  'Guardar Pago',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-                ),
+              : const Icon(Icons.check_circle),
+          label: Text(
+            widget.pagoAEditar != null ? 'Guardar Cambios' : 'Confirmar Pago',
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         ),
       ],
-    );
-  }
-
-  InputDecoration _buildInputDecoration({String? prefixText}) {
-    return InputDecoration(
-      prefixText: prefixText,
-      prefixStyle: GoogleFonts.inter(color: AppColors.onSurface),
-      filled: true,
-      fillColor: AppColors.background,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1),
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
     );
   }
 }

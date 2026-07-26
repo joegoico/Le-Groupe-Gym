@@ -3,9 +3,6 @@ import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
 import 'package:le_groupe_gym/data/repositories/routine_repository.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
-import 'package:le_groupe_gym/data/models/alumno_model.dart';
-import 'package:le_groupe_gym/data/models/routine_model.dart';
-import 'package:le_groupe_gym/data/models/pago_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/category_exercise_repository.dart';
 import 'package:le_groupe_gym/data/repositories/precio_repository.dart';
@@ -20,14 +17,7 @@ final routineRepositoryProvider = Provider<RoutineRepository>((ref) {
   return SupabaseRoutineRepository(supabaseClient: Supabase.instance.client);
 });
 
-final rutinasAlumnoProvider =
-    FutureProvider.family<List<({Rutina rutina, Alumno alumno})>, String>((
-      ref,
-      idAlumno,
-    ) async {
-      final repository = ref.watch(routineRepositoryProvider);
-      return repository.getRutinasPorAlumno(idAlumno);
-    });
+
 
 final alumnoRepositoryProvider = Provider<AlumnoRepository>((ref) {
   return SupabaseAlumnoRepository(supabaseClient: Supabase.instance.client);
@@ -59,10 +49,4 @@ final pagoRepositoryProvider = Provider<PagoRepository>((ref) {
   return SupabasePagoRepository(supabaseClient: Supabase.instance.client);
 });
 
-final ultimoPagoAlumnoProvider = FutureProvider.family<Pago?, String>((
-  ref,
-  idAlumno,
-) async {
-  final repository = ref.watch(pagoRepositoryProvider);
-  return repository.getUltimoPago(idAlumno);
-});
+

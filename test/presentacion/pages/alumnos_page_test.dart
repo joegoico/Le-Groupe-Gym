@@ -79,20 +79,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // Assert — 16 alumnos → 16 botones "VER PAGOS"
-      expect(find.text('VER DETALLES'), findsNWidgets(16));
+      expect(find.text('VER PAGOS'), findsNWidgets(16));
 
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('cada card tiene botones de editar y eliminar', (tester) async {
+    testWidgets('cada card tiene menú de opciones', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pump(const Duration(milliseconds: 100));
 
-      // Assert — 16 cards × 1 botón eliminar y 1 editar c/u
-      expect(find.byIcon(Icons.delete_outline), findsNWidgets(16));
-      expect(find.byIcon(Icons.edit_outlined), findsNWidgets(16));
+      // Assert — 16 cards × 1 menú (more_vert)
+      expect(find.byIcon(Icons.more_vert), findsNWidgets(16));
 
       addTearDown(tester.view.resetPhysicalSize);
     });

@@ -19,7 +19,6 @@ class PrecioCard extends StatelessWidget {
 
   String _getPlanName() {
     if (precio.cantidadDias == 30) return 'Pase Libre';
-    if (precio.cantidadDias == 1) return 'Pase Diario';
     if (precio.cantidadDias == 7) return 'Pase Semanal';
     return 'Plan de ${precio.cantidadDias} días';
   }
@@ -37,12 +36,6 @@ class PrecioCard extends StatelessWidget {
         (included: true, text: 'Acceso sala musculación'),
         (included: true, text: 'Clases funcional'),
         (included: true, text: 'Sin límite horario'),
-      ];
-    } else if (precio.cantidadDias == 1) {
-      return [
-        (included: true, text: 'Acceso único'),
-        (included: true, text: 'Válido por 24hs'),
-        (included: true, text: 'Clases funcional'),
       ];
     } else {
       return [

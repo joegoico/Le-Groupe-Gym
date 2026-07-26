@@ -8,6 +8,7 @@ import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_d
 import 'package:le_groupe_gym/presentacion/pages/precios_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumnos_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumno_detalle_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/alumno_pagos_page.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 final appRouter = GoRouter(
@@ -36,6 +37,13 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final alumno = state.extra as Alumno;
         return AlumnoDetallePage(alumno: alumno);
+      },
+    ),
+    GoRoute(
+      path: '/alumnos/pagos',
+      builder: (context, state) {
+        final alumno = state.extra as Alumno;
+        return AlumnoPagosPage(alumno: alumno);
       },
     ),
     GoRoute(path: '/precios', builder: (context, state) => const PreciosPage()),
