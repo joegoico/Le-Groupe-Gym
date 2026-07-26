@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:le_groupe_gym/data/repositories/deudor_repository.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
 import 'package:le_groupe_gym/data/repositories/routine_repository.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
@@ -16,8 +17,6 @@ final exerciseRepositoryProvider = Provider<ExerciseRepository>((ref) {
 final routineRepositoryProvider = Provider<RoutineRepository>((ref) {
   return SupabaseRoutineRepository(supabaseClient: Supabase.instance.client);
 });
-
-
 
 final alumnoRepositoryProvider = Provider<AlumnoRepository>((ref) {
   return SupabaseAlumnoRepository(supabaseClient: Supabase.instance.client);
@@ -49,4 +48,6 @@ final pagoRepositoryProvider = Provider<PagoRepository>((ref) {
   return SupabasePagoRepository(supabaseClient: Supabase.instance.client);
 });
 
-
+final deudorRepositoryProvider = Provider<DeudorRepository>((ref) {
+  return SupabaseDeudorRepository(supabaseClient: Supabase.instance.client);
+});

@@ -28,7 +28,7 @@ const _items = [
     label: 'Deudores',
     icon: Icons.account_balance_wallet_outlined,
     route: '/deudores',
-    enabled: false,
+    enabled: true,
   ),
   _SidebarItem(
     label: 'Gastos',

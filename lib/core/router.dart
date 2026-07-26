@@ -3,6 +3,7 @@ import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:le_groupe_gym/presentacion/auth/login_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/deudores_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/routine_work_page.dart';
 import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_dashbord_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/precios_page.dart';
@@ -27,10 +28,7 @@ final appRouter = GoRouter(
       path: '/login',
       builder: (context, state) => LoginPage(onLogin: () => context.go('/')),
     ),
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const RutinasDashboardPage(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const AlumnosPage()),
     GoRoute(path: '/alumnos', builder: (context, state) => const AlumnosPage()),
     GoRoute(
       path: '/alumnos/detalle',
@@ -60,6 +58,10 @@ final appRouter = GoRouter(
         final rutina = state.extra as Rutina;
         return MainPanelPage(rutinaExistente: rutina);
       },
+    ),
+    GoRoute(
+      path: '/deudores',
+      builder: (context, state) => const DeudoresPage(),
     ),
   ],
 );
