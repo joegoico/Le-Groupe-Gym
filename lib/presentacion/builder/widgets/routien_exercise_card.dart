@@ -3,7 +3,7 @@ import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/data/models/exercise_routine_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 
 class RoutineExerciseCard extends StatelessWidget {
   final int blockIndex;
@@ -240,13 +240,14 @@ class RoutineExerciseCard extends StatelessWidget {
                   ),
                 ),
                 onPressed: () async {
-                  final confirmed = await showConfirmDialog(
-                    btnContext,
-                    titulo: 'Eliminar ejercicio',
-                    mensaje:
-                        '¿Estás seguro de que querés eliminar este ejercicio?',
+                  final confirmed = await showDialog<bool>(
+                    context: btnContext,
+                    builder: (_) => const DeleteConfirmDialog(
+                      title: 'Eliminar ejercicio',
+                      message: '¿Estás seguro de que querés eliminar este ejercicio?',
+                    ),
                   );
-                  if (!confirmed) return;
+                  if (confirmed != true) return;
                   controller.removeExercise(blockIndex, exerciseIndex);
                 },
               ),

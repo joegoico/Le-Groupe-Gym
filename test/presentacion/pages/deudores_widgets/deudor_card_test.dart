@@ -49,6 +49,7 @@ void main() {
             body: DeudorCard(
               deudor: deudorMock,
               onRegistrarPago: () {},
+              onEliminar: () {},
             ),
           ),
         ),
@@ -85,6 +86,7 @@ void main() {
                 onEnviarMensaje: () {
                   mensajeEnviado = true;
                 },
+                onEliminar: () {},
               ),
             ),
           ),
@@ -101,6 +103,35 @@ void main() {
 
       expect(pagoRegistrado, true);
       expect(mensajeEnviado, true);
+    });
+
+    testWidgets('Debe disparar el callback onEliminar', (tester) async {
+      bool deudorEliminado = false;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            pagoRepositoryProvider.overrideWithValue(mockPagoRepo),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: DeudorCard(
+                deudor: deudorMock,
+                onRegistrarPago: () {},
+                onEliminar: () {
+                  deudorEliminado = true;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+
+      expect(deudorEliminado, true);
     });
   });
 }

@@ -4,11 +4,13 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 class DetalleCard extends StatelessWidget {
   final Widget child;
   final bool accentLeft;
+  final Color? accentColor;
 
   const DetalleCard({
     super.key,
     required this.child,
     this.accentLeft = false,
+    this.accentColor,
   });
 
   @override
@@ -25,7 +27,7 @@ class DetalleCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (accentLeft) Container(width: 4, color: AppColors.primary),
+              if (accentLeft) Container(width: 4, color: accentColor ?? AppColors.primary),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),

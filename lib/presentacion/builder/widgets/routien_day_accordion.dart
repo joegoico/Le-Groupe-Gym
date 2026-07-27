@@ -2,7 +2,7 @@ import 'package:le_groupe_gym/data/models/dia_rutina_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/inline_editable_text.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/routien_block_section.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/view_selector.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -152,13 +152,14 @@ class RoutineDayAccordion extends StatelessWidget {
                         Builder(
                           builder: (btnContext) => IconButton(
                             onPressed: () async {
-                              final confirmed = await showConfirmDialog(
-                                btnContext,
-                                titulo: 'Eliminar día',
-                                mensaje:
-                                    '¿Estás seguro de que querés eliminar este día?',
+                              final confirmed = await showDialog<bool>(
+                                context: btnContext,
+                                builder: (_) => const DeleteConfirmDialog(
+                                  title: 'Eliminar día',
+                                  message: '¿Estás seguro de que querés eliminar este día?',
+                                ),
                               );
-                              if (!confirmed) return;
+                              if (confirmed != true) return;
                               final ok = controller.removeDay(dayIndex);
                               if (!ok) {
                                 onShowMessage?.call(
@@ -200,7 +201,7 @@ class RoutineDayAccordion extends StatelessWidget {
                       // Bloques del día
                       ...currentDia.bloques.asMap().entries.map((entry) {
                         return RoutineBlockSection(
-                          key: ValueKey('block_${dayIndex}_${entry.key}'),
+                          key: ValueKey(entry.value.id),
                           dayIndex: dayIndex,
                           blockIndex: entry.key,
                           bloque: entry.value,

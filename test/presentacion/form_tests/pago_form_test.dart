@@ -16,7 +16,6 @@ void main() {
     idAlumno: 'abc',
     nombre: 'Juan',
     apellido: 'Perez',
-    aplicaDescuento: false,
   );
 
   setUp(() async {

@@ -17,6 +17,7 @@ import 'package:le_groupe_gym/services/service_storage.dart';
 import 'package:le_groupe_gym/services/email_service.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/exit_routine_confirm_dialog.dart';
 
 class MainPanelPage extends ConsumerStatefulWidget {
   final Rutina? rutinaExistente;
@@ -302,120 +303,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     final confirmar = await showDialog<bool>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.65),
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surfaceContainerHigh,
-        surfaceTintColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(AppRadius.lg),
-          side: BorderSide(color: AppColors.surfaceContainerHighest, width: 1),
-        ),
-        contentPadding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
-        titlePadding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.lg,
-          AppSpacing.md,
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.errorContainer.withValues(alpha: 0.35),
-                borderRadius: const BorderRadius.all(AppRadius.md),
-                border: Border.all(
-                  color: AppColors.error.withValues(alpha: 0.25),
-                  width: 1,
-                ),
-              ),
-              child: const Icon(
-                Icons.logout_rounded,
-                color: AppColors.error,
-                size: 22,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text('¿Salir sin guardar?', style: AppTextStyles.titleMd),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Perdés todos los cambios de la rutina actual. Esta acción no se puede deshacer.',
-              style: AppTextStyles.subtittles.copyWith(
-                color: AppColors.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            const Divider(
-              color: AppColors.surfaceContainerHighest,
-              thickness: 1,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm + 2,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(AppRadius.md),
-                        side: BorderSide(
-                          color: AppColors.surfaceContainerHighest,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Cancelar',
-                      style: AppTextStyles.subtittlesBold.copyWith(
-                        color: AppColors.onSurface,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.errorContainer,
-                      foregroundColor: AppColors.error,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm + 2,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(AppRadius.md),
-                      ),
-                    ),
-                    child: Text(
-                      'Salir',
-                      style: AppTextStyles.subtittlesBold.copyWith(
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: const [],
-      ),
+      builder: (context) => const ExitRoutineConfirmDialog(),
     );
 
     if (confirmar == true && context.mounted) {

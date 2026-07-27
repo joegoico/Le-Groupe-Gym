@@ -26,6 +26,7 @@ class SupabasePagoRepository implements PagoRepository {
         'comentarios': pago.comentarios,
         'id_alumno': pago.idAlumno,
         'cantidad_dias': pago.cantidadDias,
+        'aplica_descuento': pago.aplicaDescuento,
         'user_id': userId,
       });
     } on PostgrestException catch (e) {
@@ -47,7 +48,7 @@ class SupabasePagoRepository implements PagoRepository {
       var query = supabaseClient
           .from('Pagos')
           .select(
-            '"Fecha_de_pago",monto,medio_de_pago,comentarios,id_pago,id_alumno,cantidad_dias',
+            '"Fecha_de_pago",monto,medio_de_pago,comentarios,id_pago,id_alumno,cantidad_dias,aplica_descuento',
           )
           .eq('id_alumno', idAlumno)
           .eq('user_id', userId);
@@ -118,6 +119,7 @@ class SupabasePagoRepository implements PagoRepository {
             'medio_de_pago': pago.medioDePago,
             'comentarios': pago.comentarios,
             'cantidad_dias': pago.cantidadDias,
+            'aplica_descuento': pago.aplicaDescuento,
           })
           .eq('id_pago', pago.idPago);
     } on PostgrestException catch (e) {

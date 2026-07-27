@@ -6,11 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:le_groupe_gym/providers/repository_providers.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
 import 'package:le_groupe_gym/data/models/pago_model.dart';
 import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/estado_cuenta_card.dart';
 import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/historial_pagos_card.dart';
+import 'package:le_groupe_gym/providers/alumno_view_providers.dart';
 
 const _avatarColors = [
   Color(0xFF5C6BC0), // índigo
@@ -112,13 +113,15 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
   }
 
   Future<void> _confirmarEliminarPago(Pago pago) async {
-    final confirmed = await showConfirmDialog(
-      context,
-      titulo: 'Eliminar pago',
-      mensaje: '¿Estás seguro de que deseás eliminar este pago? Esta acción no se puede deshacer.',
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const DeleteConfirmDialog(
+        title: 'Eliminar pago',
+        message: '¿Estás seguro de que deseás eliminar este pago? Esta acción no se puede deshacer.',
+      ),
     );
 
-    if (confirmed) {
+    if (confirmed == true) {
       setState(() => _isLoading = true);
       try {
         await ref.read(pagoRepositoryProvider).deletePago(pago.idPago);
@@ -138,6 +141,8 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
   @override
   Widget build(BuildContext context) {
     final avatarColor = _avatarColor(widget.alumno.nombre);
+    final deudorAsync = ref.watch(deudorAlumnoProvider(widget.alumno.idAlumno));
+    final deudor = deudorAsync.value;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -206,7 +211,10 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // ── Estado de Cuenta ──────────────────────────────────────────
-                EstadoCuentaCard(ultimoPago: _ultimoPago),
+                EstadoCuentaCard(
+                  ultimoPago: _ultimoPago,
+                  deudor: deudor,
+                ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // ── Historial de Pagos ──────────────────────────────────────────

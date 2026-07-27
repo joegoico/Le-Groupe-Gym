@@ -10,13 +10,11 @@ void main() {
       idAlumno: 'abc-123',
       nombre: 'Juan',
       apellido: 'Pérez',
-      aplicaDescuento: false,
     );
     final mockAlumno2 = Alumno(
       idAlumno: 'def-456',
       nombre: 'María',
       apellido: 'García',
-      aplicaDescuento: false,
     );
 
     final mockRutinas = [

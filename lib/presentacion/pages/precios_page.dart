@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/precio_form.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
@@ -103,11 +104,12 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
   }
 
   Future<void> _eliminarPrecio(Precio precio) async {
-    final confirmar = await showConfirmDialog(
-      context,
-      titulo: 'Eliminar plan',
-      mensaje:
-          '¿Seguro que querés eliminar el plan de ${precio.cantidadDias} días? Esta acción no se puede deshacer.',
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => DeleteConfirmDialog(
+        title: 'Eliminar plan',
+        message: '¿Seguro que querés eliminar el plan de ${precio.cantidadDias} días? Esta acción no se puede deshacer.',
+      ),
     );
 
     if (confirmar != true) return;
@@ -173,11 +175,12 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
   }
 
   Future<void> _eliminarDescuento(Descuento descuento) async {
-    final confirmar = await showConfirmDialog(
-      context,
-      titulo: 'Eliminar descuento',
-      mensaje:
-          '¿Seguro que querés eliminar este descuento? Esta acción no se puede deshacer.',
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => const DeleteConfirmDialog(
+        title: 'Eliminar descuento',
+        message: '¿Seguro que querés eliminar este descuento? Esta acción no se puede deshacer.',
+      ),
     );
     if (confirmar != true) return;
 
@@ -198,8 +201,14 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
             currentRoute: '/precios',
             isCollapsed: _sidebarCollapsed,
             onCerrarSesion: () async {
-              await SupabaseConfig.client.auth.signOut();
-              if (mounted) context.go('/login');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => const LogoutConfirmDialog(),
+              );
+              if (confirm == true) {
+                await SupabaseConfig.client.auth.signOut();
+                if (mounted) context.go('/login');
+              }
             },
             onNavigate: (route) => context.go(route),
           ),

@@ -3,7 +3,7 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/inline_editable_text.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/routien_exercise_card.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/data/models/routine_block_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/view_selector.dart';
 
@@ -151,13 +151,14 @@ class RoutineBlockSection extends StatelessWidget {
                           Builder(
                             builder: (btnContext) => IconButton(
                               onPressed: () async {
-                                final confirmed = await showConfirmDialog(
-                                  btnContext,
-                                  titulo: 'Eliminar bloque',
-                                  mensaje:
-                                      '¿Estás seguro de que querés eliminar este bloque?',
-                                );
-                                if (!confirmed) return;
+                                  final confirmed = await showDialog<bool>(
+                                    context: btnContext,
+                                    builder: (_) => const DeleteConfirmDialog(
+                                      title: 'Eliminar bloque',
+                                      message: '¿Estás seguro de que querés eliminar este bloque?',
+                                    ),
+                                  );
+                                  if (confirmed != true) return;
                                 final ok = controller.removeBlock(blockIndex);
                                 if (!ok) {
                                   onShowMessage?.call('No se pudo eliminar.');
@@ -218,7 +219,7 @@ class RoutineBlockSection extends StatelessWidget {
                       itemCount: currentBloque.ejercicios.length,
                       itemBuilder: (context, exerciseIndex) {
                         return RoutineExerciseCard(
-                          key: ValueKey('card_${blockIndex}_$exerciseIndex'),
+                          key: ValueKey(currentBloque.ejercicios[exerciseIndex].ejercicio.idEjercicio),
                           blockIndex: blockIndex,
                           exerciseIndex: exerciseIndex,
                           item: currentBloque.ejercicios[exerciseIndex],

@@ -14,6 +14,7 @@ class RoutineBuilderController extends ChangeNotifier {
   int _pendingCombineSeries = 4;
   String _pendingCombineReps = '10';
   int _blockIdCounter = 0;
+  int _dayIdCounter = 0;
 
   // ── Getters de días ──────────────────────────────────────────────
   List<DiaRutina> get dias => List.unmodifiable(_dias);
@@ -68,9 +69,11 @@ class RoutineBuilderController extends ChangeNotifier {
 
   int addDay({String? nombre}) {
     if (_dias.length >= 5) return -1;
+    _dayIdCounter++;
     final dia = DiaRutina(
       nombre: nombre ?? 'Día ${_dias.length + 1}',
       orden: _dias.length,
+      internalId: 'day-$_dayIdCounter',
     );
     _dias.add(dia);
     _activeDayIndex = _dias.length - 1;

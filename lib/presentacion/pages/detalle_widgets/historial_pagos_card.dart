@@ -145,7 +145,7 @@ class HistorialPagosCard extends StatelessWidget {
                             color: AppColors.onSurfaceVariant,
                           ),
                         ),
-                        if (alumno.aplicaDescuento)
+                        if (pago.aplicaDescuento)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 6,

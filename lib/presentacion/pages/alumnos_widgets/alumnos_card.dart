@@ -75,9 +75,14 @@ class AlumnoCard extends StatelessWidget {
               ),
               const Spacer(),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: AppColors.onSurfaceVariant),
+                icon: const Icon(
+                  Icons.more_vert,
+                  color: AppColors.onSurfaceVariant,
+                ),
                 color: AppColors.surfaceContainerHigh,
-                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(AppRadius.md)),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(AppRadius.md),
+                ),
                 onSelected: (value) {
                   if (value == 'editar') onEditar();
                   if (value == 'eliminar') onEliminar();
@@ -86,15 +91,24 @@ class AlumnoCard extends StatelessWidget {
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: 'editar',
-                    child: Text('Editar', style: GoogleFonts.inter(color: AppColors.onSurface)),
+                    child: Text(
+                      'Editar',
+                      style: GoogleFonts.inter(color: AppColors.onSurface),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'eliminar',
-                    child: Text('Eliminar', style: GoogleFonts.inter(color: AppColors.error)),
+                    child: Text(
+                      'Eliminar',
+                      style: GoogleFonts.inter(color: AppColors.error),
+                    ),
                   ),
                   PopupMenuItem(
                     value: 'detalles',
-                    child: Text('Ver detalles', style: GoogleFonts.inter(color: AppColors.onSurface)),
+                    child: Text(
+                      'Ver detalles',
+                      style: GoogleFonts.inter(color: AppColors.onSurface),
+                    ),
                   ),
                 ],
               ),
@@ -114,22 +128,7 @@ class AlumnoCard extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-
-          const SizedBox(height: 2),
-
-          // ── Subtítulo ─────────────────────────────────────────────────
-          Text(
-            alumno.aplicaDescuento ? 'Con descuento' : 'Sin descuento',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              color: alumno.aplicaDescuento
-                  ? AppColors.primary
-                  : AppColors.onSurfaceVariant,
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.md),
-
+          const SizedBox(height: AppSpacing.sm),
           // ── Acciones inferiores ───────────────────────────────────────
           SizedBox(
             width: double.infinity,

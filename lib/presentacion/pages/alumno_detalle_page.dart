@@ -46,8 +46,10 @@ class AlumnoDetallePage extends ConsumerWidget {
     final ultimoPagoAsync = ref.watch(
       ultimoPagoAlumnoProvider(alumno.idAlumno),
     );
+    final deudorAsync = ref.watch(deudorAlumnoProvider(alumno.idAlumno));
 
     final ultimoPago = ultimoPagoAsync.value;
+    final deudor = deudorAsync.value;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -119,46 +121,7 @@ class AlumnoDetallePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
 
-                // Descuento Badge
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: alumno.aplicaDescuento
-                                ? AppColors.primary
-                                : AppColors.onSurfaceVariant,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          alumno.aplicaDescuento
-                              ? 'Con descuento'
-                              : 'Sin descuento',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xl),
+
 
                 // Información Personal Card
                 DetalleCard(
@@ -190,7 +153,10 @@ class AlumnoDetallePage extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.lg),
 
                 // Estado de Cuenta Card
-                EstadoCuentaCard(ultimoPago: ultimoPago),
+                EstadoCuentaCard(
+                  ultimoPago: ultimoPago,
+                  deudor: deudor,
+                ),
                 const SizedBox(height: AppSpacing.lg),
 
                 // Rutinas Asignadas Card

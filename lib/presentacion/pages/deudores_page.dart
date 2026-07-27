@@ -10,6 +10,10 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/pages/deudores_widgets/deudor_card.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
+import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 
 class DeudoresPage extends ConsumerStatefulWidget {
   const DeudoresPage({super.key});
@@ -23,6 +27,7 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
   bool _sidebarCollapsed = false;
   List<Deudor> _deudores = [];
   String _filtroSeleccionado = 'Todos';
+  Alumno? _alumnoFiltro;
 
   @override
   void initState() {
@@ -55,8 +60,14 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
             currentRoute: '/deudores',
             isCollapsed: _sidebarCollapsed,
             onCerrarSesion: () async {
-              await SupabaseConfig.client.auth.signOut();
-              if (mounted) context.go('/login');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => const LogoutConfirmDialog(),
+              );
+              if (confirm == true) {
+                await SupabaseConfig.client.auth.signOut();
+                if (mounted) context.go('/login');
+              }
             },
             onNavigate: (route) => context.go(route),
           ),
@@ -67,6 +78,21 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
                   onMenuPressed: () =>
                       setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                   pageTitle: 'Deudores',
+                  actionsCenter: [
+                    SizedBox(
+                      width: 320,
+                      child: AlumnoSelector(
+                        alumnoRepository: ref.read(alumnoRepositoryProvider),
+                        alumnoSeleccionado: _alumnoFiltro,
+                        hintText: 'Buscar por nombre...',
+                        onAlumnoChanged: (alumno) {
+                          setState(() {
+                            _alumnoFiltro = alumno;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 Expanded(
                   child: _isLoading
@@ -88,6 +114,10 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
   Widget _buildContent() {
     // Filtrar deudores
     final deudoresFiltrados = _deudores.where((d) {
+      if (_alumnoFiltro != null && d.idDeudor != _alumnoFiltro!.idAlumno) {
+        return false;
+      }
+      
       if (_filtroSeleccionado == 'Vencido este mes') {
         return d.diasAdeudados < 30;
       } else if (_filtroSeleccionado == 'Más de 30 días') {
@@ -205,6 +235,51 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
                       setState(() => _isLoading = false);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  },
+                  onEliminar: () async {
+                    final confirmar = await showDialog<bool>(
+                      context: context,
+                      builder: (_) => DeleteConfirmDialog(
+                        title: 'Eliminar deudor',
+                        message: '¿Seguro que querés eliminar a ${deudor.nombreCompleto} de la lista de deudores? Esta acción no se puede deshacer.',
+                      ),
+                    );
+
+                    if (confirmar != true) return;
+
+                    setState(() => _isLoading = true);
+                    try {
+                      final repo = ref.read(deudorRepositoryProvider);
+                      await repo.eliminarDeudor(deudor.idDeudor);
+                      
+                      if (!mounted) return;
+                      setState(() => _isLoading = false);
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Deudor eliminado exitosamente.',
+                            style: GoogleFonts.inter(
+                              color: AppColors.successContent,
+                            ),
+                          ),
+                          backgroundColor: AppColors.successContainer,
+                          behavior: SnackBarBehavior.floating,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(AppRadius.md),
+                          ),
+                        ),
+                      );
+                      
+                      setState(() => _isLoading = true);
+                      _loadData();
+                    } catch (e) {
+                      if (!mounted) return;
+                      setState(() => _isLoading = false);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error al eliminar deudor: $e')),
                       );
                     }
                   },

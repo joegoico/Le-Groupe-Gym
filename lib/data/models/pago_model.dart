@@ -6,6 +6,7 @@ class Pago {
   final String medioDePago;
   final String? comentarios;
   final int cantidadDias;
+  final bool aplicaDescuento;
 
   Pago({
     required this.idPago,
@@ -15,6 +16,7 @@ class Pago {
     required this.medioDePago,
     this.comentarios,
     required this.cantidadDias,
+    this.aplicaDescuento = false,
   });
 
   factory Pago.fromMap(Map<String, dynamic> map) {
@@ -26,6 +28,7 @@ class Pago {
       medioDePago: map['medio_de_pago'] as String,
       comentarios: map['comentarios'] as String?,
       cantidadDias: map['cantidad_dias'] as int,
+      aplicaDescuento: map['aplica_descuento'] as bool? ?? false,
     );
   }
 
@@ -38,6 +41,7 @@ class Pago {
       'medio_de_pago': medioDePago,
       'comentarios': comentarios,
       'cantidad_dias': cantidadDias,
+      'aplica_descuento': aplicaDescuento,
     };
   }
 }

@@ -42,7 +42,6 @@ void main() {
         nombre: 'Juan',
         apellido: 'Pérez',
         mail: 'juan@mail.com',
-        aplicaDescuento: false,
       );
       await tester.pumpWidget(
         MaterialApp(

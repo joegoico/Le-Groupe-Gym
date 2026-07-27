@@ -3,20 +3,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/pago_model.dart';
+import 'package:le_groupe_gym/data/models/deudor_model.dart';
 import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/detalle_card.dart';
 
 class EstadoCuentaCard extends StatelessWidget {
   final Pago? ultimoPago;
+  final Deudor? deudor;
 
   const EstadoCuentaCard({
     super.key,
     required this.ultimoPago,
+    this.deudor,
   });
 
   @override
   Widget build(BuildContext context) {
+    bool esDeudor = false;
+    int diasVencido = 0;
+    
+    if (deudor != null && deudor!.diasAdeudados > 0) {
+      esDeudor = true;
+      diasVencido = deudor!.diasAdeudados;
+    }
+
+    final Color statusColor = esDeudor ? Colors.redAccent : AppColors.primary;
+    final String statusText = esDeudor ? 'Cuota Vencida' : 'Cuota al Día';
+    final IconData statusIcon = esDeudor ? Icons.cancel_outlined : Icons.check_circle_outline;
+
     return DetalleCard(
       accentLeft: true,
+      accentColor: statusColor,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -46,22 +62,48 @@ class EstadoCuentaCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Cuota al Día',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onSurface,
+                  Row(
+                    children: [
+                      Text(
+                        statusText,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: esDeudor ? Colors.redAccent : AppColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Icon(
+                        statusIcon,
+                        color: statusColor,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                  if (esDeudor) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: statusColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'HACE $diasVencido DÍAS',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(
-                    Icons.check_circle_outline,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
+                  ],
                 ],
               ),
               Text(

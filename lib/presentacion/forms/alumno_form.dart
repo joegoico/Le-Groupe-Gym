@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
-import 'package:le_groupe_gym/presentacion/forms/alumno_forms_widgets/descuento_switch.dart';
 
 class AlumnoForm extends StatefulWidget {
   /// Si es null, el formulario funciona en modo creación.
@@ -28,7 +27,6 @@ class _AlumnoFormState extends State<AlumnoForm> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoCtrl;
   late final TextEditingController _mailCtrl;
-  late bool _aplicaDescuento;
   bool _isLoading = false;
 
   bool get _esEdicion => widget.alumno != null;
@@ -39,7 +37,6 @@ class _AlumnoFormState extends State<AlumnoForm> {
     _nombreCtrl = TextEditingController(text: widget.alumno?.nombre ?? '');
     _apellidoCtrl = TextEditingController(text: widget.alumno?.apellido ?? '');
     _mailCtrl = TextEditingController(text: widget.alumno?.mail ?? '');
-    _aplicaDescuento = widget.alumno?.aplicaDescuento ?? false;
   }
 
   @override
@@ -82,7 +79,6 @@ class _AlumnoFormState extends State<AlumnoForm> {
         nombre: _nombreCtrl.text.trim(),
         apellido: _apellidoCtrl.text.trim(),
         mail: _mailCtrl.text.trim().isEmpty ? null : _mailCtrl.text.trim(),
-        aplicaDescuento: _aplicaDescuento,
       );
 
       if (_esEdicion) {
@@ -96,7 +92,6 @@ class _AlumnoFormState extends State<AlumnoForm> {
             nombre: alumno.nombre,
             apellido: alumno.apellido,
             mail: alumno.mail,
-            aplicaDescuento: alumno.aplicaDescuento,
           ),
         );
       }
@@ -263,13 +258,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
 
                   const SizedBox(height: AppSpacing.lg),
 
-                  // ── Descuento ────────────────────────────────────────────────
-                  DescuentoSwitch(
-                    value: _aplicaDescuento,
-                    onChanged: (v) => setState(() => _aplicaDescuento = v),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xl),
+                  const SizedBox(height: AppSpacing.lg),
 
                   // ── Botones ──────────────────────────────────────────────────
                   Row(

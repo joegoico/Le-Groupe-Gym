@@ -24,7 +24,6 @@ void main() {
         nombre: 'Juan',
         apellido: 'Pérez',
         mail: 'juan@mail.com',
-        aplicaDescuento: false,
       );
       mockCategoriaPecho = CategoriaEjercicio(
         idCategoria: 1,

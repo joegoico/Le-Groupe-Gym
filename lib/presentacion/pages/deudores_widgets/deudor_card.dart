@@ -10,12 +10,14 @@ class DeudorCard extends ConsumerWidget {
   final Deudor deudor;
   final VoidCallback onRegistrarPago;
   final VoidCallback? onEnviarMensaje;
+  final VoidCallback onEliminar;
 
   const DeudorCard({
     super.key,
     required this.deudor,
     required this.onRegistrarPago,
     this.onEnviarMensaje,
+    required this.onEliminar,
   });
 
   @override
@@ -97,6 +99,11 @@ class DeudorCard extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                                onPressed: onEliminar,
+                                tooltip: 'Eliminar deudor',
                               ),
                             ],
                           ),

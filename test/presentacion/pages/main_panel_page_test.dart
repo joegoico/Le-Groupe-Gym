@@ -224,10 +224,10 @@ void main() {
         await tester.pump();
 
         // Assert — aparece diálogo de confirmación
-        expect(find.text('¿Salir sin guardar?'), findsOneWidget);
+        expect(find.text('Salir del creador'), findsOneWidget);
         expect(
           find.text(
-            'Perdés todos los cambios de la rutina actual. Esta acción no se puede deshacer.',
+            '¿Estás seguro de salir? Se perderán los datos no guardados.',
           ),
           findsOneWidget,
         );

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -33,7 +32,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
 
       final response = await supabaseClient
           .from('Alumno')
-          .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
+          .select('id_alumno, "Nombre", "Apellido", "Mail"')
           .eq('user_id', userId)
           .order('"Apellido"', ascending: true);
       return (response as List<dynamic>)
@@ -53,7 +52,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
       final pattern = '%$query%';
       final response = await supabaseClient
           .from('Alumno')
-          .select('id_alumno, "Nombre", "Apellido", "Mail", aplica_descuento')
+          .select('id_alumno, "Nombre", "Apellido", "Mail"')
           .or('"Nombre".ilike.$pattern,"Apellido".ilike.$pattern')
           .eq('user_id', userId)
           .order('"Apellido"', ascending: true)
@@ -99,7 +98,6 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
             'Nombre': alumno.nombre,
             'Apellido': alumno.apellido,
             'Mail': alumno.mail,
-            'aplica_descuento': alumno.aplicaDescuento,
             'user_id': userId,
           })
           .select('id_alumno')
@@ -122,7 +120,6 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
             'Nombre': alumno.nombre,
             'Apellido': alumno.apellido,
             'Mail': alumno.mail,
-            'aplica_descuento': alumno.aplicaDescuento,
           })
           .eq('id_alumno', alumno.idAlumno)
           .eq('user_id', userId);

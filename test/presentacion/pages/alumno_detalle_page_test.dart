@@ -15,7 +15,6 @@ void main() {
     nombre: 'Juan',
     apellido: 'Pérez',
     mail: 'juan@mail.com',
-    aplicaDescuento: false,
   );
 
   final alumnoSinMail = Alumno(
@@ -23,7 +22,6 @@ void main() {
     nombre: 'María',
     apellido: 'García',
     mail: null,
-    aplicaDescuento: true,
   );
 
   Widget createWidgetUnderTest(Alumno alumno) {

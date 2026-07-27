@@ -17,7 +17,6 @@ void main() {
         nombre: nombreEsperado,
         apellido: apellidoEsperado,
         mail: mailEsperado,
-        aplicaDescuento: false,
       );
 
       // Assert
@@ -25,7 +24,6 @@ void main() {
       expect(alumno.nombre, nombreEsperado);
       expect(alumno.apellido, apellidoEsperado);
       expect(alumno.mail, mailEsperado);
-      expect(alumno.aplicaDescuento, isFalse);
     });
 
     test('fromMap debe reconstruir un Alumno desde la respuesta de Supabase', () {
@@ -46,7 +44,6 @@ void main() {
       expect(alumno.nombre, 'Juan');
       expect(alumno.apellido, 'Pérez');
       expect(alumno.mail, 'juan@mail.com');
-      expect(alumno.aplicaDescuento, isFalse);
     });
 
     test('mail puede ser nulo', () {
@@ -72,7 +69,6 @@ void main() {
         idAlumno: 'abc-123',
         nombre: 'Juan',
         apellido: 'Pérez',
-        aplicaDescuento: false,
       );
 
       // Act

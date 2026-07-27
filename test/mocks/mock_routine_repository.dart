@@ -34,7 +34,6 @@ class MockRoutineRepository implements RoutineRepository {
           idAlumno: 'abc-123',
           nombre: 'Juan',
           apellido: 'Pérez',
-          aplicaDescuento: false,
         ),
       ),
     ];

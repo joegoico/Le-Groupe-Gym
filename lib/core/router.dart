@@ -63,5 +63,9 @@ final appRouter = GoRouter(
       path: '/deudores',
       builder: (context, state) => const DeudoresPage(),
     ),
+    GoRoute(
+      path: '/rutinas',
+      builder: (context, state) => const RutinasDashboardPage(),
+    ),
   ],
 );

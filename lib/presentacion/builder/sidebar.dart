@@ -45,7 +45,7 @@ const _items = [
   _SidebarItem(
     label: 'Rutinas',
     icon: Icons.fitness_center_outlined,
-    route: '/',
+    route: '/rutinas',
     enabled: true,
   ),
 ];
@@ -142,8 +142,8 @@ class Sidebar extends StatelessWidget {
               ),
         borderRadius: const BorderRadius.all(AppRadius.md),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
+          padding: EdgeInsets.symmetric(
+            horizontal: isCollapsed ? AppSpacing.sm : AppSpacing.md,
             vertical: AppSpacing.md,
           ),
           decoration: BoxDecoration(
@@ -159,6 +159,7 @@ class Sidebar extends StatelessWidget {
                 : null,
           ),
           child: Row(
+            mainAxisAlignment: isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
             children: [
               Icon(
                 item.icon,

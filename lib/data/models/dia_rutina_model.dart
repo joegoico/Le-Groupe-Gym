@@ -5,12 +5,14 @@ class DiaRutina {
   final String nombre;
   final int orden;
   final List<BloqueRutina> bloques;
+  final String? internalId;
 
   DiaRutina({
     this.idDia,
     required this.nombre,
     required this.orden,
     List<BloqueRutina>? bloques,
+    this.internalId,
   }) : bloques = bloques ?? [];
 
   bool get estaVacio => bloques.isEmpty || bloques.every((b) => b.estaVacio);
@@ -20,12 +22,14 @@ class DiaRutina {
     String? nombre,
     int? orden,
     List<BloqueRutina>? bloques,
+    String? internalId,
   }) {
     return DiaRutina(
       idDia: idDia ?? this.idDia,
       nombre: nombre ?? this.nombre,
       orden: orden ?? this.orden,
       bloques: bloques ?? this.bloques,
+      internalId: internalId ?? this.internalId,
     );
   }
 

@@ -15,6 +15,7 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/solicitud_rutina_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
 
 class RutinasDashboardPage extends ConsumerStatefulWidget {
   const RutinasDashboardPage({super.key});
@@ -134,8 +135,14 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
             currentRoute: '/',
             isCollapsed: _sidebarCollapsed,
             onCerrarSesion: () async {
-              await SupabaseConfig.client.auth.signOut();
-              if (mounted) context.go('/login');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => const LogoutConfirmDialog(),
+              );
+              if (confirm == true) {
+                await SupabaseConfig.client.auth.signOut();
+                if (mounted) context.go('/login');
+              }
             },
             onNavigate: (route) => context.go(route),
           ),

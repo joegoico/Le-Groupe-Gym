@@ -118,7 +118,7 @@ void main() {
       await tester.pump();
 
       // Assert
-      expect(navigatedTo, '/');
+      expect(navigatedTo, '/rutinas');
     });
   });
 }

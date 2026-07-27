@@ -6,10 +6,16 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/pago_model.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
+import 'package:le_groupe_gym/data/models/descuento_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/presentacion/forms/alumno_forms_widgets/descuento_switch.dart';
 
 final planesProvider = FutureProvider.autoDispose<List<Precio>>((ref) async {
   return ref.read(precioRepositoryProvider).getPrecios();
+});
+
+final descuentosProvider = FutureProvider.autoDispose<List<Descuento>>((ref) async {
+  return ref.read(descuentoRepositoryProvider).getDescuentos();
 });
 
 class PagoForm extends ConsumerStatefulWidget {
@@ -32,6 +38,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   String _medioPago = 'Efectivo';
   DateTime _fechaPago = DateTime.now();
   bool _isLoading = false;
+  bool _aplicaDescuento = false;
 
   @override
   void initState() {
@@ -44,6 +51,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       _diasController.text = widget.pagoAEditar!.cantidadDias.toString();
       _medioPago = widget.pagoAEditar!.medioDePago;
       _fechaPago = widget.pagoAEditar!.fechaDePago;
+      _aplicaDescuento = widget.pagoAEditar!.aplicaDescuento;
     }
   }
 
@@ -91,6 +99,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
             ? _comentariosController.text
             : null,
         cantidadDias: dias,
+        aplicaDescuento: _aplicaDescuento,
       );
 
       if (widget.pagoAEditar == null) {
@@ -131,6 +140,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   @override
   Widget build(BuildContext context) {
     final planesAsync = ref.watch(planesProvider);
+    final descuentosAsync = ref.watch(descuentosProvider);
 
     return AlertDialog(
       backgroundColor: AppColors.surfaceContainer,
@@ -343,9 +353,17 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                               if (selected) {
                                 setState(() {
                                   _planSeleccionado = p;
-                                  _montoController.text = (p.valor % 1 == 0)
-                                      ? p.valor.toInt().toString()
-                                      : p.valor.toString();
+                                  
+                                  double baseMonto = p.valor.toDouble();
+                                  if (_aplicaDescuento && descuentosAsync.value != null && descuentosAsync.value!.isNotEmpty) {
+                                    final descValue = descuentosAsync.value!.first.valor;
+                                    baseMonto = baseMonto - descValue.toDouble();
+                                    if (baseMonto < 0.0) baseMonto = 0.0;
+                                  }
+                                  
+                                  _montoController.text = (baseMonto % 1 == 0)
+                                      ? baseMonto.toInt().toString()
+                                      : baseMonto.toString();
                                   _diasController.text = p.cantidadDias
                                       .toString();
                                 });
@@ -432,6 +450,28 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                       return Colors.white;
                     }),
                   ),
+                ),
+                
+                // Descuento
+                _buildSectionTitle('Descuento'),
+                DescuentoSwitch(
+                  value: _aplicaDescuento,
+                  onChanged: (v) {
+                    setState(() {
+                      _aplicaDescuento = v;
+                      if (_planSeleccionado != null && descuentosAsync.value != null && descuentosAsync.value!.isNotEmpty) {
+                        double baseMonto = _planSeleccionado!.valor.toDouble();
+                        if (_aplicaDescuento) {
+                          final descValue = descuentosAsync.value!.first.valor;
+                          baseMonto = baseMonto - descValue.toDouble();
+                          if (baseMonto < 0.0) baseMonto = 0.0;
+                        }
+                        _montoController.text = (baseMonto % 1 == 0)
+                            ? baseMonto.toInt().toString()
+                            : baseMonto.toString();
+                      }
+                    });
+                  },
                 ),
 
                 // Comentarios

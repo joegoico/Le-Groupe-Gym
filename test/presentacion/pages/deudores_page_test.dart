@@ -126,6 +126,42 @@ void main() {
       // Buscar el icono de email
       expect(find.byIcon(Icons.email_outlined), findsWidgets);
       
+      
+      addTearDown(tester.view.resetPhysicalSize);
+    });
+
+    testWidgets('Debe eliminar un deudor al confirmar en el dialogo', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      await tester.pumpWidget(createWidgetUnderTest());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Juan Pérez'), findsOneWidget);
+
+      // Tocar el botón de eliminar del primer deudor
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      // Debería mostrar el diálogo
+      expect(find.text('Eliminar deudor'), findsOneWidget);
+      expect(find.text('¿Seguro que querés eliminar a Juan Pérez de la lista de deudores? Esta acción no se puede deshacer.'), findsOneWidget);
+
+      // Cancelar no debería hacer nada
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Juan Pérez'), findsOneWidget);
+
+      // Tocar eliminar de nuevo
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      // Confirmar eliminación
+      await tester.tap(find.text('Eliminar'));
+      await tester.pumpAndSettle();
+
+      // Debería desaparecer Juan Pérez
+      expect(find.text('Juan Pérez'), findsNothing);
+
       addTearDown(tester.view.resetPhysicalSize);
     });
   });

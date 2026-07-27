@@ -41,11 +41,7 @@ void main() {
       expect(find.byKey(const Key('alumno_mail_field')), findsOneWidget);
     });
 
-    testWidgets('debe mostrar el switch de descuento', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest());
 
-      expect(find.byKey(const Key('alumno_descuento_switch')), findsOneWidget);
-    });
 
     testWidgets('debe mostrar botones Cancelar y Guardar', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
@@ -71,7 +67,6 @@ void main() {
             idAlumno: 'abc-123',
             nombre: 'Juan',
             apellido: 'Pérez',
-            aplicaDescuento: false,
           ),
         ),
       );
@@ -194,34 +189,8 @@ void main() {
       expect(guardado!.nombre, 'María');
       expect(guardado!.apellido, 'García');
       expect(guardado!.mail, 'maria@mail.com');
-      expect(guardado!.aplicaDescuento, isFalse);
     });
 
-    testWidgets('debe incluir aplicaDescuento=true al activar el switch', (
-      tester,
-    ) async {
-      Alumno? guardado;
-      await tester.pumpWidget(
-        createWidgetUnderTest(onGuardar: (a) => guardado = a),
-      );
-
-      await tester.enterText(
-        find.byKey(const Key('alumno_nombre_field')),
-        'Pedro',
-      );
-      await tester.enterText(
-        find.byKey(const Key('alumno_apellido_field')),
-        'Gómez',
-      );
-      // Activamos el switch
-      await tester.tap(find.byKey(const Key('alumno_descuento_switch')));
-      await tester.pump();
-
-      await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-      await tester.pump();
-
-      expect(guardado!.aplicaDescuento, isTrue);
-    });
 
     // ── Modo edición ──────────────────────────────────────────────────────────
 
@@ -235,7 +204,6 @@ void main() {
             nombre: 'Lucas',
             apellido: 'Benítez',
             mail: 'lucas@mail.com',
-            aplicaDescuento: true,
           ),
         ),
       );
@@ -263,12 +231,6 @@ void main() {
             ?.text,
         'lucas@mail.com',
       );
-
-      // El switch debe estar activado
-      final switchWidget = tester.widget<Switch>(
-        find.byKey(const Key('alumno_descuento_switch')),
-      );
-      expect(switchWidget.value, isTrue);
     });
 
     testWidgets('debe llamar onGuardar con id del alumno existente al editar', (
@@ -282,7 +244,6 @@ void main() {
             nombre: 'Lucas',
             apellido: 'Benítez',
             mail: 'lucas@mail.com',
-            aplicaDescuento: false,
           ),
           onGuardar: (a) => guardado = a,
         ),

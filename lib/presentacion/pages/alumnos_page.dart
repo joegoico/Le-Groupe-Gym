@@ -6,7 +6,8 @@ import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
@@ -125,11 +126,12 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   }
 
   Future<void> _eliminarAlumno(Alumno alumno) async {
-    final confirmar = await showConfirmDialog(
-      context,
-      titulo: 'Eliminar alumno',
-      mensaje:
-          '¿Seguro que querés eliminar a ${alumno.nombreCompleto}? Esta acción no se puede deshacer.',
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => DeleteConfirmDialog(
+        title: 'Eliminar alumno',
+        message: '¿Seguro que querés eliminar a ${alumno.nombreCompleto}? Esta acción no se puede deshacer.',
+      ),
     );
     if (confirmar != true) return;
 
@@ -177,8 +179,14 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
             currentRoute: '/alumnos',
             isCollapsed: _sidebarCollapsed,
             onCerrarSesion: () async {
-              await SupabaseConfig.client.auth.signOut();
-              if (mounted) context.go('/login');
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => const LogoutConfirmDialog(),
+              );
+              if (confirm == true) {
+                await SupabaseConfig.client.auth.signOut();
+                if (mounted) context.go('/login');
+              }
             },
             onNavigate: (route) => context.go(route),
           ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'routine_builder_controller.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/routien_day_accordion.dart';
@@ -132,13 +132,14 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
             const SizedBox(width: AppSpacing.sm),
             TextButton.icon(
               onPressed: () async {
-                final ok = await showConfirmDialog(
-                  context,
-                  titulo: 'Limpiar rutina',
-                  mensaje:
-                      '¿Estás seguro de que querés eliminar toda la rutina?',
+                final ok = await showDialog<bool>(
+                  context: context,
+                  builder: (_) => const DeleteConfirmDialog(
+                    title: 'Limpiar rutina',
+                    message: '¿Estás seguro de que querés eliminar toda la rutina?',
+                  ),
                 );
-                if (ok) widget.controller.clearRoutine();
+                if (ok == true) widget.controller.clearRoutine();
               },
               icon: const Icon(
                 Icons.delete_outline,
@@ -160,7 +161,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
               final isExpanded = _expandedDay == dayIndex;
 
               return RoutineDayAccordion(
-                key: ValueKey('day_$dayIndex'),
+                key: ValueKey(dia.internalId ?? 'day_$dayIndex'),
                 dayIndex: dayIndex,
                 dia: dia,
                 isExpanded: isExpanded,

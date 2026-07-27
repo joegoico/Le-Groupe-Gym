@@ -20,7 +20,6 @@ void main() {
         idAlumno: '1234',
         nombre: 'Carlos',
         apellido: 'Gómez',
-        aplicaDescuento: true,
       );
       mockPagoRepository = MockPagoRepository();
     });
