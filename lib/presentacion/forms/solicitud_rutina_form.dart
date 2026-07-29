@@ -5,12 +5,17 @@ import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+import 'package:le_groupe_gym/data/repositories/pago_repository.dart';
+import 'package:le_groupe_gym/data/repositories/deudor_repository.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/show_confirm_dialog.dart';
 
 class AddSolicitudRutinaForm extends StatefulWidget {
   final VoidCallback onCancelar;
   final ValueChanged<SolicitudRutina> onGuardar;
   final AlumnoRepository alumnoRepository;
   final SolicitudRutinaRepository solicitudRutinaRepository;
+  final PagoRepository pagoRepository;
+  final DeudorRepository deudorRepository;
 
   const AddSolicitudRutinaForm({
     super.key,
@@ -18,6 +23,8 @@ class AddSolicitudRutinaForm extends StatefulWidget {
     required this.onGuardar,
     required this.alumnoRepository,
     required this.solicitudRutinaRepository,
+    required this.pagoRepository,
+    required this.deudorRepository,
   });
 
   @override
@@ -58,6 +65,42 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
     );
 
     try {
+      final deudores = await widget.deudorRepository.getDeudores();
+      final deudorIndex = deudores.indexWhere((d) => d.idDeudor == _selectedAlumno!.idAlumno);
+      final isDebtor = deudorIndex != -1;
+      final diasAdeudados = isDebtor ? deudores[deudorIndex].diasAdeudados : 0;
+
+      final ultimoPago = await widget.pagoRepository.getUltimoPago(_selectedAlumno!.idAlumno);
+      final hasNoPayments = ultimoPago == null;
+
+      if (isDebtor || hasNoPayments) {
+        if (mounted) setState(() => _isSaving = false);
+
+        String alertMessage = '';
+        if (isDebtor && !hasNoPayments) {
+          alertMessage = 'El alumno se encuentra en situación de deudor (hace $diasAdeudados días).';
+        } else if (!isDebtor && hasNoPayments) {
+          alertMessage = 'El alumno no registra pagos.';
+        } else {
+          alertMessage = 'El alumno es deudor (hace $diasAdeudados días) y no registra pagos.';
+        }
+
+        alertMessage += '\n\n¿Desea continuar de todas formas?';
+
+        final proceed = await showConfirmDialog(
+          context,
+          titulo: 'Advertencia',
+          mensaje: alertMessage,
+          confirmLabel: 'Continuar',
+          confirmColor: AppColors.warningLow,
+          headerIcon: Icons.warning_amber_rounded,
+        );
+
+        if (proceed != true) return;
+        if (mounted) setState(() => _isSaving = true);
+      }
+
+
       final idSolicitud = await widget.solicitudRutinaRepository
           .createSolicitud(solicitudRutina);
       widget.onGuardar(solicitudRutina.copyWith(idSolicitud: idSolicitud));

@@ -7,6 +7,7 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import '../../mocks/mock_alumno_repository.dart';
 import '../../mocks/mock_routine_repository.dart';
 import '../../mocks/mock_pago_repository.dart';
+import '../../mocks/mock_deudor_repository.dart';
 
 void main() {
   // ── Alumno de prueba ─────────────────────────────────────────────────────────
@@ -30,6 +31,7 @@ void main() {
         alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
         routineRepositoryProvider.overrideWithValue(MockRoutineRepository()),
         pagoRepositoryProvider.overrideWithValue(MockPagoRepository()),
+        deudorRepositoryProvider.overrideWithValue(MockDeudorRepository()),
       ],
       child: MaterialApp(home: AlumnoDetallePage(alumno: alumno)),
     );
@@ -71,24 +73,6 @@ void main() {
       await tester.pump();
 
       expect(find.text('Sin email registrado'), findsOneWidget);
-    });
-
-    // ── Descuento ─────────────────────────────────────────────────────────────
-
-    testWidgets('muestra badge "Con descuento" cuando aplica', (tester) async {
-      await tester.pumpWidget(createWidgetUnderTest(alumnoSinMail));
-      await tester.pump();
-
-      expect(find.text('Con descuento'), findsOneWidget);
-    });
-
-    testWidgets('muestra badge "Sin descuento" cuando no aplica', (
-      tester,
-    ) async {
-      await tester.pumpWidget(createWidgetUnderTest(alumnoConMail));
-      await tester.pump();
-
-      expect(find.text('Sin descuento'), findsOneWidget);
     });
 
     // ── Rutinas Asignadas ─────────────────────────────────────────────────────

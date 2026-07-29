@@ -8,11 +8,13 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import '../../mocks/mock_pago_repository.dart';
+import '../../mocks/mock_deudor_repository.dart';
 
 void main() {
   group('AlumnoPagosPage Widget Tests', () {
     late Alumno alumnoPrueba;
     late MockPagoRepository mockPagoRepository;
+    late MockDeudorRepository mockDeudorRepository;
 
     setUp(() async {
       await initializeDateFormatting('es_ES', null);
@@ -22,12 +24,14 @@ void main() {
         apellido: 'Gómez',
       );
       mockPagoRepository = MockPagoRepository();
+      mockDeudorRepository = MockDeudorRepository();
     });
 
     Widget createWidgetUnderTest() {
       return ProviderScope(
         overrides: [
           pagoRepositoryProvider.overrideWithValue(mockPagoRepository),
+          deudorRepositoryProvider.overrideWithValue(mockDeudorRepository),
         ],
         child: MaterialApp(
           home: AlumnoPagosPage(alumno: alumnoPrueba),

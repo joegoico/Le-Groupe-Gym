@@ -1,0 +1,81 @@
+--- lib/presentacion/forms/solicitud_rutina_form.dart
++++ lib/presentacion/forms/solicitud_rutina_form.dart
+@@ -5,21 +5,27 @@
+ import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
+ import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
+ import 'package:le_groupe_gym/data/models/alumno_model.dart';
++import 'package:le_groupe_gym/data/repositories/pago_repository.dart';
++import 'package:le_groupe_gym/data/repositories/deudor_repository.dart';
+ 
+ class AddSolicitudRutinaForm extends StatefulWidget {
+   final VoidCallback onCancelar;
+   final ValueChanged<SolicitudRutina> onGuardar;
+   final AlumnoRepository alumnoRepository;
+   final SolicitudRutinaRepository solicitudRutinaRepository;
++  final PagoRepository pagoRepository;
++  final DeudorRepository deudorRepository;
+ 
+   const AddSolicitudRutinaForm({
+     super.key,
+     required this.onCancelar,
+     required this.onGuardar,
+     required this.alumnoRepository,
+     required this.solicitudRutinaRepository,
++    required this.pagoRepository,
++    required this.deudorRepository,
+   });
+ 
+   @override
+@@ -49,8 +55,52 @@
+   Future<void> _guardarSolicitudRutina() async {
+     if (!_canSave) return;
+ 
+     setState(() => _isSaving = true);
+ 
++    bool isDebtor = false;
++    bool hasNoPayments = false;
++
++    try {
++      final deudores = await widget.deudorRepository.getDeudores();
++      final deudorIndex = deudores.indexWhere((d) => d.idDeudor == _selectedAlumno!.idAlumno);
++      if (deudorIndex != -1) {
++        final deudor = deudores[deudorIndex];
++        if (deudor.diasAdeudados > 0) {
++          isDebtor = true;
++        }
++      }
++
++      final ultimoPago = await widget.pagoRepository.getUltimoPago(_selectedAlumno!.idAlumno);
++      if (ultimoPago == null) {
++        hasNoPayments = true;
++      }
++    } catch (e) {
++      // ignore errors fetching status
++    }
++
++    if (isDebtor || hasNoPayments) {
++      setState(() => _isSaving = false);
++      final proceed = await showDialog<bool>(
++        context: context,
++        builder: (ctx) => AlertDialog(
++          title: const Text('Advertencia'),
++          content: Text(isDebtor ? 'El alumno es deudor.' : 'El alumno no registra pagos.'),
++          actions: [
++            TextButton(
++              onPressed: () => Navigator.of(ctx).pop(false),
++              child: const Text('Cancelar'),
++            ),
++            TextButton(
++              onPressed: () => Navigator.of(ctx).pop(true),
++              child: const Text('Continuar de todas formas'),
++            ),
++          ],
++        ),
++      );
++
++      if (proceed != true) return;
++      setState(() => _isSaving = true);
++    }
++
+     final solicitudRutina = SolicitudRutina(
+       idAlumno: _selectedAlumno!.idAlumno,

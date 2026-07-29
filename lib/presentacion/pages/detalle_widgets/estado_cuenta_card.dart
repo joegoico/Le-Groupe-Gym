@@ -26,9 +26,11 @@ class EstadoCuentaCard extends StatelessWidget {
       diasVencido = deudor!.diasAdeudados;
     }
 
-    final Color statusColor = esDeudor ? Colors.redAccent : AppColors.primary;
-    final String statusText = esDeudor ? 'Cuota Vencida' : 'Cuota al Día';
-    final IconData statusIcon = esDeudor ? Icons.cancel_outlined : Icons.check_circle_outline;
+    final bool sinPagos = ultimoPago == null;
+
+    final Color statusColor = sinPagos ? Colors.orange : (esDeudor ? Colors.redAccent : AppColors.primary);
+    final String statusText = sinPagos ? 'Sin pagos registrados' : (esDeudor ? 'Cuota Vencida' : 'Cuota al Día');
+    final IconData statusIcon = sinPagos ? Icons.warning_amber_rounded : (esDeudor ? Icons.cancel_outlined : Icons.check_circle_outline);
 
     return DetalleCard(
       accentLeft: true,
@@ -72,7 +74,7 @@ class EstadoCuentaCard extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: esDeudor ? Colors.redAccent : AppColors.onSurface,
+                          color: sinPagos ? Colors.orange : (esDeudor ? Colors.redAccent : AppColors.onSurface),
                         ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
@@ -83,7 +85,7 @@ class EstadoCuentaCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  if (esDeudor) ...[
+                  if (esDeudor && !sinPagos) ...[
                     const SizedBox(height: 4),
                     Row(
                       children: [
@@ -108,7 +110,7 @@ class EstadoCuentaCard extends StatelessWidget {
               ),
               Text(
                 ultimoPago != null
-                    ? DateFormat('dd/MM/yyyy').format(ultimoPago!.fechaDePago)
+                    ? DateFormat('dd/MM/yyyy').format(ultimoPago!.fechaDePago.add(const Duration(days: 30)))
                     : '-',
                 style: GoogleFonts.inter(
                   fontSize: 16,
@@ -125,7 +127,7 @@ class EstadoCuentaCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Último pago: ${ultimoPago != null ? DateFormat('MM/yyyy').format(ultimoPago!.fechaDePago) : 'N/A'}',
+                'Último pago: ${ultimoPago != null ? DateFormat('dd/MM/yyyy').format(ultimoPago!.fechaDePago) : 'N/A'}',
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: AppColors.onSurfaceVariant,

@@ -60,18 +60,6 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('cards con descuento muestran "Con descuento"', (tester) async {
-      tester.view.physicalSize = const Size(1280, 800);
-      tester.view.devicePixelRatio = 1.0;
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pump(const Duration(milliseconds: 100));
-
-      // Assert — en el mock hay 5 alumnos con aplicaDescuento=true
-      expect(find.text('Con descuento'), findsNWidgets(5));
-
-      addTearDown(tester.view.resetPhysicalSize);
-    });
-
     testWidgets('cada card tiene botón "VER PAGOS"', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;

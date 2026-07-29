@@ -52,14 +52,12 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
   }
 
   Future<void> _loadData() async {
-    debugPrint(
-      'AlumnoPagosPage: ${widget.alumno.nombre} + ${widget.alumno.apellido}',
-    );
     try {
       if (!mounted) return;
       setState(() => _isLoading = true);
 
       final pagoRepo = ref.read(pagoRepositoryProvider);
+
       final results = await Future.wait([
         pagoRepo.getUltimoPago(widget.alumno.idAlumno),
         pagoRepo.getPagosPorAlumno(
@@ -79,13 +77,17 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al cargar pagos: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 10),
-          ),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error al cargar pagos: $e'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 10),
+              ),
+            );
+          }
+        });
       }
     }
   }
@@ -103,11 +105,9 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
   void _editarPago(Pago pago) {
     showDialog(
       context: context,
-      builder: (ctx) => PagoForm(
-        alumno: widget.alumno,
-        pagoAEditar: pago,
-      ),
+      builder: (ctx) => PagoForm(alumno: widget.alumno, pagoAEditar: pago),
     ).then((_) {
+      ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
       _loadData();
     });
   }
@@ -117,7 +117,8 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
       context: context,
       builder: (_) => const DeleteConfirmDialog(
         title: 'Eliminar pago',
-        message: '¿Estás seguro de que deseás eliminar este pago? Esta acción no se puede deshacer.',
+        message:
+            '¿Estás seguro de que deseás eliminar este pago? Esta acción no se puede deshacer.',
       ),
     );
 
@@ -125,12 +126,13 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
       setState(() => _isLoading = true);
       try {
         await ref.read(pagoRepositoryProvider).deletePago(pago.idPago);
+        ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
         _loadData();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al eliminar pago: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error al eliminar pago: $e')));
         }
       } finally {
         if (mounted) setState(() => _isLoading = false);
@@ -211,10 +213,7 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // ── Estado de Cuenta ──────────────────────────────────────────
-                EstadoCuentaCard(
-                  ultimoPago: _ultimoPago,
-                  deudor: deudor,
-                ),
+                EstadoCuentaCard(ultimoPago: _ultimoPago, deudor: deudor),
                 const SizedBox(height: AppSpacing.xl),
 
                 // ── Historial de Pagos ──────────────────────────────────────────
@@ -253,6 +252,9 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
                         context: context,
                         builder: (ctx) => PagoForm(alumno: widget.alumno),
                       ).then((_) {
+                        ref.invalidate(
+                          deudorAlumnoProvider(widget.alumno.idAlumno),
+                        );
                         _loadData();
                       });
                     },

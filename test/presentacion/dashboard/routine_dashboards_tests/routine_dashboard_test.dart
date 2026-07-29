@@ -9,6 +9,8 @@ import 'package:le_groupe_gym/providers/repository_providers.dart';
 import '../../../mocks/mock_solicitud_rutina_repository.dart';
 import '../../../mocks/mock_routine_repository.dart';
 import '../../../mocks/mock_alumno_repository.dart';
+import '../../../mocks/mock_pago_repository.dart';
+import '../../../mocks/mock_deudor_repository.dart';
 
 void main() {
   group('RutinasDashboardPage Widget Tests', () {
@@ -20,6 +22,8 @@ void main() {
           ),
           routineRepositoryProvider.overrideWithValue(MockRoutineRepository()),
           alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
+          pagoRepositoryProvider.overrideWithValue(MockPagoRepository()),
+          deudorRepositoryProvider.overrideWithValue(MockDeudorRepository()),
         ],
         child: const MaterialApp(home: RutinasDashboardPage()),
       );
@@ -149,12 +153,17 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
-        find.byKey(const Key('solicitud_rutina_name_field')),
-        'Hipertrofia',
+          find.byKey(const Key('solicitud_rutina_name_field')),
+          'Rutina Test',
       );
-      await tester.pump();
-
-      await tester.tap(find.byKey(const Key('guardar_solicitud_button')));
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+      
+      // Since the student has no payments (MockPagoRepository is empty), it shows the warning.
+      // We must tap 'Continuar' to proceed.
+      expect(find.text('Advertencia'), findsOneWidget);
+      await tester.tap(find.text('Continuar').last);
+      await tester.pumpAndSettle();
       await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('3 Rutinas Pendientes'), findsOneWidget);

@@ -178,6 +178,9 @@ class AlumnoDetallePage extends ConsumerWidget {
                         ref.invalidate(
                           ultimoPagoAlumnoProvider(alumno.idAlumno),
                         );
+                        ref.invalidate(
+                          deudorAlumnoProvider(alumno.idAlumno),
+                        );
                       });
                     },
                     style: OutlinedButton.styleFrom(

@@ -92,6 +92,8 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
               solicitudRutinaRepository: ref.read(
                 solicitudRutinaRepositoryProvider,
               ),
+              pagoRepository: ref.read(pagoRepositoryProvider),
+              deudorRepository: ref.read(deudorRepositoryProvider),
               onCancelar: () => Navigator.of(dialogContext).pop(),
               onGuardar: (solicitud) {
                 if (mounted) {

@@ -8,6 +8,7 @@ import 'package:le_groupe_gym/data/models/pago_model.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../mocks/mock_deudor_repository.dart';
 import '../../mocks/mock_pago_repository.dart';
+import '../../mocks/mock_alumno_repository.dart';
 
 void main() {
   group('DeudoresPage Widget Tests', () {
@@ -56,6 +57,7 @@ void main() {
         overrides: [
           deudorRepositoryProvider.overrideWithValue(mockDeudorRepo),
           pagoRepositoryProvider.overrideWithValue(mockPagoRepo),
+          alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
         ],
         child: const MaterialApp(home: DeudoresPage()),
       );
