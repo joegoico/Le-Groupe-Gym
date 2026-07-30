@@ -3,12 +3,14 @@ class Ingreso {
   final DateTime fechaIngreso;
   final String concepto;
   final num monto;
+  final String? medioDePago;
 
   Ingreso({
     this.idIngreso,
     required this.fechaIngreso,
     required this.concepto,
     required this.monto,
+    this.medioDePago,
   });
 
   factory Ingreso.fromMap(Map<String, dynamic> map) {
@@ -17,6 +19,7 @@ class Ingreso {
       fechaIngreso: DateTime.parse(map['fecha_ingreso'] as String),
       concepto: map['concepto'] as String,
       monto: map['monto'] as num,
+      medioDePago: map['medio_de_pago'] as String?,
     );
   }
 
@@ -25,6 +28,7 @@ class Ingreso {
       'fecha_ingreso': fechaIngreso.toIso8601String().split('T')[0],
       'concepto': concepto,
       'monto': monto,
+      if (medioDePago != null) 'medio_de_pago': medioDePago,
     };
   }
 
@@ -33,12 +37,14 @@ class Ingreso {
     DateTime? fechaIngreso,
     String? concepto,
     num? monto,
+    String? medioDePago,
   }) {
     return Ingreso(
       idIngreso: idIngreso ?? this.idIngreso,
       fechaIngreso: fechaIngreso ?? this.fechaIngreso,
       concepto: concepto ?? this.concepto,
       monto: monto ?? this.monto,
+      medioDePago: medioDePago ?? this.medioDePago,
     );
   }
 }

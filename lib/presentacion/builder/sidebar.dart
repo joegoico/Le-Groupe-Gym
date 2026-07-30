@@ -31,6 +31,12 @@ const _items = [
     enabled: true,
   ),
   _SidebarItem(
+    label: 'Ingresos',
+    icon: Icons.payments_outlined,
+    route: '/ingresos',
+    enabled: true,
+  ),
+  _SidebarItem(
     label: 'Gastos',
     icon: Icons.receipt_outlined,
     route: '/gastos',

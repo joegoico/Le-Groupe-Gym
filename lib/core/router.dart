@@ -2,8 +2,11 @@ import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
+import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 import 'package:le_groupe_gym/presentacion/auth/login_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/deudores_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/ingreso_detalle_page.dart';
+import 'package:le_groupe_gym/presentacion/pages/ingresos_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/routine_work_page.dart';
 import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_dashbord_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/precios_page.dart';
@@ -66,6 +69,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/rutinas',
       builder: (context, state) => const RutinasDashboardPage(),
+    ),
+    GoRoute(
+      path: '/ingresos',
+      builder: (context, state) => const IngresoPage(),
+    ),
+    GoRoute(
+      path: '/ingresos/detalle',
+      builder: (context, state) {
+        final resumen = state.extra as ResumenMensual;
+        return IngresoDetallePage(resumen: resumen);
+      },
     ),
   ],
 );
