@@ -21,6 +21,11 @@ class MockRoutineRepository implements RoutineRepository {
   }
 
   @override
+  Future<void> deleteRoutine(int idRutina) async {
+    // Mock
+  }
+
+  @override
   Future<List<({Rutina rutina, Alumno alumno})>> getRutinas() async {
     return [
       (

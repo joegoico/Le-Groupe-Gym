@@ -7,6 +7,7 @@ class RutinasPanel extends StatelessWidget {
   final List<({Rutina rutina, Alumno alumno})> rutinas;
   final Function(Rutina) onVerDetalle;
   final Function(Rutina)? onEditarRutina;
+  final Function(Rutina)? onEliminarRutina;
   final VoidCallback? onVerHistorial;
 
   const RutinasPanel({
@@ -14,6 +15,7 @@ class RutinasPanel extends StatelessWidget {
     required this.rutinas,
     required this.onVerDetalle,
     this.onEditarRutina,
+    this.onEliminarRutina,
     this.onVerHistorial,
   });
 
@@ -199,7 +201,25 @@ class RutinasPanel extends StatelessWidget {
                           ),
                         ),
                       ),
-
+                      if (onEliminarRutina != null) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        SizedBox(
+                          width: 30,
+                          height: 30,
+                          child: IconButton(
+                            onPressed: () => onEliminarRutina!(item.rutina),
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(Icons.delete_outline, size: 15),
+                            color: AppColors.error,
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.error.withValues(alpha: 0.1),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 );

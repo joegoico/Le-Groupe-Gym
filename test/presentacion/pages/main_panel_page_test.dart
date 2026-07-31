@@ -163,6 +163,41 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
       },
     );
+
+    testWidgets(
+      'debe mostrar error inline si se intenta guardar sin nombre de rutina',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        final solicitud = SolicitudRutina(
+          idSolicitud: 1,
+          idAlumno: 'abc-123',
+          fechaSolicitud: DateTime(2026, 1, 1),
+        );
+        await tester.pumpWidget(createWidgetUnderTest(solicitudOrigen: solicitud));
+        await tester.pumpAndSettle();
+
+        // Act: Intentamos guardar con el nombre vacío (el controlador arranca vacío)
+        await tester.tap(find.text('Guardar Rutina'));
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(find.byKey(const Key('error-nombre-rutina')), findsOneWidget);
+        expect(find.text('El nombre de la rutina es obligatorio'), findsOneWidget);
+
+        // Act 2: Escribimos algo y verificamos que desaparece
+        await tester.enterText(find.byKey(const Key('routine_name_field')), 'Mi rutina');
+        await tester.pumpAndSettle();
+
+        // Assert 2
+        expect(find.byKey(const Key('error-nombre-rutina')), findsNothing);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+
     testWidgets(
       'debe eliminar la solicitud al guardar una rutina con solicitudOrigen',
       (tester) async {

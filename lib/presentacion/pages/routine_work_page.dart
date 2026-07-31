@@ -18,6 +18,7 @@ import 'package:le_groupe_gym/services/email_service.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/exit_routine_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 
 class MainPanelPage extends ConsumerStatefulWidget {
   final Rutina? rutinaExistente;
@@ -39,6 +40,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
   // Agregá esto junto a las otras variables de estado
   late TextEditingController _routineNameController = TextEditingController();
+  String? _errorNombreRutina;
 
   @override
   void dispose() {
@@ -216,15 +218,20 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
   Future<void> _saveRoutine() async {
     if (_alumnoSeleccionado == null) return;
+    
+    final nombreIngresado = _routineNameController.text.trim();
+    if (nombreIngresado.isEmpty) {
+      setState(() => _errorNombreRutina = 'El nombre de la rutina es obligatorio');
+      return;
+    }
+    
     setState(() => _isSaving = true);
 
     try {
       final routineRepo = ref.read(routineRepositoryProvider);
 
       final rutina = _routineController.buildRutina(
-        nombre: _routineNameController.text.isEmpty
-            ? 'Rutina sin nombre'
-            : _routineNameController.text,
+        nombre: nombreIngresado,
         idAlumno: _alumnoSeleccionado!.idAlumno,
         idRutina: widget.rutinaExistente?.idRutina,
         notasGenerales: _notasController.text.isEmpty
@@ -347,6 +354,11 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                             key: const Key('routine_name_field'),
                             controller: _routineNameController,
                             style: AppTextStyles.titleMd,
+                            onChanged: (_) {
+                              if (_errorNombreRutina != null) {
+                                setState(() => _errorNombreRutina = null);
+                              }
+                            },
                             decoration: InputDecoration(
                               hintText: 'Nombre de la rutina',
                               hintStyle: AppTextStyles.subtittles,
@@ -361,15 +373,19 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                   AppRadius.md,
                                 ),
                                 borderSide: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.08),
+                                  color: _errorNombreRutina != null
+                                      ? Colors.redAccent
+                                      : Colors.white.withValues(alpha: 0.08),
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: const BorderRadius.all(
                                   AppRadius.md,
                                 ),
-                                borderSide: const BorderSide(
-                                  color: AppColors.primary,
+                                borderSide: BorderSide(
+                                  color: _errorNombreRutina != null
+                                      ? Colors.redAccent
+                                      : AppColors.primary,
                                 ),
                               ),
                             ),
@@ -407,6 +423,14 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                         ),
                       ],
                     ),
+                    if (_errorNombreRutina != null)
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: InlineError(
+                          key: const Key('error-nombre-rutina'),
+                          mensaje: _errorNombreRutina!,
+                        ),
+                      ),
                     // 👇 Sidebar y Workspace en un Row con Expanded
                     Expanded(
                       child: Row(

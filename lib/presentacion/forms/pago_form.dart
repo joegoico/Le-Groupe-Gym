@@ -9,6 +9,7 @@ import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/data/models/descuento_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_forms_widgets/descuento_switch.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 
 final planesProvider = FutureProvider.autoDispose<List<Precio>>((ref) async {
   return ref.read(precioRepositoryProvider).getPrecios();
@@ -315,7 +316,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                 if (_errorFecha != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: _InlineError(
+                    child: InlineError(
                       key: const Key('error-fecha-duplicada'),
                       mensaje: _errorFecha!,
                       icon: Icons.event_busy,
@@ -546,14 +547,14 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                 if (_errorComentario != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
-                    child: _InlineError(mensaje: _errorComentario!),
+                    child: InlineError(mensaje: _errorComentario!),
                   ),
 
                 // Error del servidor (unicidad, etc.)
                 if (_errorServidor != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 20),
-                    child: _InlineError(
+                    child: InlineError(
                       key: const Key('error-servidor-generico'),
                       mensaje: _errorServidor!,
                       icon: Icons.warning_amber_rounded,
@@ -593,49 +594,6 @@ class _PagoFormState extends ConsumerState<PagoForm> {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Banner de error inline para mostrar dentro del formulario.
-class _InlineError extends StatelessWidget {
-  final String mensaje;
-  final IconData icon;
-
-  const _InlineError({
-    super.key,
-    required this.mensaje,
-    this.icon = Icons.error_outline,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.red.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.redAccent, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              mensaje,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: Colors.redAccent,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

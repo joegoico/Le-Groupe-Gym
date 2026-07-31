@@ -117,7 +117,12 @@ class Sidebar extends StatelessWidget {
               ),
               children: _items.map((item) {
                 final isActive = currentRoute == item.route;
-                return _buildItem(context, item, isActive);
+                return _SidebarItemWidget(
+                  item: item,
+                  isActive: isActive,
+                  isCollapsed: isCollapsed,
+                  onNavigate: onNavigate,
+                );
               }).toList(),
             ),
           ),
@@ -127,37 +132,70 @@ class Sidebar extends StatelessWidget {
           // Cerrar sesión
           Padding(
             padding: const EdgeInsets.all(AppSpacing.sm),
-            child: _buildCerrarSesion(),
+            child: _LogoutButtonWidget(
+              isCollapsed: isCollapsed,
+              onCerrarSesion: onCerrarSesion,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildItem(BuildContext context, _SidebarItem item, bool isActive) {
+}
+
+class _SidebarItemWidget extends StatefulWidget {
+  final _SidebarItem item;
+  final bool isActive;
+  final bool isCollapsed;
+  final Function(String) onNavigate;
+
+  const _SidebarItemWidget({
+    required this.item,
+    required this.isActive,
+    required this.isCollapsed,
+    required this.onNavigate,
+  });
+
+  @override
+  State<_SidebarItemWidget> createState() => _SidebarItemWidgetState();
+}
+
+class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Opacity(
-      opacity: item.enabled ? 1.0 : 0.35,
+      opacity: widget.item.enabled ? 1.0 : 0.35,
       child: InkWell(
-        onTap: item.enabled
-            ? () => onNavigate(item.route)
+        onHover: (value) {
+          if (widget.item.enabled) {
+            setState(() => _isHovered = value);
+          }
+        },
+        onTap: widget.item.enabled
+            ? () => widget.onNavigate(widget.item.route)
             : () => AppSnackbar.show(
                 context,
-                message: '"${item.label}" aún no está disponible.',
+                message: '"${widget.item.label}" aún no está disponible.',
                 type: SnackbarType.warning,
                 bottomMargin: 24,
               ),
         borderRadius: const BorderRadius.all(AppRadius.md),
         child: Container(
           padding: EdgeInsets.symmetric(
-            horizontal: isCollapsed ? AppSpacing.sm : AppSpacing.md,
+            horizontal: widget.isCollapsed ? AppSpacing.sm : AppSpacing.md,
             vertical: AppSpacing.md,
           ),
           decoration: BoxDecoration(
-            color: isActive
+            color: widget.isActive
                 ? AppColors.primary.withValues(alpha: 0.15)
-                : Colors.transparent,
+                : (_isHovered
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.transparent),
             borderRadius: const BorderRadius.all(AppRadius.md),
-            border: isActive
+            border: widget.isActive
                 ? Border.all(
                     color: AppColors.primary.withValues(alpha: 0.25),
                     width: 1,
@@ -165,29 +203,34 @@ class Sidebar extends StatelessWidget {
                 : null,
           ),
           child: Row(
-            mainAxisAlignment: isCollapsed ? MainAxisAlignment.center : MainAxisAlignment.start,
+            mainAxisAlignment: widget.isCollapsed
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
             children: [
               Icon(
-                item.icon,
+                widget.item.icon,
                 size: 22,
-                color: isActive
+                color: widget.isActive
                     ? AppColors.primary
                     : AppColors.onSurfaceVariant,
               ),
-              if (!isCollapsed) ...[
+              if (!widget.isCollapsed) ...[
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    item.label,
+                    widget.item.label,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                      color: isActive ? AppColors.primary : AppColors.onSurface,
+                      fontWeight:
+                          widget.isActive ? FontWeight.w700 : FontWeight.w500,
+                      color: widget.isActive
+                          ? AppColors.primary
+                          : AppColors.onSurface,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (isActive)
+                if (widget.isActive)
                   Container(
                     width: 4,
                     height: 4,
@@ -203,11 +246,29 @@ class Sidebar extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildCerrarSesion() {
-    if (isCollapsed) {
+class _LogoutButtonWidget extends StatefulWidget {
+  final bool isCollapsed;
+  final VoidCallback onCerrarSesion;
+
+  const _LogoutButtonWidget({
+    required this.isCollapsed,
+    required this.onCerrarSesion,
+  });
+
+  @override
+  State<_LogoutButtonWidget> createState() => _LogoutButtonWidgetState();
+}
+
+class _LogoutButtonWidgetState extends State<_LogoutButtonWidget> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isCollapsed) {
       return IconButton(
-        onPressed: onCerrarSesion,
+        onPressed: widget.onCerrarSesion,
         tooltip: 'Cerrar sesión',
         icon: const Icon(
           Icons.logout_rounded,
@@ -224,7 +285,8 @@ class Sidebar extends StatelessWidget {
     }
 
     return InkWell(
-      onTap: onCerrarSesion,
+      onHover: (value) => setState(() => _isHovered = value),
+      onTap: widget.onCerrarSesion,
       borderRadius: const BorderRadius.all(AppRadius.md),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -232,7 +294,9 @@ class Sidebar extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
         decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.08),
+          color: _isHovered
+              ? AppColors.error.withValues(alpha: 0.15)
+              : AppColors.error.withValues(alpha: 0.08),
           borderRadius: const BorderRadius.all(AppRadius.md),
           border: Border.all(
             color: AppColors.error.withValues(alpha: 0.2),

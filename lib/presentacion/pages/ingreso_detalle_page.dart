@@ -216,68 +216,64 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(color: AppColors.primary),
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
                     )
                   : SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // — Título —
-                  Text('Filtrar por', style: AppTextStyles.labelCaps),
-                  const SizedBox(height: AppSpacing.xs),
-                  // — Filtros (auto-aplican al seleccionar) —
-                  IngresoFiltros(
-                    fechaUnicaLabel: _fechaUnicaLabel,
-                    rangoLabel: _rangoLabel,
-                    hayFiltroActivo: _hayFiltro,
-                    filtroDescripcion: _hayFiltro ? _filtroDescripcion : null,
-                    onTapFechaUnica: _pickFechaUnica,
-                    onTapRango: _pickRango,
-                    onLimpiar: _hayFiltro ? _limpiarFiltro : null,
-                  ),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // — Título —
+                          Text('Filtrar por', style: AppTextStyles.labelCaps),
+                          const SizedBox(height: AppSpacing.xs),
+                          // — Filtros (auto-aplican al seleccionar) —
+                          IngresoFiltros(
+                            fechaUnicaLabel: _fechaUnicaLabel,
+                            rangoLabel: _rangoLabel,
+                            hayFiltroActivo: _hayFiltro,
+                            filtroDescripcion: _hayFiltro
+                                ? _filtroDescripcion
+                                : null,
+                            onTapFechaUnica: _pickFechaUnica,
+                            onTapRango: _pickRango,
+                            onLimpiar: _hayFiltro ? _limpiarFiltro : null,
+                          ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.lg),
 
-                  // — Tarjetas de totales —
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TotalCard(
-                          titulo: 'Total Efectivo',
-                          monto: _totalEfectivo,
-                          icon: Icons.payments,
-                        ),
+                          // — Tarjetas de totales —
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TotalCard(
+                                  titulo: 'Total Efectivo',
+                                  monto: _totalEfectivo,
+                                  icon: Icons.payments,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: TotalCard(
+                                  titulo: 'Total Transferencia',
+                                  monto: _totalTransferencia,
+                                  icon: Icons.credit_card,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // — Tabla —
+                          IngresoTable(ingresos: _ingresos),
+                        ],
                       ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: TotalCard(
-                          titulo: 'Total Transferencia',
-                          monto: _totalTransferencia,
-                          icon: Icons.credit_card,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // — Tabla —
-                  IngresoTable(ingresos: _ingresos),
-                ],
-              ),
-            ),
+                    ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          /* TODO: abrir form */
-        },
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -16,6 +16,8 @@ import 'package:le_groupe_gym/presentacion/forms/solicitud_rutina_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
+import 'package:le_groupe_gym/services/service_storage.dart';
 
 class RutinasDashboardPage extends ConsumerStatefulWidget {
   const RutinasDashboardPage({super.key});
@@ -284,6 +286,55 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                             _rutinas[index] = rutinaActualizada;
                                           }
                                         });
+                                      }
+                                    },
+                                    onEliminarRutina: (rutina) async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => DeleteConfirmDialog(
+                                          title: 'Eliminar rutina',
+                                          message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                        ),
+                                      );
+
+                                      if (confirm == true) {
+                                        setState(() => _isLoading = true);
+                                        try {
+                                          final repo = ref.read(routineRepositoryProvider);
+                                          final storage = StorageService();
+                                          
+                                          // 1. Eliminar del storage (PDF)
+                                          await storage.deletePdf(
+                                            idRutina: rutina.idRutina!, 
+                                            idAlumno: rutina.idAlumno!
+                                          );
+
+                                          // 2. Eliminar de base de datos
+                                          await repo.deleteRoutine(rutina.idRutina!);
+
+                                          // 3. Actualizar UI local
+                                          setState(() {
+                                            _rutinas.removeWhere((r) => r.rutina.idRutina == rutina.idRutina);
+                                          });
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Rutina eliminada exitosamente'),
+                                              backgroundColor: AppColors.successContainer,
+                                            ),
+                                          );
+                                        } catch (e) {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Error al eliminar rutina: $e'),
+                                              backgroundColor: AppColors.error,
+                                            ),
+                                          );
+                                        } finally {
+                                          if (mounted) {
+                                            setState(() => _isLoading = false);
+                                          }
+                                        }
                                       }
                                     },
                                   ),

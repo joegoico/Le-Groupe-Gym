@@ -15,6 +15,7 @@ abstract class RoutineRepository {
     String idAlumno,
   ); // 👈
   Future<void> updateRoutine(Rutina rutina);
+  Future<void> deleteRoutine(int idRutina);
   Future<Rutina?> getRutinaCompleta(int idRutina);
 }
 
@@ -183,6 +184,22 @@ class SupabaseRoutineRepository implements RoutineRepository {
       throw Exception('Error al actualizar rutina: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado al actualizar: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteRoutine(int idRutina) async {
+    try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      await supabaseClient
+          .from('Rutinas')
+          .delete()
+          .eq('id_rutina', idRutina)
+          .eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw Exception('Error al eliminar rutina: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado al eliminar: $e');
     }
   }
 
