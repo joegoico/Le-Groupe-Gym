@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/ingreso_model.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/ingreso_filtros.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/ingreso_table.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/total_card.dart';
@@ -40,8 +40,26 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
   @override
   void initState() {
     super.initState();
-    // Partimos con los ingresos del resumen recibido
-    _ingresos = List.from(widget.resumen.ingresos);
+    // Cargar los ingresos del mes completo desde el repo (datos frescos)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _cargarMesCompleto());
+  }
+
+  Future<void> _cargarMesCompleto() async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await ref
+          .read(ingresoRepositoryProvider)
+          .getIngresosPorPeriodo(desde: _primerDia, hasta: _ultimoDia);
+      if (mounted) setState(() => _ingresos = result);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al cargar ingresos: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ── Computed ──────────────────────────────────────────────────────────────
@@ -120,7 +138,8 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
       context: context,
       firstDate: _primerDia,
       lastDate: _ultimoDia,
-      initialDateRange: _rango ?? DateTimeRange(start: _primerDia, end: _ultimoDia),
+      initialDateRange:
+          _rango ?? DateTimeRange(start: _primerDia, end: _ultimoDia),
       builder: _datePickerTheme,
     );
     if (!mounted || picked == null) return;
@@ -148,7 +167,11 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
           hasta: _rango!.end,
         );
       } else {
-        result = List.from(widget.resumen.ingresos);
+        // Sin filtro: recargar el mes completo
+        result = await repo.getIngresosPorPeriodo(
+          desde: _primerDia,
+          hasta: _ultimoDia,
+        );
       }
 
       if (mounted) setState(() => _ingresos = result);
@@ -171,8 +194,8 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
       _filtroActivo = null;
       _fechaUnica = null;
       _rango = null;
-      _ingresos = List.from(widget.resumen.ingresos);
     });
+    _cargarMesCompleto();
   }
 
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -181,48 +204,21 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surfaceContainer,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/ingresos'),
-        ),
-        title: Text(
-          'Detalle de Ingresos — ${widget.resumen.titulo}',
-          style: GoogleFonts.inter(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppColors.primary,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: ElevatedButton.icon(
-              onPressed: () {
-                /* TODO: abrir form */
-              },
-              icon: const Icon(Icons.add, size: 16),
-              label: Text('Agregar Ingreso', style: AppTextStyles.buttonText),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.onPrimary,
-                elevation: 0,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(AppRadius.md),
-                ),
-              ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            TopBar(
+              pageTitle: 'Detalle de Ingresos — ${widget.resumen.titulo}',
+              isBack: true,
+              onMenuPressed: () =>
+                  context.canPop() ? context.pop() : context.go('/ingresos'),
             ),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            )
-          : SingleChildScrollView(
+            Expanded(
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: AppColors.primary),
+                    )
+                  : SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -271,6 +267,10 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
                 ],
               ),
             ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           /* TODO: abrir form */

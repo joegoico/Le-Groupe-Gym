@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/ingreso_model.dart';
-import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/medio_pago_badge.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/table_widgets/ingreso_row.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/table_widgets/paginattion_table.dart';
 

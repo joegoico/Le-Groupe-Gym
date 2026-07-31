@@ -7,6 +7,7 @@ class TopBar extends StatelessWidget {
   final List<Widget>? actionsCenter;
   final List<Widget>? actionsEnd;
   final bool isBack;
+  final Key? menuBtnKey;
 
   const TopBar({
     super.key,
@@ -15,6 +16,7 @@ class TopBar extends StatelessWidget {
     this.actionsCenter,
     this.actionsEnd,
     this.isBack = false,
+    this.menuBtnKey,
   });
 
   @override
@@ -37,6 +39,7 @@ class TopBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
+                  key: menuBtnKey,
                   icon: Icon(
                     isBack ? Icons.arrow_back_ios_new : Icons.menu,
                     color: AppColors.onSurface,

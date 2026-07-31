@@ -1,25 +1,28 @@
-import 'package:le_groupe_gym/data/models/ingreso_model.dart';
-
 class ResumenMensual {
   final int mes;
   final int anio;
-  final List<Ingreso> ingresos;
+  final num totalEfectivo;
+  final num totalTransferencia;
+  final num total;
 
   ResumenMensual({
     required this.mes,
     required this.anio,
-    required this.ingresos,
+    required this.totalEfectivo,
+    required this.totalTransferencia,
+    required this.total,
   });
 
-  num get total => ingresos.fold(0, (sum, i) => sum + i.monto);
-
-  num get totalEfectivo => ingresos
-      .where((i) => i.medioDePago?.toLowerCase() == 'efectivo')
-      .fold(0, (sum, i) => sum + i.monto);
-
-  num get totalTransferencia => ingresos
-      .where((i) => i.medioDePago?.toLowerCase() == 'transferencia')
-      .fold(0, (sum, i) => sum + i.monto);
+  /// Construye un ResumenMensual desde la respuesta de la RPC `get_resumenes_mensuales`.
+  factory ResumenMensual.fromRpc(Map<String, dynamic> map) {
+    return ResumenMensual(
+      anio: (map['anio'] as num).toInt(),
+      mes: (map['mes'] as num).toInt(),
+      totalEfectivo: (map['total_efectivo'] as num?) ?? 0,
+      totalTransferencia: (map['total_transferencia'] as num?) ?? 0,
+      total: (map['total'] as num?) ?? 0,
+    );
+  }
 
   String get titulo {
     const meses = [

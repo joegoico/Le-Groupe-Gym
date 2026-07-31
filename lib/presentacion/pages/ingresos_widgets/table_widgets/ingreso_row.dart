@@ -11,6 +11,7 @@ class IngresoRow extends StatelessWidget {
   final NumberFormat montoFmt;
 
   const IngresoRow({
+    super.key,
     required this.ingreso,
     required this.dateFmt,
     required this.montoFmt,

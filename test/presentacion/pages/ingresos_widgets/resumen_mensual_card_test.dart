@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le_groupe_gym/data/models/ingreso_model.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 import 'package:le_groupe_gym/presentacion/pages/ingresos_widgets/resumen_mensual_card.dart';
 
@@ -9,22 +8,9 @@ void main() {
     final mockResumen = ResumenMensual(
       mes: 6,
       anio: 2026,
-      ingresos: [
-        Ingreso(
-          idIngreso: '1',
-          fechaIngreso: DateTime(2026, 6, 1),
-          concepto: 'Plan de 3 días',
-          monto: 15000,
-          medioDePago: 'Efectivo',
-        ),
-        Ingreso(
-          idIngreso: '2',
-          fechaIngreso: DateTime(2026, 6, 15),
-          concepto: 'Plan de 5 días',
-          monto: 18000,
-          medioDePago: 'Transferencia',
-        ),
-      ],
+      totalEfectivo: 15000,
+      totalTransferencia: 18000,
+      total: 33000,
     );
 
     Widget createWidgetUnderTest({VoidCallback? onVerDetalle}) {

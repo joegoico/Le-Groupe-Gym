@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
-import 'package:le_groupe_gym/data/models/ingreso_model.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
@@ -30,51 +29,50 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
   bool _isLoading = true;
   bool _sidebarCollapsed = false;
 
-  /// null = sin filtro → carga todos los ingresos
+  /// null = sin filtro → carga todos los meses
   _Filtro? _filtroActivo;
   DateTime? _fechaFiltro;
   DateTimeRange? _rangoFiltro;
 
-  List<Ingreso> _ingresos = [];
+  List<ResumenMensual> _resumenes = [];
 
   @override
   void initState() {
     super.initState();
-    _loadIngresos();
+    _loadResumenes();
   }
 
   // ── Data ──────────────────────────────────────────────────────────────────
 
-  Future<void> _loadIngresos() async {
+  Future<void> _loadResumenes() async {
     setState(() => _isLoading = true);
     try {
       final repo = ref.read(ingresoRepositoryProvider);
-      final List<Ingreso> result;
+      final List<ResumenMensual> result;
 
       if (_filtroActivo == _Filtro.hoy) {
-        final hoy = DateTime.now();
-        result = await repo.getIngresosPorFecha(fecha: hoy);
+        result = await repo.getResumenesMensuales(fecha: DateTime.now());
       } else if (_filtroActivo == _Filtro.mesActual) {
         final now = DateTime.now();
-        result = await repo.getIngresosPorPeriodo(
+        result = await repo.getResumenesMensuales(
           desde: DateTime(now.year, now.month, 1),
           hasta: DateTime(now.year, now.month + 1, 0),
         );
       } else if (_filtroActivo == _Filtro.fechaEspecifica &&
           _fechaFiltro != null) {
-        result = await repo.getIngresosPorFecha(fecha: _fechaFiltro!);
+        result = await repo.getResumenesMensuales(fecha: _fechaFiltro!);
       } else if (_filtroActivo == _Filtro.rangoDeFechas &&
           _rangoFiltro != null) {
-        result = await repo.getIngresosPorPeriodo(
+        result = await repo.getResumenesMensuales(
           desde: _rangoFiltro!.start,
           hasta: _rangoFiltro!.end,
         );
       } else {
-        // Sin filtro → todos
-        result = await repo.getIngresos();
+        // Sin filtro → todos los meses
+        result = await repo.getResumenesMensuales();
       }
 
-      if (mounted) setState(() => _ingresos = result);
+      if (mounted) setState(() => _resumenes = result);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -108,7 +106,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
         _fechaFiltro = null;
         _rangoFiltro = null;
       });
-      _loadIngresos();
+      _loadResumenes();
       return;
     }
 
@@ -149,30 +147,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
       });
     }
 
-    _loadIngresos();
-  }
-
-  // ── Agrupación ────────────────────────────────────────────────────────────
-
-  List<ResumenMensual> get _resumenes {
-    final Map<String, List<Ingreso>> grupos = {};
-    for (final i in _ingresos) {
-      final key =
-          '${i.fechaIngreso.year}-${i.fechaIngreso.month.toString().padLeft(2, '0')}';
-      grupos.putIfAbsent(key, () => []).add(i);
-    }
-    return grupos.entries.map((e) {
-      final parts = e.key.split('-');
-      return ResumenMensual(
-        mes: int.parse(parts[1]),
-        anio: int.parse(parts[0]),
-        ingresos: e.value,
-      );
-    }).toList()..sort((a, b) {
-      final dateA = DateTime(a.anio, a.mes);
-      final dateB = DateTime(b.anio, b.mes);
-      return dateB.compareTo(dateA);
-    });
+    _loadResumenes();
   }
 
   // ── Build ─────────────────────────────────────────────────────────────────
@@ -180,16 +155,6 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          /* TODO: abrir form ingreso */
-        },
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        tooltip: 'Agregar Ingreso',
-        child: const Icon(Icons.add),
-      ),
       body: Row(
         children: [
           Sidebar(
@@ -216,26 +181,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
                   onMenuPressed: () =>
                       setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                   pageTitle: 'Ingresos',
-                  actionsEnd: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        /* TODO */
-                      },
-                      icon: const Icon(Icons.add, size: 16),
-                      label: Text(
-                        'Agregar Ingreso',
-                        style: AppTextStyles.buttonText,
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.onPrimary,
-                        elevation: 0,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(AppRadius.md),
-                        ),
-                      ),
-                    ),
-                  ],
+                  actionsEnd: [],
                 ),
 
                 // — ChoiceChips debajo de TopBar —
@@ -251,7 +197,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
                             _fechaFiltro = null;
                             _rangoFiltro = null;
                           });
-                          _loadIngresos();
+                          _loadResumenes();
                         }
                       : null,
                 ),
@@ -275,8 +221,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
   }
 
   Widget _buildGrid() {
-    final resumenes = _resumenes;
-    if (resumenes.isEmpty) {
+    if (_resumenes.isEmpty) {
       return Center(
         child: Text(
           _filtroActivo != null
@@ -291,7 +236,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
       child: Wrap(
         spacing: AppSpacing.md,
         runSpacing: AppSpacing.md,
-        children: resumenes
+        children: _resumenes
             .map(
               (r) => SizedBox(
                 width: 380,

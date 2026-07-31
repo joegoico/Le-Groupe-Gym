@@ -40,6 +40,13 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   bool _isLoading = false;
   bool _aplicaDescuento = false;
 
+  /// Error inline debajo del campo Comentarios (pago personalizado sin comentario)
+  String? _errorComentario;
+  /// Error inline debajo del selector de fecha (pago duplicado en el mes)
+  String? _errorFecha;
+  /// Error inline del servidor genérico (red, BD, etc.) mostrado antes del botón
+  String? _errorServidor;
+
   @override
   void initState() {
     super.initState();
@@ -64,21 +71,24 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   }
 
   Future<void> _guardarPago() async {
-    final isValid = _formKey.currentState!.validate();
+    // Limpiar errores previos
+    setState(() {
+      _errorComentario = null;
+      _errorFecha = null;
+      _errorServidor = null;
+    });
 
+    // Validar comentario obligatorio para pagos personalizados
     if (_planSeleccionado == null &&
         widget.pagoAEditar == null &&
-        _comentariosController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'El comentario es obligatorio para pagos personalizados',
-          ),
-        ),
-      );
+        _comentariosController.text.trim().isEmpty) {
+      setState(() {
+        _errorComentario = 'El comentario es obligatorio para pagos personalizados.';
+      });
       return;
     }
 
+    final isValid = _formKey.currentState!.validate();
     if (!isValid) return;
 
     setState(() => _isLoading = true);
@@ -113,9 +123,21 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        final msg = e.toString();
+        // Detectar error de unicidad de Supabase / Postgres
+        final esUnicidad = msg.contains('unique') ||
+            msg.contains('duplicate') ||
+            msg.contains('23505') ||
+            msg.contains('already exists');
+        setState(() {
+          if (esUnicidad) {
+            _errorFecha =
+                'Este alumno ya tiene un pago registrado para ese mes. '
+                'Solo se permite un pago por alumno por mes.';
+          } else {
+            _errorServidor = 'Ocurrió un error al guardar: $msg';
+          }
+        });
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -258,7 +280,10 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                       lastDate: DateTime(2100),
                     );
                     if (date != null) {
-                      setState(() => _fechaPago = date);
+                      setState(() {
+                        _fechaPago = date;
+                        _errorFecha = null; // limpiar al cambiar la fecha
+                      });
                     }
                   },
                   child: Container(
@@ -286,6 +311,16 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                     ),
                   ),
                 ),
+                // Error inline de fecha duplicada
+                if (_errorFecha != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _InlineError(
+                      key: const Key('error-fecha-duplicada'),
+                      mensaje: _errorFecha!,
+                      icon: Icons.event_busy,
+                    ),
+                  ),
 
                 // Concepto / Plan
                 _buildSectionTitle('Concepto / Plan'),
@@ -475,11 +510,21 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                 ),
 
                 // Comentarios
-                _buildSectionTitle('Comentarios (Opcional)'),
+                _buildSectionTitle(
+                  _planSeleccionado == null
+                      ? 'Comentarios (Obligatorio para personalizado)'
+                      : 'Comentarios (Opcional)',
+                ),
                 TextFormField(
                   controller: _comentariosController,
                   maxLines: 2,
                   style: GoogleFonts.inter(color: AppColors.onSurface),
+                  onChanged: (_) {
+                    // Limpia el error inline al editar
+                    if (_errorComentario != null) {
+                      setState(() => _errorComentario = null);
+                    }
+                  },
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: const Color(0xFF141414),
@@ -487,10 +532,33 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide.none,
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: _errorComentario != null
+                          ? const BorderSide(color: Colors.redAccent, width: 1.5)
+                          : BorderSide.none,
+                    ),
                     hintText: 'Nota para el pago...',
                     hintStyle: const TextStyle(color: Colors.white24),
                   ),
                 ),
+                // Error inline comentario
+                if (_errorComentario != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: _InlineError(mensaje: _errorComentario!),
+                  ),
+
+                // Error del servidor (unicidad, etc.)
+                if (_errorServidor != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20),
+                    child: _InlineError(
+                      key: const Key('error-servidor-generico'),
+                      mensaje: _errorServidor!,
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -525,6 +593,49 @@ class _PagoFormState extends ConsumerState<PagoForm> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Banner de error inline para mostrar dentro del formulario.
+class _InlineError extends StatelessWidget {
+  final String mensaje;
+  final IconData icon;
+
+  const _InlineError({
+    super.key,
+    required this.mensaje,
+    this.icon = Icons.error_outline,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.red.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: Colors.redAccent, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              mensaje,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

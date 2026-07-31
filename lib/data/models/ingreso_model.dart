@@ -4,6 +4,7 @@ class Ingreso {
   final String concepto;
   final num monto;
   final String? medioDePago;
+  final String? idPago;
 
   Ingreso({
     this.idIngreso,
@@ -11,6 +12,7 @@ class Ingreso {
     required this.concepto,
     required this.monto,
     this.medioDePago,
+    this.idPago,
   });
 
   factory Ingreso.fromMap(Map<String, dynamic> map) {
@@ -20,6 +22,7 @@ class Ingreso {
       concepto: map['concepto'] as String,
       monto: map['monto'] as num,
       medioDePago: map['medio_de_pago'] as String?,
+      idPago: map['id_pago'] as String?,
     );
   }
 
@@ -29,6 +32,7 @@ class Ingreso {
       'concepto': concepto,
       'monto': monto,
       if (medioDePago != null) 'medio_de_pago': medioDePago,
+      if (idPago != null) 'id_pago': idPago,
     };
   }
 
@@ -38,6 +42,7 @@ class Ingreso {
     String? concepto,
     num? monto,
     String? medioDePago,
+    String? idPago,
   }) {
     return Ingreso(
       idIngreso: idIngreso ?? this.idIngreso,
@@ -45,6 +50,7 @@ class Ingreso {
       concepto: concepto ?? this.concepto,
       monto: monto ?? this.monto,
       medioDePago: medioDePago ?? this.medioDePago,
+      idPago: idPago ?? this.idPago,
     );
   }
 }

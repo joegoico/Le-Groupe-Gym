@@ -5,6 +5,7 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
@@ -148,36 +149,30 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          key: const Key('pagos_back_btn'),
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            }
-          },
-        ),
-        title: Text(
-          'Pagos de Alumno',
-          style: AppTextStyles.titleMd.copyWith(
-            color: AppColors.primary,
-            fontSize: 16,
-          ),
-        ),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.lg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            TopBar(
+              pageTitle: 'Pagos de Alumno',
+              isBack: true,
+              menuBtnKey: const Key('pagos_back_btn'),
+              onMenuPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                }
+              },
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // ── Cabecera (Avatar y Nombre) ──────────────────────────────────
                 Row(
@@ -280,6 +275,10 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
               ],
             ),
           ),
+        ),
+      ),
+      ),
+          ],
         ),
       ),
     );

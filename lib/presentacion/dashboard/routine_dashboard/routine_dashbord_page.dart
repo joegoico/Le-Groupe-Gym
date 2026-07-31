@@ -152,7 +152,8 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
             child: Column(
               children: [
                 TopBar(
-                  onMenuPressed: () {},
+                  onMenuPressed: () =>
+                      setState(() => _sidebarCollapsed = !_sidebarCollapsed),
                   pageTitle: 'Rutinas',
                   actionsCenter: [
                     SizedBox(

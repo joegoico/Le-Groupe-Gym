@@ -1,80 +1,78 @@
 // test/data_tests/models/resumen_mensual_model_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:le_groupe_gym/data/models/ingreso_model.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 
 void main() {
   group('ResumenMensual Model Tests', () {
-    final mockIngresos = [
-      Ingreso(
-        idIngreso: '1',
-        fechaIngreso: DateTime(2026, 6, 1),
-        concepto: 'Plan de 3 días',
-        monto: 15000,
-        medioDePago: 'Efectivo',
-      ),
-      Ingreso(
-        idIngreso: '2',
-        fechaIngreso: DateTime(2026, 6, 15),
-        concepto: 'Plan de 5 días',
-        monto: 18000,
-        medioDePago: 'Transferencia',
-      ),
-      Ingreso(
-        idIngreso: '3',
-        fechaIngreso: DateTime(2026, 6, 20),
-        concepto: 'Plan de 2 días',
-        monto: 10000,
-        medioDePago: 'Efectivo',
-      ),
-    ];
+    // Ahora los totales vienen directamente desde la RPC (no se calculan de la lista)
+    final resumen = ResumenMensual(
+      mes: 6,
+      anio: 2026,
+      totalEfectivo: 25000,
+      totalTransferencia: 18000,
+      total: 43000,
+    );
 
-    test('debe calcular el total correctamente', () {
-      // Arrange + Act
-      final resumen = ResumenMensual(
-        mes: 6,
-        anio: 2026,
-        ingresos: mockIngresos,
-      );
-
-      // Assert
+    test('debe tener el total correcto', () {
       expect(resumen.total, 43000);
     });
 
-    test('debe calcular el total de efectivo correctamente', () {
-      // Arrange + Act
-      final resumen = ResumenMensual(
-        mes: 6,
-        anio: 2026,
-        ingresos: mockIngresos,
-      );
-
-      // Assert
+    test('debe tener el total de efectivo correcto', () {
       expect(resumen.totalEfectivo, 25000);
     });
 
-    test('debe calcular el total de transferencia correctamente', () {
-      // Arrange + Act
-      final resumen = ResumenMensual(
-        mes: 6,
-        anio: 2026,
-        ingresos: mockIngresos,
-      );
-
-      // Assert
+    test('debe tener el total de transferencia correcto', () {
       expect(resumen.totalTransferencia, 18000);
     });
 
     test('debe tener getter de título del mes', () {
-      // Arrange + Act
-      final resumen = ResumenMensual(
-        mes: 6,
-        anio: 2026,
-        ingresos: mockIngresos,
-      );
-
-      // Assert
       expect(resumen.titulo, 'Junio 2026');
+    });
+
+    group('fromRpc', () {
+      test('parsea correctamente todos los campos numéricos', () {
+        final map = {
+          'anio': 2026,
+          'mes': 7,
+          'total_efectivo': 15000.0,
+          'total_transferencia': 18000.0,
+          'total': 33000.0,
+        };
+
+        final r = ResumenMensual.fromRpc(map);
+
+        expect(r.anio, 2026);
+        expect(r.mes, 7);
+        expect(r.totalEfectivo, 15000);
+        expect(r.totalTransferencia, 18000);
+        expect(r.total, 33000);
+      });
+
+      test('maneja enteros de Postgres correctamente', () {
+        final map = {
+          'anio': 2026,
+          'mes': 3,
+          'total_efectivo': 5000,
+          'total_transferencia': 10000,
+          'total': 15000,
+        };
+
+        final r = ResumenMensual.fromRpc(map);
+        expect(r.total, 15000);
+      });
+
+      test('maneja valores en cero', () {
+        final map = {
+          'anio': 2026,
+          'mes': 1,
+          'total_efectivo': 0.0,
+          'total_transferencia': 0.0,
+          'total': 0.0,
+        };
+        final r = ResumenMensual.fromRpc(map);
+        expect(r.total, 0);
+        expect(r.totalEfectivo, 0);
+      });
     });
   });
 }

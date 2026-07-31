@@ -5,6 +5,7 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/providers/alumno_view_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
 import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/detalle_card.dart';
@@ -53,47 +54,40 @@ class AlumnoDetallePage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          key: const Key('detalle_back_btn'),
-          icon: const Icon(Icons.arrow_back, color: AppColors.onSurfaceVariant),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            }
-          },
-        ),
-        title: Text(
-          'Detalle de Alumno',
-          style: AppTextStyles.titleMd.copyWith(
-            color: AppColors.primary,
-            fontSize: 16,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(
-              Icons.more_vert,
-              color: AppColors.onSurfaceVariant,
+      body: SafeArea(
+        child: Column(
+          children: [
+            TopBar(
+              pageTitle: 'Detalle de Alumno',
+              isBack: true,
+              menuBtnKey: const Key('detalle_back_btn'),
+              onMenuPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                }
+              },
+              actionsEnd: [
+                IconButton(
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  onPressed: () {},
+                ),
+              ],
             ),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.xl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.xl,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
                 // Avatar
                 CircleAvatar(
                   radius: 46,
@@ -205,6 +199,10 @@ class AlumnoDetallePage extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+      ),
+          ],
         ),
       ),
     );
