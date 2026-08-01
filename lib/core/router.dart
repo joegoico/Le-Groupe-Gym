@@ -59,7 +59,10 @@ final appRouter = GoRouter(
       path: '/editar-rutina',
       builder: (context, state) {
         final rutina = state.extra as Rutina;
-        return MainPanelPage(rutinaExistente: rutina);
+        return MainPanelPage(
+          rutinaExistente: rutina,
+          esPredeterminada: rutina.esPredeterminada,
+        );
       },
     ),
     GoRoute(

@@ -32,10 +32,12 @@ class RutinasPredeterminadasPanel extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Rutinas Genéricas',
-                style: AppTextStyles.titleMd,
-                overflow: TextOverflow.ellipsis,
+              Expanded(
+                child: Text(
+                  'Rutinas Genéricas',
+                  style: AppTextStyles.titleMd,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               ElevatedButton.icon(
                 onPressed: onNuevaRutina,

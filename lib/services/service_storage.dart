@@ -8,18 +8,22 @@ class StorageService {
   StorageService({this.supabaseClient});
 
   // Genera un path único y predecible para el PDF
-  String buildFilePath({required int idRutina, required String idAlumno}) {
-    return 'alumnos/$idAlumno/rutina_$idRutina.pdf';
+  String buildFilePath({required int idRutina, required String nombreAlumno}) {
+    final sanitized = nombreAlumno
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'[^a-z0-9_]'), '');
+    return 'alumnos/$sanitized/rutina_$idRutina.pdf';
   }
 
   // Sube el PDF a Supabase Storage y retorna la URL pública
   Future<String> uploadPdf({
     required Uint8List bytes,
     required int idRutina,
-    required String idAlumno,
+    required String nombreAlumno,
   }) async {
     final client = supabaseClient ?? Supabase.instance.client;
-    final path = buildFilePath(idRutina: idRutina, idAlumno: idAlumno);
+    final path = buildFilePath(idRutina: idRutina, nombreAlumno: nombreAlumno);
 
     await client.storage
         .from(_bucket)
@@ -35,14 +39,19 @@ class StorageService {
     return client.storage.from(_bucket).getPublicUrl(path);
   }
 
-  Future<void> deletePdf({
-    required int idRutina,
-    required String idAlumno,
-  }) async {
+  Future<void> deletePdf({required String urlPdf}) async {
     try {
-      await Supabase.instance.client.storage.from('rutinas-pdf').remove([
-        'alumnos/$idAlumno/rutina_$idRutina.pdf',
-      ]);
+      // Extraemos el path del archivo desde la URL pública
+      final uri = Uri.parse(urlPdf);
+      final pathSegments = uri.pathSegments;
+      // Buscamos el bucket en los segmentos y tomamos lo que sigue
+      final bucketIndex = pathSegments.indexOf(_bucket);
+      
+      if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
+        final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+        await Supabase.instance.client.storage.from(_bucket).remove([filePath]);
+      }
+
     } catch (e) {
       debugPrint('Error al eliminar PDF: $e');
     }

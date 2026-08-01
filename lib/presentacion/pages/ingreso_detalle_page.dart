@@ -112,6 +112,15 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
         surface: AppColors.surfaceContainerHigh,
         onSurface: AppColors.onSurface,
       ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surfaceContainerHigh,
+        headerBackgroundColor: AppColors.surfaceContainerHigh,
+        rangePickerBackgroundColor: AppColors.surfaceContainerHigh,
+        rangePickerHeaderBackgroundColor: AppColors.surfaceContainerHigh,
+        rangeSelectionOverlayColor: WidgetStateProperty.all(
+          AppColors.primary.withOpacity(0.15),
+        ),
+      ),
     ),
     child: child!,
   );

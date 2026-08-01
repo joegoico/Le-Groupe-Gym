@@ -1,4 +1,5 @@
 import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/services/pdf_generator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flutter/material.dart';
@@ -143,6 +144,107 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
     );
   }
 
+  Future<void> _addGenericRoutine(Rutina r, Alumno alumno) async {
+    try {
+      setState(() => _isLoading = true);
+      final repo = ref.read(routineRepositoryProvider);
+
+      // 1. Obtener la rutina completa (con días, bloques, etc)
+      final rutinaCompleta = await repo.getRutinaCompleta(r.idRutina!);
+      if (rutinaCompleta == null)
+        throw Exception('No se pudo cargar la rutina original');
+
+      // 2. Clonarla para este alumno (instanciamos nueva para borrar el ID)
+      final rutinaClonada = Rutina(
+        idAlumno: alumno.idAlumno,
+        nombre: rutinaCompleta.nombre,
+        dias: rutinaCompleta.dias,
+        fechaCreacion: DateTime.now(),
+        notasGenerales: rutinaCompleta.notasGenerales,
+        urlPdf: null,
+        esPredeterminada: false,
+      );
+
+      // 3. Chequear si el alumno ya tiene 3 rutinas y borrar la más antigua
+      final rutinasAlumno = await repo.getRutinasPorAlumno(alumno.idAlumno);
+      if (rutinasAlumno.length >= 3) {
+        final masAntigua = rutinasAlumno.last;
+        if (masAntigua.rutina.urlPdf != null) {
+          await StorageService().deletePdf(
+            urlPdf: masAntigua.rutina.urlPdf!,
+          );
+        }
+        await repo.deleteRoutine(masAntigua.rutina.idRutina!);
+      }
+
+      // 4. Guardar la nueva rutina
+      final newId = await repo.saveRoutine(rutinaClonada);
+
+      // 5. Generar PDF
+      final pdfGenerator = PdfGenerator();
+      final newPdfBytes = await pdfGenerator.generate(
+        rutina: rutinaClonada,
+        alumno: alumno,
+      );
+
+      // 6. Subir PDF a Storage
+      final storage = StorageService();
+      final newPdfUrl = await storage.uploadPdf(
+        bytes: newPdfBytes,
+        idRutina: newId,
+        nombreAlumno: alumno.nombreCompleto,
+      );
+
+      // 7. Actualizar URL en la BD
+      await repo.updatePdfUrl(idRutina: newId, url: newPdfUrl);
+
+      // 8. Enviar correo al alumno
+      await EmailService().enviarRutina(
+        pdfUrl: newPdfUrl,
+        mailAlumno: alumno.mail!,
+        nombreAlumno: alumno.nombreCompleto,
+        nombreRutina: rutinaClonada.nombre,
+      );
+
+      if (mounted) {
+        // Reflejamos los cambios en el UI localmente
+        setState(() {
+          final rFinal = rutinaClonada.copyWith(
+            idRutina: newId,
+            urlPdf: newPdfUrl,
+          );
+          _rutinas.insert(0, (rutina: rFinal, alumno: alumno));
+          if (_rutinas.length > 10) {
+            _rutinas.removeLast();
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Rutina asignada y enviada a ${alumno.mail}',
+              style: AppTextStyles.subtittlesBold.copyWith(
+                color: AppColors.successContent,
+              ),
+            ),
+            backgroundColor: AppColors.successContainer,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al asignar rutina: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _showAsignarRutinaForm(Rutina rutinaInicial) async {
     await showDialog<void>(
       context: context,
@@ -163,40 +265,9 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
               rutinasPredeterminadas: _rutinasPredeterminadas,
               rutinaSeleccionadaInicial: rutinaInicial,
               onCancelar: () => Navigator.of(dialogContext).pop(),
-              onAsignar: (alumno, rutina) async {
+              onAsignar: (alumno, rutinaP) async {
                 Navigator.of(dialogContext).pop();
-                try {
-                  setState(() => _isLoading = true);
-                  if (rutina.urlPdf != null) {
-                    await EmailService().enviarRutina(
-                      pdfUrl: rutina.urlPdf!,
-                      mailAlumno: alumno.mail!,
-                      nombreAlumno: alumno.nombreCompleto,
-                      nombreRutina: rutina.nombre,
-                    );
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Rutina enviada a ${alumno.mail}', style: AppTextStyles.subtittlesBold.copyWith(color: AppColors.successContent)),
-                          backgroundColor: AppColors.successContainer,
-                        ),
-                      );
-                    }
-                  } else {
-                    throw Exception('La rutina no tiene PDF generado');
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error al enviar: $e'),
-                        backgroundColor: AppColors.error,
-                      ),
-                    );
-                  }
-                } finally {
-                  if (mounted) setState(() => _isLoading = false);
-                }
+                _addGenericRoutine(rutinaP, alumno);
               },
             ),
           ),
@@ -320,38 +391,57 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                         solicitudRutinaRepositoryProvider,
                                       );
                                       await solicitudRepo.deleteSolicitud(
-                        solicitud.idSolicitud!,
+                                        solicitud.idSolicitud!,
                                       );
                                       _eliminarSolicitudLocal(solicitud);
                                     },
                                   ),
                                   const SizedBox(height: AppSpacing.lg),
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
                                         child: RutinasPanel(
                                           rutinas: _rutinas,
                                           onVerDetalle: (rutina) async {
                                             if (rutina.urlPdf != null) {
-                                              final uri = Uri.parse(rutina.urlPdf!);
+                                              final uri = Uri.parse(
+                                                rutina.urlPdf!,
+                                              );
                                               if (await canLaunchUrl(uri)) {
                                                 await launchUrl(
                                                   uri,
-                                                  mode: LaunchMode.externalApplication,
+                                                  mode: LaunchMode
+                                                      .externalApplication,
                                                 );
                                               }
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final rutinaActualizada = await context.push<
-                                              ({Rutina rutina, Alumno alumno})?
-                                            >('/editar-rutina', extra: rutina);
+                                            final rutinaActualizada =
+                                                await context.push<
+                                                  ({
+                                                    Rutina rutina,
+                                                    Alumno alumno,
+                                                  })?
+                                                >(
+                                                  '/editar-rutina',
+                                                  extra: rutina,
+                                                );
                                             if (rutinaActualizada != null) {
                                               setState(() {
-                                                final index = _rutinas.indexWhere((r) => r.rutina.idRutina == rutinaActualizada.rutina.idRutina);
+                                                final index = _rutinas
+                                                    .indexWhere(
+                                                      (r) =>
+                                                          r.rutina.idRutina ==
+                                                          rutinaActualizada
+                                                              .rutina
+                                                              .idRutina,
+                                                    );
                                                 if (index != -1) {
-                                                  _rutinas[index] = rutinaActualizada;
+                                                  _rutinas[index] =
+                                                      rutinaActualizada;
                                                 }
                                               });
                                             }
@@ -359,34 +449,59 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                           onEliminarRutina: (rutina) async {
                                             final confirm = await showDialog<bool>(
                                               context: context,
-                                              builder: (context) => DeleteConfirmDialog(
-                                                title: 'Eliminar rutina',
-                                                message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
-                                              ),
+                                              builder: (context) =>
+                                                  DeleteConfirmDialog(
+                                                    title: 'Eliminar rutina',
+                                                    message:
+                                                        '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                                  ),
                                             );
                                             if (confirm == true) {
                                               try {
-                                                final repo = ref.read(routineRepositoryProvider);
-                                                final storage = StorageService();
-                                                await storage.deletePdf(idRutina: rutina.idRutina!, idAlumno: rutina.idAlumno!);
-                                                await repo.deleteRoutine(rutina.idRutina!);
+                                                final repo = ref.read(
+                                                  routineRepositoryProvider,
+                                                );
+                                                final storage =
+                                                    StorageService();
+                                                if (rutina.urlPdf != null) {
+                                                  await storage.deletePdf(
+                                                    urlPdf: rutina.urlPdf!,
+                                                  );
+                                                }
+                                                await repo.deleteRoutine(
+                                                  rutina.idRutina!,
+                                                );
                                                 if (mounted) {
                                                   setState(() {
-                                                    _rutinas.removeWhere((r) => r.rutina.idRutina == rutina.idRutina);
+                                                    _rutinas.removeWhere(
+                                                      (r) =>
+                                                          r.rutina.idRutina ==
+                                                          rutina.idRutina,
+                                                    );
                                                   });
-                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
                                                     SnackBar(
-                                                      content: Text('Rutina eliminada exitosamente'),
-                                                      backgroundColor: AppColors.successContainer,
+                                                      content: Text(
+                                                        'Rutina eliminada exitosamente',
+                                                      ),
+                                                      backgroundColor: AppColors
+                                                          .successContainer,
                                                     ),
                                                   );
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
                                                     SnackBar(
-                                                      content: Text('Error al eliminar rutina: $e'),
-                                                      backgroundColor: AppColors.error,
+                                                      content: Text(
+                                                        'Error al eliminar rutina: $e',
+                                                      ),
+                                                      backgroundColor:
+                                                          AppColors.error,
                                                     ),
                                                   );
                                                 }
@@ -400,28 +515,52 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                         child: RutinasPredeterminadasPanel(
                                           rutinas: _rutinasPredeterminadas,
                                           onNuevaRutina: () async {
-                                            final nuevaRutina = await context.push<Rutina?>('/nueva-rutina-predeterminada');
+                                            final nuevaRutina = await context
+                                                .push<Rutina?>(
+                                                  '/nueva-rutina-predeterminada',
+                                                );
                                             if (nuevaRutina != null) {
                                               setState(() {
-                                                _rutinasPredeterminadas.insert(0, nuevaRutina);
+                                                _rutinasPredeterminadas.insert(
+                                                  0,
+                                                  nuevaRutina,
+                                                );
                                               });
                                             }
                                           },
                                           onVerDetalle: (rutina) async {
                                             if (rutina.urlPdf != null) {
-                                              final uri = Uri.parse(rutina.urlPdf!);
+                                              final uri = Uri.parse(
+                                                rutina.urlPdf!,
+                                              );
                                               if (await canLaunchUrl(uri)) {
-                                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                                await launchUrl(
+                                                  uri,
+                                                  mode: LaunchMode
+                                                      .externalApplication,
+                                                );
                                               }
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final rutinaActualizada = await context.push<Rutina?>('/editar-rutina', extra: rutina);
+                                            final rutinaActualizada =
+                                                await context.push<Rutina?>(
+                                                  '/editar-rutina',
+                                                  extra: rutina,
+                                                );
                                             if (rutinaActualizada != null) {
                                               setState(() {
-                                                final index = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaActualizada.idRutina);
+                                                final index =
+                                                    _rutinasPredeterminadas
+                                                        .indexWhere(
+                                                          (r) =>
+                                                              r.idRutina ==
+                                                              rutinaActualizada
+                                                                  .idRutina,
+                                                        );
                                                 if (index != -1) {
-                                                  _rutinasPredeterminadas[index] = rutinaActualizada;
+                                                  _rutinasPredeterminadas[index] =
+                                                      rutinaActualizada;
                                                 }
                                               });
                                             }
@@ -429,36 +568,66 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                           onEliminarRutina: (rutina) async {
                                             final confirm = await showDialog<bool>(
                                               context: context,
-                                              builder: (context) => DeleteConfirmDialog(
-                                                title: 'Eliminar rutina',
-                                                message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
-                                              ),
+                                              builder: (context) =>
+                                                  DeleteConfirmDialog(
+                                                    title: 'Eliminar rutina',
+                                                    message:
+                                                        '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                                  ),
                                             );
                                             if (confirm == true) {
                                               try {
-                                                final repo = ref.read(routineRepositoryProvider);
-                                                final storage = StorageService();
-                                                await storage.deletePdf(idRutina: rutina.idRutina!, idAlumno: 'predeterminada');
-                                                await repo.deleteRoutine(rutina.idRutina!);
+                                                final repo = ref.read(
+                                                  routineRepositoryProvider,
+                                                );
+                                                final storage =
+                                                    StorageService();
+                                                if (rutina.urlPdf != null) {
+                                                  await storage.deletePdf(
+                                                    urlPdf: rutina.urlPdf!,
+                                                  );
+                                                }
+                                                await repo.deleteRoutine(
+                                                  rutina.idRutina!,
+                                                );
                                                 if (mounted) {
                                                   setState(() {
-                                                    _rutinasPredeterminadas.removeWhere((r) => r.idRutina == rutina.idRutina);
+                                                    _rutinasPredeterminadas
+                                                        .removeWhere(
+                                                          (r) =>
+                                                              r.idRutina ==
+                                                              rutina.idRutina,
+                                                        );
                                                   });
-                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
                                                     SnackBar(
-                                                      content: Text('Rutina eliminada exitosamente'),
-                                                      backgroundColor: AppColors.successContainer,
+                                                      content: Text(
+                                                        'Rutina eliminada exitosamente',
+                                                      ),
+                                                      backgroundColor: AppColors
+                                                          .successContainer,
                                                     ),
                                                   );
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error: $e',
+                                                      ),
+                                                    ),
+                                                  );
                                                 }
                                               }
                                             }
                                           },
-                                          onAsignarRutina: _showAsignarRutinaForm,
+                                          onAsignarRutina:
+                                              _showAsignarRutinaForm,
                                         ),
                                       ),
                                     ],

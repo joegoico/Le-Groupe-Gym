@@ -88,14 +88,20 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
           _notasController.text = widget.rutinaExistente!.notasGenerales ?? '';
         }
 
-        // Preseleccionar alumno
-        final alumno = await alumnoRepo.getAlumnoById(
-          widget.rutinaExistente!.idAlumno!,
-        );
+        // Preseleccionar alumno solo si no es predeterminada
+        Alumno? alumno;
+        if (!widget.esPredeterminada && widget.rutinaExistente!.idAlumno != null) {
+          alumno = await alumnoRepo.getAlumnoById(
+            widget.rutinaExistente!.idAlumno!,
+          );
+        }
+        
         if (mounted) {
           setState(() {
             _loadedExercises = exercises;
-            _alumnoSeleccionado = alumno;
+            if (alumno != null) {
+              _alumnoSeleccionado = alumno;
+            }
             _isLoading = false;
           });
         }
@@ -183,9 +189,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     final pdfUrl = await storageService.uploadPdf(
       bytes: pdfBytes,
       idRutina: idRutina,
-      idAlumno: widget.esPredeterminada
-          ? 'predeterminada'
-          : _alumnoSeleccionado!.idAlumno,
+      nombreAlumno: widget.esPredeterminada ? 'genérica' : _alumnoSeleccionado!.nombreCompleto,
     );
     await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
 
@@ -219,8 +223,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
       if (masAntigua.rutina.urlPdf != null) {
         await storageService.deletePdf(
-          idRutina: masAntigua.rutina.idRutina!,
-          idAlumno: _alumnoSeleccionado!.idAlumno,
+          urlPdf: masAntigua.rutina.urlPdf!,
         );
       }
     }
