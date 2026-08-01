@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? _error;
 
   bool get _canLogin =>
@@ -131,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 key: const Key('password_field'),
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _obscurePassword,
                 style: GoogleFonts.inter(
                   fontSize: 14,
                   color: AppColors.onSurface,
@@ -143,6 +144,21 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   filled: true,
                   fillColor: AppColors.surfaceContainer,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppColors.onSurfaceVariant,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                    splashRadius: 20,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: const BorderRadius.all(AppRadius.md),
                     borderSide: BorderSide(

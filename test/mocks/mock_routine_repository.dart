@@ -35,11 +35,7 @@ class MockRoutineRepository implements RoutineRepository {
           idAlumno: 'abc-123',
           fechaCreacion: DateTime(2026, 1, 1),
         ),
-        alumno: Alumno(
-          idAlumno: 'abc-123',
-          nombre: 'Juan',
-          apellido: 'Pérez',
-        ),
+        alumno: Alumno(idAlumno: 'abc-123', nombre: 'Juan', apellido: 'Pérez'),
       ),
     ];
   }
@@ -87,5 +83,23 @@ class MockRoutineRepository implements RoutineRepository {
   ) async {
     final todas = await getRutinas();
     return todas.where((r) => r.alumno.idAlumno == idAlumno).toList();
+  }
+
+  @override
+  Future<List<Rutina>> getRutinasPredeterminadas() async {
+    return [
+      Rutina(
+        idRutina: 101,
+        nombre: 'Rutina Fuerza',
+        esPredeterminada: true,
+        fechaCreacion: DateTime(2026, 1, 1),
+      ),
+      Rutina(
+        idRutina: 102,
+        nombre: 'Rutina Hipertrofia',
+        esPredeterminada: true,
+        fechaCreacion: DateTime(2026, 2, 15),
+      ),
+    ];
   }
 }

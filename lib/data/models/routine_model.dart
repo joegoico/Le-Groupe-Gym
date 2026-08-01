@@ -9,6 +9,7 @@ class Rutina {
   final DateTime? fechaCreacion;
   final String? notasGenerales;
   final String? urlPdf;
+  final bool esPredeterminada;
 
   Rutina({
     this.idRutina,
@@ -18,6 +19,7 @@ class Rutina {
     this.fechaCreacion,
     this.notasGenerales,
     this.urlPdf,
+    this.esPredeterminada = false,
   }) : dias = dias ?? [];
 
   // Getter de compatibilidad para acceder a todos los ejercicios
@@ -32,6 +34,7 @@ class Rutina {
     DateTime? fechaCreacion,
     String? notasGenerales,
     String? urlPdf,
+    bool? esPredeterminada,
   }) {
     return Rutina(
       idRutina: idRutina ?? this.idRutina,
@@ -41,6 +44,7 @@ class Rutina {
       fechaCreacion: fechaCreacion ?? this.fechaCreacion,
       notasGenerales: notasGenerales ?? this.notasGenerales,
       urlPdf: urlPdf ?? this.urlPdf,
+      esPredeterminada: esPredeterminada ?? this.esPredeterminada,
     );
   }
 
@@ -55,6 +59,7 @@ class Rutina {
           : null,
       notasGenerales: map['notas_generales'] as String?,
       urlPdf: map['url_pdf'] as String?,
+      esPredeterminada: map['es_predeterminada'] as bool? ?? false,
     );
   }
 
@@ -65,6 +70,7 @@ class Rutina {
       if (idAlumno != null) 'id_alumno': idAlumno,
       if (notasGenerales != null) 'notas_generales': notasGenerales,
       if (urlPdf != null) 'url_pdf': urlPdf,
+      if (esPredeterminada) 'es_predeterminada': esPredeterminada,
     };
   }
 }

@@ -176,7 +176,9 @@ void main() {
           idAlumno: 'abc-123',
           fechaSolicitud: DateTime(2026, 1, 1),
         );
-        await tester.pumpWidget(createWidgetUnderTest(solicitudOrigen: solicitud));
+        await tester.pumpWidget(
+          createWidgetUnderTest(solicitudOrigen: solicitud),
+        );
         await tester.pumpAndSettle();
 
         // Act: Intentamos guardar con el nombre vacío (el controlador arranca vacío)
@@ -185,10 +187,16 @@ void main() {
 
         // Assert
         expect(find.byKey(const Key('error-nombre-rutina')), findsOneWidget);
-        expect(find.text('El nombre de la rutina es obligatorio'), findsOneWidget);
+        expect(
+          find.text('El nombre de la rutina es obligatorio'),
+          findsOneWidget,
+        );
 
         // Act 2: Escribimos algo y verificamos que desaparece
-        await tester.enterText(find.byKey(const Key('routine_name_field')), 'Mi rutina');
+        await tester.enterText(
+          find.byKey(const Key('routine_name_field')),
+          'Mi rutina',
+        );
         await tester.pumpAndSettle();
 
         // Assert 2
@@ -338,6 +346,45 @@ void main() {
         expect(find.text('Día 1'), findsOneWidget);
         expect(find.text('Press Banca'), findsOneWidget);
         expect(find.text('Rutina Fuerza'), findsOneWidget);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+    testWidgets(
+      'debe mostrar título "Nueva Rutina Predeterminada" cuando esPredeterminada es true',
+      (tester) async {
+        // Arrange
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              exerciseRepositoryProvider.overrideWithValue(
+                MockExerciseRepository(),
+              ),
+              routineRepositoryProvider.overrideWithValue(
+                MockRoutineRepository(),
+              ),
+              alumnoRepositoryProvider.overrideWithValue(
+                MockAlumnoRepository(),
+              ),
+              categoryExerciseRepositoryProvider.overrideWithValue(
+                MockCategoryExerciseRepository(),
+              ),
+              solicitudRutinaRepositoryProvider.overrideWithValue(
+                MockSolicitudRutinaRepository(),
+              ),
+            ],
+            child: const MaterialApp(
+              home: MainPanelPage(esPredeterminada: true),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Assert
+        expect(find.text('Nueva Rutina Predeterminada'), findsOneWidget);
 
         addTearDown(tester.view.resetPhysicalSize);
       },

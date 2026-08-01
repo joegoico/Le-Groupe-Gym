@@ -81,5 +81,9 @@ final appRouter = GoRouter(
         return IngresoDetallePage(resumen: resumen);
       },
     ),
+    GoRoute(
+      path: '/nueva-rutina-predeterminada',
+      builder: (context, state) => const MainPanelPage(esPredeterminada: true),
+    ),
   ],
 );

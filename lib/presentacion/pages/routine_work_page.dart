@@ -23,7 +23,13 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 class MainPanelPage extends ConsumerStatefulWidget {
   final Rutina? rutinaExistente;
   final SolicitudRutina? solicitudOrigen;
-  const MainPanelPage({super.key, this.rutinaExistente, this.solicitudOrigen});
+  final bool esPredeterminada;
+  const MainPanelPage({
+    super.key,
+    this.rutinaExistente,
+    this.solicitudOrigen,
+    this.esPredeterminada = false,
+  });
 
   @override
   ConsumerState<MainPanelPage> createState() => _MainPanelPageState();
@@ -171,13 +177,15 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
     final pdfBytes = await PdfGenerator().generate(
       rutina: rutina.copyWith(idRutina: idRutina),
-      alumno: _alumnoSeleccionado!,
+      alumno: widget.esPredeterminada ? null : _alumnoSeleccionado,
     );
     final storageService = StorageService();
     final pdfUrl = await storageService.uploadPdf(
       bytes: pdfBytes,
       idRutina: idRutina,
-      idAlumno: _alumnoSeleccionado!.idAlumno,
+      idAlumno: widget.esPredeterminada
+          ? 'predeterminada'
+          : _alumnoSeleccionado!.idAlumno,
     );
     await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
 
@@ -197,6 +205,8 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   }
 
   Future<void> _deleteOldRoutines(RoutineRepository routineRepo) async {
+    if (widget.esPredeterminada) return;
+
     final storageService = StorageService();
 
     // 👇 Verificar si el alumno ya tiene 3 rutinas
@@ -217,30 +227,35 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   }
 
   Future<void> _saveRoutine() async {
-    if (_alumnoSeleccionado == null) return;
-    
+    if (!widget.esPredeterminada && _alumnoSeleccionado == null) return;
+
     final nombreIngresado = _routineNameController.text.trim();
     if (nombreIngresado.isEmpty) {
-      setState(() => _errorNombreRutina = 'El nombre de la rutina es obligatorio');
+      setState(
+        () => _errorNombreRutina = 'El nombre de la rutina es obligatorio',
+      );
       return;
     }
-    
+
     setState(() => _isSaving = true);
 
     try {
       final routineRepo = ref.read(routineRepositoryProvider);
+      await _deleteOldRoutines(routineRepo);
 
       final rutina = _routineController.buildRutina(
         nombre: nombreIngresado,
-        idAlumno: _alumnoSeleccionado!.idAlumno,
+        idAlumno: widget.esPredeterminada
+            ? null
+            : _alumnoSeleccionado!.idAlumno,
         idRutina: widget.rutinaExistente?.idRutina,
         notasGenerales: _notasController.text.isEmpty
             ? null
             : _notasController.text,
+        esPredeterminada: widget.esPredeterminada,
       );
 
       int idRutina;
-      await _deleteOldRoutines(routineRepo);
 
       if (widget.rutinaExistente != null) {
         await routineRepo.updateRoutine(rutina);
@@ -250,7 +265,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       }
 
       final pdfUrl = await _savePDfInSupabase(rutina, idRutina);
-      await _sendRoutineViaMail(rutina, pdfUrl);
+      if (!widget.esPredeterminada) {
+        await _sendRoutineViaMail(rutina, pdfUrl);
+      }
 
       if (widget.solicitudOrigen != null) {
         final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
@@ -277,19 +294,36 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
             ),
           ),
         );
-        context.pop((
-          rutina: rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl),
-          alumno: _alumnoSeleccionado!,
-        ));
+        if (widget.esPredeterminada) {
+          context.pop(rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl));
+        } else {
+          context.pop((
+            rutina: rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl),
+            alumno: _alumnoSeleccionado!,
+          ));
+        }
       }
     } catch (e) {
       if (mounted) {
-        AppSnackbar.show(
-          context,
-          message: 'Error al guardar: $e',
-          type: SnackbarType.error,
-          bottomMargin: 120,
-        );
+        final msg = e.toString();
+        final esUnicidad = msg.contains('unique') ||
+            msg.contains('duplicate') ||
+            msg.contains('23505') ||
+            msg.contains('already exists');
+
+        if (esUnicidad && widget.esPredeterminada) {
+          setState(() {
+            _errorNombreRutina =
+                'Ya existe una rutina genérica con este nombre';
+          });
+        } else {
+          AppSnackbar.show(
+            context,
+            message: 'Error al guardar: $msg',
+            type: SnackbarType.error,
+            bottomMargin: 120,
+          );
+        }
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -316,6 +350,8 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     if (confirmar == true && context.mounted) {
       if (context.canPop()) {
         context.pop();
+      } else {
+        context.go('/rutinas');
       }
     }
   }
@@ -332,21 +368,26 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                     // Barra superior
                     TopBar(
                       onMenuPressed: () => _confirmarSalida(context),
-                      pageTitle: 'Crear Rutina',
+                      pageTitle: widget.rutinaExistente != null
+                          ? 'Editar Rutina'
+                          : widget.esPredeterminada
+                          ? 'Nueva Rutina Predeterminada' // 👈
+                          : 'Crear Rutina',
                       isBack: true,
                       actionsCenter: [
-                        SizedBox(
-                          width: 220,
-                          child: AlumnoSelector(
-                            alumnoRepository: ref.read(
-                              alumnoRepositoryProvider,
+                        if (!widget.esPredeterminada)
+                          SizedBox(
+                            width: 220,
+                            child: AlumnoSelector(
+                              alumnoRepository: ref.read(
+                                alumnoRepositoryProvider,
+                              ),
+                              alumnoSeleccionado: _alumnoSeleccionado,
+                              onAlumnoChanged: (alumno) {
+                                setState(() => _alumnoSeleccionado = alumno);
+                              },
                             ),
-                            alumnoSeleccionado: _alumnoSeleccionado,
-                            onAlumnoChanged: (alumno) {
-                              setState(() => _alumnoSeleccionado = alumno);
-                            },
                           ),
-                        ),
                         SizedBox(
                           width: 220,
                           height: 44,
@@ -396,7 +437,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                         SizedBox(
                           height: 44,
                           child: ElevatedButton.icon(
-                            onPressed: _alumnoSeleccionado != null
+                            onPressed:
+                                (widget.esPredeterminada ||
+                                    _alumnoSeleccionado != null)
                                 ? _saveRoutine
                                 : null,
                             icon: const Icon(Icons.save_outlined, size: 17),

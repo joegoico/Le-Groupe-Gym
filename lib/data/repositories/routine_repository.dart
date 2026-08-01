@@ -17,6 +17,7 @@ abstract class RoutineRepository {
   Future<void> updateRoutine(Rutina rutina);
   Future<void> deleteRoutine(int idRutina);
   Future<Rutina?> getRutinaCompleta(int idRutina);
+  Future<List<Rutina>> getRutinasPredeterminadas();
 }
 
 class SupabaseRoutineRepository implements RoutineRepository {
@@ -127,6 +128,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
           .from('Rutinas')
           .select('*, Alumno(*)')
           .eq('user_id', userId)
+          .eq('es_predeterminada', false)
           .order('fecha_creacion', ascending: false)
           .limit(10);
 
@@ -294,6 +296,30 @@ class SupabaseRoutineRepository implements RoutineRepository {
       }).toList();
     } on PostgrestException catch (e) {
       throw Exception('Error al obtener rutinas por alumno: ${e.message}');
+    } catch (e) {
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
+  @override
+  Future<List<Rutina>> getRutinasPredeterminadas() async {
+    try {
+      final userId = SupabaseConfig.client.auth.currentUser!.id;
+
+      // Filtramos solo las rutinas predeterminadas
+      final response = await supabaseClient
+          .from('Rutinas')
+          .select('*')
+          .eq('es_predeterminada', true)
+          .eq('user_id', userId)
+          .order('fecha_creacion', ascending: false)
+          .limit(50);
+
+      return (response as List<dynamic>)
+          .map((json) => Rutina.fromMap(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw Exception('Error al obtener rutinas predeterminadas: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');
     }

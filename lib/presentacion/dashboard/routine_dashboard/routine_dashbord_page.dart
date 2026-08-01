@@ -10,14 +10,17 @@ import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_widgets/rutinas_panel.dart';
+import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_widgets/rutinas_predeterminadas_panel.dart';
 import 'package:le_groupe_gym/presentacion/dashboard/routine_dashboard/routine_widgets/solicitudes_panel.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/solicitud_rutina_form.dart';
+import 'package:le_groupe_gym/presentacion/forms/asignar_rutina_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/services/service_storage.dart';
+import 'package:le_groupe_gym/services/email_service.dart';
 
 class RutinasDashboardPage extends ConsumerStatefulWidget {
   const RutinasDashboardPage({super.key});
@@ -33,6 +36,7 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
   List<SolicitudRutina> _solicitudes = [];
   final List<SolicitudRutina> _recentlyCreatedSolicitudes = [];
   List<({Rutina rutina, Alumno alumno})> _rutinas = [];
+  List<Rutina> _rutinasPredeterminadas = [];
 
   @override
   void initState() {
@@ -42,7 +46,11 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
 
   Future<void> _loadData() async {
     try {
-      await Future.wait([_loadSolicitudes(), _loadRutinas()]);
+      await Future.wait([
+        _loadSolicitudes(),
+        _loadRutinas(),
+        _loadRutinasPredeterminadas(),
+      ]);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -60,6 +68,12 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
     final repo = ref.read(routineRepositoryProvider);
     final rutinas = await repo.getRutinas();
     if (mounted) setState(() => _rutinas = rutinas);
+  }
+
+  Future<void> _loadRutinasPredeterminadas() async {
+    final repo = ref.read(routineRepositoryProvider);
+    final rutinas = await repo.getRutinasPredeterminadas();
+    if (mounted) setState(() => _rutinasPredeterminadas = rutinas);
   }
 
   Future<void> _filtrarPorAlumno(Alumno alumno) async {
@@ -121,6 +135,68 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                     ),
                   ),
                 );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showAsignarRutinaForm(Rutina rutinaInicial) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.xl,
+          ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(AppRadius.md),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: AsignarRutinaForm(
+              alumnoRepository: ref.read(alumnoRepositoryProvider),
+              rutinasPredeterminadas: _rutinasPredeterminadas,
+              rutinaSeleccionadaInicial: rutinaInicial,
+              onCancelar: () => Navigator.of(dialogContext).pop(),
+              onAsignar: (alumno, rutina) async {
+                Navigator.of(dialogContext).pop();
+                try {
+                  setState(() => _isLoading = true);
+                  if (rutina.urlPdf != null) {
+                    await EmailService().enviarRutina(
+                      pdfUrl: rutina.urlPdf!,
+                      mailAlumno: alumno.mail!,
+                      nombreAlumno: alumno.nombreCompleto,
+                      nombreRutina: rutina.nombre,
+                    );
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Rutina enviada a ${alumno.mail}', style: AppTextStyles.subtittlesBold.copyWith(color: AppColors.successContent)),
+                          backgroundColor: AppColors.successContainer,
+                        ),
+                      );
+                    }
+                  } else {
+                    throw Exception('La rutina no tiene PDF generado');
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error al enviar: $e'),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
+                } finally {
+                  if (mounted) setState(() => _isLoading = false);
+                }
               },
             ),
           ),
@@ -222,7 +298,7 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           child: Center(
                             child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 860),
+                              constraints: const BoxConstraints(maxWidth: 1200),
                               child: Column(
                                 children: [
                                   SolicitudesPanel(
@@ -244,99 +320,148 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                         solicitudRutinaRepositoryProvider,
                                       );
                                       await solicitudRepo.deleteSolicitud(
-                                        solicitud.idSolicitud!,
+                        solicitud.idSolicitud!,
                                       );
                                       _eliminarSolicitudLocal(solicitud);
                                     },
                                   ),
                                   const SizedBox(height: AppSpacing.lg),
-                                  RutinasPanel(
-                                    rutinas: _rutinas,
-                                    onVerDetalle: (rutina) async {
-                                      if (rutina.urlPdf != null) {
-                                        final uri = Uri.parse(rutina.urlPdf!);
-                                        if (await canLaunchUrl(uri)) {
-                                          await launchUrl(
-                                            uri,
-                                            mode:
-                                                LaunchMode.externalApplication,
-                                          );
-                                        }
-                                      }
-                                    },
-                                    onEditarRutina: (rutina) async {
-                                      debugPrint(
-                                        'Editar rutina: ${rutina.idRutina}',
-                                      );
-                                      debugPrint('dias: ${rutina.dias}');
-                                      final rutinaActualizada = await context
-                                          .push<
-                                            ({Rutina rutina, Alumno alumno})?
-                                          >('/editar-rutina', extra: rutina);
-                                      if (rutinaActualizada != null) {
-                                        setState(() {
-                                          final index = _rutinas.indexWhere(
-                                            (r) =>
-                                                r.rutina.idRutina ==
-                                                rutinaActualizada
-                                                    .rutina
-                                                    .idRutina,
-                                          );
-                                          if (index != -1) {
-                                            _rutinas[index] = rutinaActualizada;
-                                          }
-                                        });
-                                      }
-                                    },
-                                    onEliminarRutina: (rutina) async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (context) => DeleteConfirmDialog(
-                                          title: 'Eliminar rutina',
-                                          message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: RutinasPanel(
+                                          rutinas: _rutinas,
+                                          onVerDetalle: (rutina) async {
+                                            if (rutina.urlPdf != null) {
+                                              final uri = Uri.parse(rutina.urlPdf!);
+                                              if (await canLaunchUrl(uri)) {
+                                                await launchUrl(
+                                                  uri,
+                                                  mode: LaunchMode.externalApplication,
+                                                );
+                                              }
+                                            }
+                                          },
+                                          onEditarRutina: (rutina) async {
+                                            final rutinaActualizada = await context.push<
+                                              ({Rutina rutina, Alumno alumno})?
+                                            >('/editar-rutina', extra: rutina);
+                                            if (rutinaActualizada != null) {
+                                              setState(() {
+                                                final index = _rutinas.indexWhere((r) => r.rutina.idRutina == rutinaActualizada.rutina.idRutina);
+                                                if (index != -1) {
+                                                  _rutinas[index] = rutinaActualizada;
+                                                }
+                                              });
+                                            }
+                                          },
+                                          onEliminarRutina: (rutina) async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => DeleteConfirmDialog(
+                                                title: 'Eliminar rutina',
+                                                message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                              ),
+                                            );
+                                            if (confirm == true) {
+                                              try {
+                                                final repo = ref.read(routineRepositoryProvider);
+                                                final storage = StorageService();
+                                                await storage.deletePdf(idRutina: rutina.idRutina!, idAlumno: rutina.idAlumno!);
+                                                await repo.deleteRoutine(rutina.idRutina!);
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _rutinas.removeWhere((r) => r.rutina.idRutina == rutina.idRutina);
+                                                  });
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text('Rutina eliminada exitosamente'),
+                                                      backgroundColor: AppColors.successContainer,
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text('Error al eliminar rutina: $e'),
+                                                      backgroundColor: AppColors.error,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            }
+                                          },
                                         ),
-                                      );
-
-                                      if (confirm == true) {
-                                        setState(() => _isLoading = true);
-                                        try {
-                                          final repo = ref.read(routineRepositoryProvider);
-                                          final storage = StorageService();
-                                          
-                                          // 1. Eliminar del storage (PDF)
-                                          await storage.deletePdf(
-                                            idRutina: rutina.idRutina!, 
-                                            idAlumno: rutina.idAlumno!
-                                          );
-
-                                          // 2. Eliminar de base de datos
-                                          await repo.deleteRoutine(rutina.idRutina!);
-
-                                          // 3. Actualizar UI local
-                                          setState(() {
-                                            _rutinas.removeWhere((r) => r.rutina.idRutina == rutina.idRutina);
-                                          });
-
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Rutina eliminada exitosamente'),
-                                              backgroundColor: AppColors.successContainer,
-                                            ),
-                                          );
-                                        } catch (e) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(
-                                              content: Text('Error al eliminar rutina: $e'),
-                                              backgroundColor: AppColors.error,
-                                            ),
-                                          );
-                                        } finally {
-                                          if (mounted) {
-                                            setState(() => _isLoading = false);
-                                          }
-                                        }
-                                      }
-                                    },
+                                      ),
+                                      const SizedBox(width: AppSpacing.xl),
+                                      Expanded(
+                                        child: RutinasPredeterminadasPanel(
+                                          rutinas: _rutinasPredeterminadas,
+                                          onNuevaRutina: () async {
+                                            final nuevaRutina = await context.push<Rutina?>('/nueva-rutina-predeterminada');
+                                            if (nuevaRutina != null) {
+                                              setState(() {
+                                                _rutinasPredeterminadas.insert(0, nuevaRutina);
+                                              });
+                                            }
+                                          },
+                                          onVerDetalle: (rutina) async {
+                                            if (rutina.urlPdf != null) {
+                                              final uri = Uri.parse(rutina.urlPdf!);
+                                              if (await canLaunchUrl(uri)) {
+                                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                              }
+                                            }
+                                          },
+                                          onEditarRutina: (rutina) async {
+                                            final rutinaActualizada = await context.push<Rutina?>('/editar-rutina', extra: rutina);
+                                            if (rutinaActualizada != null) {
+                                              setState(() {
+                                                final index = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaActualizada.idRutina);
+                                                if (index != -1) {
+                                                  _rutinasPredeterminadas[index] = rutinaActualizada;
+                                                }
+                                              });
+                                            }
+                                          },
+                                          onEliminarRutina: (rutina) async {
+                                            final confirm = await showDialog<bool>(
+                                              context: context,
+                                              builder: (context) => DeleteConfirmDialog(
+                                                title: 'Eliminar rutina',
+                                                message: '¿Estás seguro de que quieres eliminar la rutina "${rutina.nombre}"? Esta acción no se puede deshacer.',
+                                              ),
+                                            );
+                                            if (confirm == true) {
+                                              try {
+                                                final repo = ref.read(routineRepositoryProvider);
+                                                final storage = StorageService();
+                                                await storage.deletePdf(idRutina: rutina.idRutina!, idAlumno: 'predeterminada');
+                                                await repo.deleteRoutine(rutina.idRutina!);
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _rutinasPredeterminadas.removeWhere((r) => r.idRutina == rutina.idRutina);
+                                                  });
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text('Rutina eliminada exitosamente'),
+                                                      backgroundColor: AppColors.successContainer,
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                if (mounted) {
+                                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                                                }
+                                              }
+                                            }
+                                          },
+                                          onAsignarRutina: _showAsignarRutinaForm,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),

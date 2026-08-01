@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 abstract class AlumnoRepository {
-  Future<List<Alumno>> getAlumnos();
+  Future<List<Alumno>> getAlumnos({int limit = 50, int offset = 0});
 
   /// Busca alumnos cuyo nombre o apellido contenga [query].
   /// Retorna como máximo [limit] resultados (default 10).
@@ -26,7 +26,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   SupabaseAlumnoRepository({required this.supabaseClient});
 
   @override
-  Future<List<Alumno>> getAlumnos() async {
+  Future<List<Alumno>> getAlumnos({int limit = 50, int offset = 0}) async {
     try {
       final userId = SupabaseConfig.client.auth.currentUser!.id;
 
@@ -34,7 +34,8 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .from('Alumno')
           .select('id_alumno, "Nombre", "Apellido", "Mail"')
           .eq('user_id', userId)
-          .order('"Apellido"', ascending: true);
+          .order('"Apellido"', ascending: true)
+          .range(offset, offset + limit - 1);
       return (response as List<dynamic>)
           .map((json) => Alumno.fromMap(json as Map<String, dynamic>))
           .toList();

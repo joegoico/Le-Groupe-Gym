@@ -11,6 +11,7 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'alumnos_widgets/alumnos_card.dart';
 // ── Página ───────────────────────────────────────────────────────────────────
 
@@ -23,6 +24,8 @@ class AlumnosPage extends ConsumerStatefulWidget {
 
 class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   bool _isLoading = true;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
   bool _sidebarCollapsed = false;
   List<Alumno> _alumnos = [];
   List<Alumno> _alumnosFiltrados = [];
@@ -37,16 +40,60 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   Future<void> _loadAlumnos() async {
     try {
       final repo = ref.read(alumnoRepositoryProvider);
-      final alumnos = await repo.getAlumnos();
+      final alumnos = await repo.getAlumnos(limit: 50, offset: 0);
       if (mounted) {
         setState(() {
           _alumnos = alumnos;
           _alumnosFiltrados = List<Alumno>.from(alumnos); // copia independiente
+          _hasMore = alumnos.length == 50;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadMoreAlumnos() async {
+    if (_isLoadingMore || !_hasMore) return;
+    setState(() => _isLoadingMore = true);
+    
+    try {
+      final repo = ref.read(alumnoRepositoryProvider);
+      final offset = _alumnos.length;
+      final newAlumnos = await repo.getAlumnos(limit: 50, offset: offset);
+      
+      if (mounted) {
+        if (newAlumnos.isEmpty) {
+          setState(() {
+            _hasMore = false;
+            _isLoadingMore = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('No hay más alumnos para cargar', style: AppTextStyles.subtittlesBold),
+              backgroundColor: AppColors.surfaceContainerHigh,
+            ),
+          );
+          return;
+        }
+
+        setState(() {
+          _alumnos.addAll(newAlumnos);
+          if (_alumnoSeleccionado == null) {
+            _alumnosFiltrados = List<Alumno>.from(_alumnos);
+          }
+          _hasMore = newAlumnos.length == 50;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingMore = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar más alumnos: $e')),
+        );
+      }
     }
   }
 
@@ -288,6 +335,32 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
                       )
                       .toList(),
                 ),
+          if (_alumnoSeleccionado == null && _hasMore && _alumnosFiltrados.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.lg),
+              child: Center(
+                child: _isLoadingMore
+                    ? const CircularProgressIndicator(color: AppColors.primary)
+                    : ElevatedButton(
+                        onPressed: _loadMoreAlumnos,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.surfaceContainerHigh,
+                          foregroundColor: AppColors.primary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(AppRadius.md),
+                          ),
+                        ),
+                        child: Text(
+                          'Cargar Más',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
         ],
       ),
     );
