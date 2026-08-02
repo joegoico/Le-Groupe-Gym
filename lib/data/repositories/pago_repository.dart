@@ -18,7 +18,9 @@ class SupabasePagoRepository implements PagoRepository {
   @override
   Future<void> insertarPago(Pago pago) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       await supabaseClient.from('Pagos').insert({
         'Fecha_de_pago': pago.fechaDePago.toIso8601String(),
         'monto': pago.monto,
@@ -43,7 +45,9 @@ class SupabasePagoRepository implements PagoRepository {
     int? mes,
   }) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
 
       var query = supabaseClient
           .from('Pagos')
@@ -89,7 +93,9 @@ class SupabasePagoRepository implements PagoRepository {
   @override
   Future<Pago?> getUltimoPago(String idAlumno) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
 
       final response = await supabaseClient
           .from('Pagos')

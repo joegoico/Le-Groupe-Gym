@@ -15,7 +15,9 @@ class SupabaseDeudorRepository implements DeudorRepository {
   @override
   Future<List<Deudor>> getDeudores() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Deudor')
           .select()

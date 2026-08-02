@@ -1,4 +1,3 @@
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -6,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
@@ -291,7 +291,7 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                 builder: (context) => const LogoutConfirmDialog(),
               );
               if (confirm == true) {
-                await SupabaseConfig.client.auth.signOut();
+                await ref.read(authServiceProvider).signOut();
                 if (mounted) context.go('/login');
               }
             },

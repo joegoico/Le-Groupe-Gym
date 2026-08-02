@@ -31,7 +31,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
     required String url,
   }) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       await supabaseClient
           .from('Rutinas')
           .update({'url_pdf': url, 'user_id': userId})
@@ -46,7 +48,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<int> saveRoutine(Rutina rutina) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       // Paso 1 — insertar cabecera en Rutinas
       final rutinaResponse = await supabaseClient
           .from('Rutinas')
@@ -123,7 +127,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<List<({Rutina rutina, Alumno alumno})>> getRutinas() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('*, Alumno(*)')
@@ -192,7 +198,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<void> deleteRoutine(int idRutina) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       await supabaseClient
           .from('Rutinas')
           .delete()
@@ -208,7 +216,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<Rutina?> getRutinaCompleta(int idRutina) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('''
@@ -281,7 +291,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
     String idAlumno,
   ) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
           .select('*, Alumno(*)')
@@ -304,7 +316,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
   @override
   Future<List<Rutina>> getRutinasPredeterminadas() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
 
       // Filtramos solo las rutinas predeterminadas
       final response = await supabaseClient
