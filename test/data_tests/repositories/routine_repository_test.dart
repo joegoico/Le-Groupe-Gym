@@ -318,5 +318,18 @@ void main() {
         }
       },
     );
+    test(
+      'getRutinasPredeterminadas debe retornar solo rutinas predeterminadas',
+      () async {
+        // Act
+        final result = await repository.getRutinasPredeterminadas();
+
+        // Assert
+        expect(result, isA<List<Rutina>>());
+        for (final rutina in result) {
+          expect(rutina.esPredeterminada, isTrue);
+        }
+      },
+    );
   });
 }

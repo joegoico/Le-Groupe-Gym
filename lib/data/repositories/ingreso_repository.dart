@@ -32,7 +32,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
   @override
   Future<List<Ingreso>> getIngresos() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
           .select()
@@ -82,7 +84,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
   @override
   Future<String> createIngreso(Ingreso ingreso) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
           .insert({...ingreso.toMap(), 'user_id': userId})
@@ -103,7 +107,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
     required DateTime hasta,
   }) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
           .select()
@@ -125,7 +131,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
   @override
   Future<List<Ingreso>> getIngresosPorFecha({required DateTime fecha}) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
           .select()

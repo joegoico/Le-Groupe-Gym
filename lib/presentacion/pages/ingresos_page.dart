@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
@@ -94,6 +94,15 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
         surface: AppColors.surfaceContainerHigh,
         onSurface: AppColors.onSurface,
       ),
+      datePickerTheme: DatePickerThemeData(
+        backgroundColor: AppColors.surfaceContainerHigh,
+        headerBackgroundColor: AppColors.surfaceContainerHigh,
+        rangePickerBackgroundColor: AppColors.surfaceContainerHigh,
+        rangePickerHeaderBackgroundColor: AppColors.surfaceContainerHigh,
+        rangeSelectionOverlayColor: WidgetStateProperty.all(
+          AppColors.primary.withOpacity(0.15),
+        ),
+      ),
     ),
     child: child!,
   );
@@ -166,7 +175,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
                 builder: (_) => const LogoutConfirmDialog(),
               );
               if (confirm == true) {
-                await SupabaseConfig.client.auth.signOut();
+                await ref.read(authServiceProvider).signOut();
                 if (mounted) context.go('/login');
               }
             },

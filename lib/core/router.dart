@@ -13,17 +13,41 @@ import 'package:le_groupe_gym/presentacion/pages/precios_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumnos_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumno_detalle_page.dart';
 import 'package:le_groupe_gym/presentacion/pages/alumno_pagos_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
+
+class _AuthNotifier extends ChangeNotifier {
+  bool _initialized = false;
+  
+  void initialize() {
+    if (_initialized) return;
+    _initialized = true;
+    try {
+      SupabaseConfig.client.auth.onAuthStateChange.listen((data) {
+        notifyListeners();
+      });
+    } catch (_) {
+      // Ignorar en entorno de tests si Supabase no está inicializado
+    }
+  }
+}
+
+final _authNotifier = _AuthNotifier();
 
 final appRouter = GoRouter(
   initialLocation: '/',
+  refreshListenable: _authNotifier..initialize(),
   redirect: (context, state) {
-    final session = SupabaseConfig.client.auth.currentSession;
-    final isLoggedIn = session != null;
-    final isLoginPage = state.matchedLocation == '/login';
+    try {
+      final session = SupabaseConfig.client.auth.currentSession;
+      final isLoggedIn = session != null;
+      final isLoginPage = state.matchedLocation == '/login';
 
-    if (!isLoggedIn && !isLoginPage) return '/login';
-    if (isLoggedIn && isLoginPage) return '/';
+      if (!isLoggedIn && !isLoginPage) return '/login';
+      if (isLoggedIn && isLoginPage) return '/';
+    } catch (_) {
+      // Ignorar en entorno de tests si Supabase no está inicializado
+    }
     return null;
   },
   routes: [
@@ -59,7 +83,10 @@ final appRouter = GoRouter(
       path: '/editar-rutina',
       builder: (context, state) {
         final rutina = state.extra as Rutina;
-        return MainPanelPage(rutinaExistente: rutina);
+        return MainPanelPage(
+          rutinaExistente: rutina,
+          esPredeterminada: rutina.esPredeterminada,
+        );
       },
     ),
     GoRoute(
@@ -80,6 +107,10 @@ final appRouter = GoRouter(
         final resumen = state.extra as ResumenMensual;
         return IngresoDetallePage(resumen: resumen);
       },
+    ),
+    GoRoute(
+      path: '/nueva-rutina-predeterminada',
+      builder: (context, state) => const MainPanelPage(esPredeterminada: true),
     ),
   ],
 );

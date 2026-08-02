@@ -20,7 +20,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
       // Mágia de Supabase: '*, alumnos(nombre, apellido)' le dice a PostgREST que traiga
       // todos los campos de la solicitud y que haga un JOIN automático con la tabla
       // 'alumnos' (o como se llame en tu BD) trayendo solo nombre y apellido.
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
           .select('*, Alumno(Nombre, Apellido)')
@@ -40,7 +42,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   @override
   Future<int> createSolicitud(SolicitudRutina solicitud) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
           .insert({...solicitud.toMap(), 'user_id': userId})
@@ -58,7 +62,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   @override
   Future<void> deleteSolicitud(int idSolicitud) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       await supabaseClient
           .from('Solicitudes_Rutina')
           .delete()
@@ -74,7 +80,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   @override
   Future<int> contarSolicitudesPendientes() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
           .select()

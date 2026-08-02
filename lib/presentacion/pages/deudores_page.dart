@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/deudor_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
+import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/presentacion/pages/deudores_widgets/deudor_card.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
@@ -65,7 +65,7 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
                 builder: (context) => const LogoutConfirmDialog(),
               );
               if (confirm == true) {
-                await SupabaseConfig.client.auth.signOut();
+                await ref.read(authServiceProvider).signOut();
                 if (mounted) context.go('/login');
               }
             },

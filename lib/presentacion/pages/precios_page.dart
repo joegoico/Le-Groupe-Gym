@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/precio_form.dart';
-import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/descuento_model.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/presentacion/pages/precios_widgets/descuentos_panel.dart';
 import 'package:le_groupe_gym/presentacion/pages/precios_widgets/precio_card.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/builder/sidebar.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
-import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/presentacion/forms/descuento_form.dart';
 
 class PreciosPage extends ConsumerStatefulWidget {
@@ -206,7 +206,7 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
                 builder: (context) => const LogoutConfirmDialog(),
               );
               if (confirm == true) {
-                await SupabaseConfig.client.auth.signOut();
+                await ref.read(authServiceProvider).signOut();
                 if (mounted) context.go('/login');
               }
             },

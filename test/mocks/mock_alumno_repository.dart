@@ -102,8 +102,8 @@ class MockAlumnoRepository implements AlumnoRepository {
   ];
 
   @override
-  Future<List<Alumno>> getAlumnos() async {
-    return List.unmodifiable(_alumnos);
+  Future<List<Alumno>> getAlumnos({int limit = 50, int offset = 0}) async {
+    return List.unmodifiable(_alumnos.skip(offset).take(limit));
   }
 
   @override

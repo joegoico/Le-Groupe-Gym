@@ -17,7 +17,9 @@ class SupabasePrecioRepository implements PrecioRepository {
   @override
   Future<List<Precio>> getPrecios() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Precios')
           .select()
@@ -37,7 +39,9 @@ class SupabasePrecioRepository implements PrecioRepository {
   @override
   Future<String> createPrecio(Precio precio) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Precios')
           .insert({...precio.toMap(), 'user_id': userId})

@@ -384,6 +384,7 @@ class RoutineBuilderController extends ChangeNotifier {
     String? idAlumno,
     int? idRutina,
     String? notasGenerales,
+    bool esPredeterminada = false,
   }) {
     return Rutina(
       idRutina: idRutina,
@@ -400,6 +401,7 @@ class RoutineBuilderController extends ChangeNotifier {
           )
           .toList(),
       notasGenerales: notasGenerales,
+      esPredeterminada: esPredeterminada,
     );
   }
 

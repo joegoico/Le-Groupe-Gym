@@ -166,5 +166,27 @@ void main() {
       // Assert
       expect(rutina.urlPdf, isNull);
     });
+    test('fromMap debe mapear es_predeterminada correctamente', () {
+      // Arrange
+      final jsonMock = {
+        'id_rutina': 1,
+        'nombre_rutina': 'Rutina Fuerza',
+        'es_predeterminada': true,
+      };
+
+      // Act
+      final rutina = Rutina.fromMap(jsonMock);
+
+      // Assert
+      expect(rutina.esPredeterminada, isTrue);
+    });
+
+    test('es_predeterminada debe ser false por defecto', () {
+      // Arrange
+      final rutina = Rutina(nombre: 'Rutina Test');
+
+      // Assert
+      expect(rutina.esPredeterminada, isFalse);
+    });
   });
 }

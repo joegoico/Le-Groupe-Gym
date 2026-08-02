@@ -43,7 +43,7 @@ class PdfGenerator {
 
   Future<Uint8List> generate({
     required Rutina rutina,
-    required Alumno alumno,
+    Alumno? alumno,
   }) async {
     final pdf = pw.Document();
 
@@ -115,8 +115,8 @@ class PdfGenerator {
   }
 
   pw.Widget _buildHeader(
-    pw.MemoryImage logo,
-    Alumno alumno,
+    pw.ImageProvider logo,
+    Alumno? alumno,
     Rutina rutina,
     pw.TextStyle boldStyle,
     pw.TextStyle baseStyle,
@@ -132,11 +132,13 @@ class PdfGenerator {
           crossAxisAlignment: pw.CrossAxisAlignment.end,
           children: [
             pw.Text(rutina.nombre, style: boldStyle.copyWith(fontSize: 20)),
-            pw.SizedBox(height: 4),
-            pw.Text(
-              'Alumno: ${alumno.nombreCompleto}',
-              style: baseStyle.copyWith(color: PdfColors.grey700),
-            ),
+            if (alumno != null) ...[
+              pw.SizedBox(height: 4),
+              pw.Text(
+                'Alumno: ${alumno.nombreCompleto}',
+                style: baseStyle.copyWith(fontSize: 14),
+              ),
+            ],
             pw.SizedBox(height: 2),
             pw.Text(
               'Fecha: $fechaHoyFormateada', // Usamos la variable formateada acá

@@ -17,7 +17,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
   @override
   Future<List<Descuento>> getDescuentos() async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Descuentos')
           .select()
@@ -36,7 +38,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
   @override
   Future<String> createDescuento(Descuento descuento) async {
     try {
-      final userId = SupabaseConfig.client.auth.currentUser!.id;
+      final user = supabaseClient.auth.currentUser;
+      if (user == null) throw Exception('No hay sesión activa.');
+      final userId = user.id;
       final response = await supabaseClient
           .from('Descuentos')
           .insert({...descuento.toMap(), 'user_id': userId})

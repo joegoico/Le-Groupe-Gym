@@ -229,25 +229,11 @@ class RutinasPanel extends StatelessWidget {
     );
   }
 
-  /// "Hoy, 10:30 AM" / "Ayer" / "DD/MM/YYYY"
+  /// "DD/MM/YYYY"
   String _formatRelativeDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dateDay = DateTime(date.year, date.month, date.day);
-
-    if (dateDay == today) {
-      final hour = date.hour;
-      final minute = date.minute.toString().padLeft(2, '0');
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final displayHour = hour % 12 == 0 ? 12 : hour % 12;
-      return 'Hoy, $displayHour:$minute $period';
-    } else if (dateDay == today.subtract(const Duration(days: 1))) {
-      return 'Ayer';
-    } else {
-      return '${date.day.toString().padLeft(2, '0')}/'
-          '${date.month.toString().padLeft(2, '0')}/'
-          '${date.year}';
-    }
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
   }
 
   IconData _dateIcon(DateTime date) {
