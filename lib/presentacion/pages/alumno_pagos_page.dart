@@ -125,9 +125,6 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
   }
 
   void _onPagoGuardado(Pago pago, {required bool esEdicion}) {
-    final previousPagos = List<Pago>.from(_pagos);
-    final previousUltimoPago = _ultimoPago;
-
     setState(() {
       if (esEdicion) {
         final idx = _pagos.indexWhere((p) => p.idPago == pago.idPago);
@@ -142,41 +139,10 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
       }
     });
 
-    _guardarPagoEnBackground(pago, esEdicion, previousPagos, previousUltimoPago);
-  }
-
-  Future<void> _guardarPagoEnBackground(
-    Pago pago,
-    bool esEdicion,
-    List<Pago> previousPagos,
-    Pago? previousUltimoPago,
-  ) async {
-    try {
-      final repo = ref.read(pagoRepositoryProvider);
-      if (esEdicion) {
-        await repo.updatePago(pago);
-      } else {
-        await repo.insertarPago(pago);
-      }
-      GlobalMessenger.showSuccessSnackbar(
-        esEdicion ? 'Pago actualizado' : 'Pago registrado',
-      );
-      ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _pagos = previousPagos;
-          _ultimoPago = previousUltimoPago;
-        });
-      }
-      final msg = e.toString();
-      final esUnicidad = msg.contains('unique') || msg.contains('duplicate') || msg.contains('23505') || msg.contains('already exists');
-      if (esUnicidad) {
-        GlobalMessenger.showErrorSnackbar('El alumno ya tiene un pago para ese mes.');
-      } else {
-        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el pago. Verifica tu conexión e intenta de nuevo.');
-      }
-    }
+    GlobalMessenger.showSuccessSnackbar(
+      esEdicion ? 'Pago actualizado' : 'Pago registrado',
+    );
+    ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
   }
 
   Future<void> _confirmarEliminarPago(Pago pago) async {
@@ -189,17 +155,57 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed != true) return;
+
+    final previousPagos = List<Pago>.from(_pagos);
+    final previousUltimoPago = _ultimoPago;
+
+    if (mounted) {
       setState(() => _isLoading = true);
-      try {
-        await ref.read(pagoRepositoryProvider).deletePago(pago.idPago);
-        ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
-        _loadData();
+    }
+
+    try {
+      final pagoRepository = ref.read(pagoRepositoryProvider);
+      await pagoRepository.deletePago(pago.idPago);
+
+      final pagosActualizados = previousPagos
+          .where((item) => item.idPago != pago.idPago)
+          .toList();
+      final borrabaUltimoPago = previousUltimoPago?.idPago == pago.idPago;
+
+      if (mounted) {
+        setState(() {
+          _pagos = pagosActualizados;
+          _ultimoPago = borrabaUltimoPago
+              ? (pagosActualizados.isNotEmpty ? pagosActualizados.first : null)
+              : previousUltimoPago;
+        });
+      }
+
+      if (borrabaUltimoPago) {
+        pagoRepository.getUltimoPago(widget.alumno.idAlumno).then((ultimoPago) {
+          if (!mounted) return;
+          setState(() => _ultimoPago = ultimoPago);
+        }).catchError((_) {
+          // Conservamos el estado local si el refresco del resumen falla.
+        });
+      }
+
+      ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
       GlobalMessenger.showSuccessSnackbar('Pago eliminado');
     } catch (e) {
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el pago. Verifica tu conexión e intenta de nuevo.');
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _pagos = previousPagos;
+          _ultimoPago = previousUltimoPago;
+        });
+      }
+      GlobalMessenger.showErrorSnackbar(
+        'Ocurrió un error inesperado al eliminar el pago. Verifica tu conexión e intenta de nuevo.',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }

@@ -22,6 +22,7 @@ class SupabasePagoRepository implements PagoRepository {
       if (user == null) throw Exception('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient.from('Pagos').insert({
+        'id_pago': pago.idPago,
         'Fecha_de_pago': pago.fechaDePago.toIso8601String(),
         'monto': pago.monto,
         'medio_de_pago': pago.medioDePago,
@@ -138,8 +139,11 @@ class SupabasePagoRepository implements PagoRepository {
   @override
   Future<void> deletePago(String idPago) async {
     try {
-      await supabaseClient.from('Pagos').delete().eq('id_pago', idPago);
+      await supabaseClient.from('Pagos').delete().eq('id_pago', idPago).select().single();
     } on PostgrestException catch (e) {
+      if (e.code == 'PGRST116') {
+        throw Exception('El pago no pudo ser eliminado (permisos insuficientes o no existe).');
+      }
       throw Exception('Error al eliminar pago: ${e.message}');
     } catch (e) {
       throw Exception('Error inesperado: $e');

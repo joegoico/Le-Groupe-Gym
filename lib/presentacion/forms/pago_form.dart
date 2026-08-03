@@ -37,6 +37,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   final _diasController = TextEditingController();
 
   Precio? _planSeleccionado;
+  bool _personalizadoSeleccionado = false;
   String _medioPago = 'Efectivo';
   DateTime _fechaPago = DateTime.now();
   bool _aplicaDescuento = false;
@@ -60,6 +61,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       _medioPago = widget.pagoAEditar!.medioDePago;
       _fechaPago = widget.pagoAEditar!.fechaDePago;
       _aplicaDescuento = widget.pagoAEditar!.aplicaDescuento;
+      _personalizadoSeleccionado = true;
     }
   }
 
@@ -79,8 +81,15 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       _errorServidor = null;
     });
 
+    if (!_personalizadoSeleccionado && _planSeleccionado == null) {
+      setState(() {
+        _errorServidor = 'Selecciona un plan o usa Personalizado.';
+      });
+      return;
+    }
+
     // Validar comentario obligatorio para pagos personalizados
-    if (_planSeleccionado == null &&
+    if (_personalizadoSeleccionado &&
         widget.pagoAEditar == null &&
         _comentariosController.text.trim().isEmpty) {
       setState(() {
@@ -108,7 +117,38 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       aplicaDescuento: _aplicaDescuento,
     );
 
-    Navigator.pop(context, nuevoPago);
+    _persistirPago(nuevoPago);
+  }
+
+  Future<void> _persistirPago(Pago pago) async {
+    try {
+      final pagoRepository = ref.read(pagoRepositoryProvider);
+      if (widget.pagoAEditar != null) {
+        await pagoRepository.updatePago(pago);
+      } else {
+        await pagoRepository.insertarPago(pago);
+      }
+
+      if (!mounted) return;
+      Navigator.pop(context, pago);
+    } catch (e) {
+      final mensaje = e.toString().toLowerCase();
+      if (!mounted) return;
+
+      setState(() {
+        if (mensaje.contains('unique') ||
+            mensaje.contains('duplicate') ||
+            mensaje.contains('23505') ||
+            mensaje.contains('already exists')) {
+          _errorFecha = 'El alumno ya tiene un pago registrado para ese mes.';
+          _errorServidor = null;
+        } else {
+          _errorFecha = null;
+          _errorServidor =
+              'Ocurrió un error al guardar el pago. Verifica tu conexión e intenta de nuevo.';
+        }
+      });
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -224,8 +264,11 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                             hintText: '0',
                             hintStyle: TextStyle(color: Colors.white24),
                           ),
-                          enabled: _planSeleccionado == null,
+                          enabled: _personalizadoSeleccionado,
                           validator: (val) {
+                            if (!_personalizadoSeleccionado && _planSeleccionado == null) {
+                              return null;
+                            }
                             if (val == null || val.isEmpty) return 'Requerido';
                             if (double.tryParse(val) == null) return 'Inválido';
                             return null;
@@ -301,21 +344,23 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                           label: Text(
                             'Personalizado',
                             style: TextStyle(
-                              color: _planSeleccionado == null
+                              color: _personalizadoSeleccionado
                                   ? Colors.black
                                   : Colors.white,
-                              fontWeight: _planSeleccionado == null
+                              fontWeight: _personalizadoSeleccionado
                                   ? FontWeight.w600
                                   : FontWeight.normal,
                             ),
                           ),
-                          selected: _planSeleccionado == null,
+                          selected: _personalizadoSeleccionado,
                           selectedColor: AppColors.primary,
                           backgroundColor: AppColors.surfaceContainerHigh,
                           onSelected: (selected) {
                             if (selected) {
                               setState(() {
+                                _personalizadoSeleccionado = true;
                                 _planSeleccionado = null;
+                                _errorServidor = null;
                                 if (widget.pagoAEditar != null) {
                                   _montoController.text =
                                       (widget.pagoAEditar!.monto % 1 == 0)
@@ -354,8 +399,11 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                             onSelected: (selected) {
                               if (selected) {
                                 setState(() {
+                                  _personalizadoSeleccionado = false;
                                   _planSeleccionado = p;
-                                  
+                                  _errorComentario = null;
+                                  _errorServidor = null;
+
                                   double baseMonto = p.valor.toDouble();
                                   if (_aplicaDescuento && descuentosAsync.value != null && descuentosAsync.value!.isNotEmpty) {
                                     final descValue = descuentosAsync.value!.first.valor;
@@ -384,7 +432,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                 ),
 
                 // Cantidad de Días (solo visible si es personalizado y estamos editando/creando)
-                if (_planSeleccionado == null) ...[
+                if (_personalizadoSeleccionado) ...[
                   _buildSectionTitle('Cantidad de días'),
                   TextFormField(
                     controller: _diasController,
@@ -478,7 +526,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
 
                 // Comentarios
                 _buildSectionTitle(
-                  _planSeleccionado == null
+                  _personalizadoSeleccionado
                       ? 'Comentarios (Obligatorio para personalizado)'
                       : 'Comentarios (Opcional)',
                 ),

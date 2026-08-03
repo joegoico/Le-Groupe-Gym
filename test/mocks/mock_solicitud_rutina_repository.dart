@@ -23,8 +23,8 @@ class MockSolicitudRutinaRepository implements SolicitudRutinaRepository {
 
   @override
   Future<List<SolicitudRutina>> getSolicitudes() async {
-    // 2. Ahora devolvemos la lista real en memoria
-    return _mockData;
+    // 2. Devolvemos una copia para evitar que la UI mutile el estado interno del mock.
+    return List<SolicitudRutina>.from(_mockData);
   }
 
   @override

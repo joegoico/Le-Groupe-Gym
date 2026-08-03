@@ -100,6 +100,16 @@ void main() {
     expect(find.text('Personalizado'), findsOneWidget);
   });
 
+  testWidgets('por default no debe venir seleccionado el plan Personalizado', (tester) async {
+    await abrirForm(tester);
+
+    final chip = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, 'Personalizado'),
+    );
+
+    expect(chip.selected, isFalse);
+  });
+
   testWidgets('guarda el pago correctamente cuando es un plan normal', (tester) async {
     await abrirForm(tester);
     await tester.ensureVisible(find.text('3 días'));
@@ -121,7 +131,8 @@ void main() {
     (tester) async {
       await abrirForm(tester);
 
-      // Pago personalizado (default): sin comentario, sin monto
+      await tester.tap(find.text('Personalizado'));
+      await tester.pumpAndSettle();
       await tocarConfirmar(tester);
 
       // El error debe aparecer en el árbol de widgets (inline)
@@ -139,6 +150,8 @@ void main() {
     'el campo comentario muestra borde rojo cuando hay error de comentario',
     (tester) async {
       await abrirForm(tester);
+      await tester.tap(find.text('Personalizado'));
+      await tester.pumpAndSettle();
       await tocarConfirmar(tester);
 
       // Debe existir un OutlineInputBorder con color rojo
@@ -165,6 +178,8 @@ void main() {
     'error de comentario desaparece al escribir en el campo',
     (tester) async {
       await abrirForm(tester);
+      await tester.tap(find.text('Personalizado'));
+      await tester.pumpAndSettle();
       await tocarConfirmar(tester);
 
       expect(
@@ -317,6 +332,8 @@ void main() {
     'errores de comentario se limpian al intentar guardar nuevamente con comentario',
     (tester) async {
       await abrirForm(tester);
+      await tester.tap(find.text('Personalizado'));
+      await tester.pumpAndSettle();
 
       // Primera pasada: sin comentario → error
       await tocarConfirmar(tester);
