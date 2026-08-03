@@ -17,7 +17,7 @@ class ExcerciseSidebar extends StatefulWidget {
   final VoidCallback? onCreateExercise;
   final ExerciseRepository exerciseRepository;
   final ICategoryExerciseRepository categoryExerciseRepository;
-  final VoidCallback? onCreateEjercicio;
+  final void Function(Ejercicio, List<int>)? onCreateEjercicio;
 
   const ExcerciseSidebar({
     super.key,
@@ -388,7 +388,9 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                           onCancelar: () => Navigator.pop(context),
                           onGuardar: (data) {
                             Navigator.pop(context);
-                            widget.onCreateEjercicio?.call(); // 👈
+                            if (widget.onCreateEjercicio != null) {
+                              widget.onCreateEjercicio!(data['ejercicio'] as Ejercicio, data['categoriaIds'] as List<int>);
+                            }
                           },
                         ),
                       );

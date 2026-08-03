@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/data/repositories/precio_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class PrecioForm extends StatefulWidget {
   final Precio? precio;
@@ -25,7 +26,6 @@ class _PrecioFormState extends State<PrecioForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _precioController;
   late TextEditingController _cantidadDiasController;
-  bool _isLoading = false;
 
   @override
   void initState() {
@@ -45,32 +45,18 @@ class _PrecioFormState extends State<PrecioForm> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _submit() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    setState(() => _isLoading = true);
-    try {
-      final precio = Precio(
-        idPrecio: widget.precio?.idPrecio,
-        valor: int.parse(_precioController.text.trim()),
-        cantidadDias: int.parse(_cantidadDiasController.text.trim()),
-      );
-      if (widget.precio != null) {
-        await widget.precioRepository.updatePrecio(precio);
-      } else {
-        await widget.precioRepository.createPrecio(precio);
-      }
-      widget.onGuardar(precio);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    
+    final precio = Precio(
+      idPrecio: widget.precio?.idPrecio ?? const Uuid().v4(),
+      valor: int.parse(_precioController.text.trim()),
+      cantidadDias: int.parse(_cantidadDiasController.text.trim()),
+    );
+    
+    widget.onGuardar(precio);
   }
 
   @override
@@ -127,7 +113,7 @@ class _PrecioFormState extends State<PrecioForm> {
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  onPressed: _isLoading ? null : widget.onCancelar,
+                  onPressed: widget.onCancelar,
                   icon: const Icon(
                     Icons.close,
                     color: AppColors.onSurfaceVariant,
@@ -259,7 +245,7 @@ class _PrecioFormState extends State<PrecioForm> {
                         child: SizedBox(
                           height: 44,
                           child: OutlinedButton(
-                            onPressed: _isLoading ? null : widget.onCancelar,
+                            onPressed: widget.onCancelar,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.onSurfaceVariant,
                               side: const BorderSide(
@@ -278,23 +264,12 @@ class _PrecioFormState extends State<PrecioForm> {
                         child: SizedBox(
                           height: 44,
                           child: ElevatedButton.icon(
-                            onPressed: _isLoading ? null : _submit,
-                            icon: _isLoading
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  )
-                                : const Icon(Icons.check, size: 16),
+                            onPressed: _submit,
+                            icon: const Icon(Icons.check, size: 16),
                             label: Text(
-                              _isLoading
-                                  ? 'Guardando...'
-                                  : (widget.precio == null
-                                        ? 'Crear Plan'
-                                        : 'Guardar'),
+                              widget.precio == null
+                                  ? 'Crear Plan'
+                                  : 'Guardar',
                               style: AppTextStyles.buttonText.copyWith(
                                 color: AppColors.onPrimary,
                               ),

@@ -51,71 +51,45 @@ class SupabaseRoutineRepository implements RoutineRepository {
       final user = supabaseClient.auth.currentUser;
       if (user == null) throw Exception('No hay sesión activa.');
       final userId = user.id;
-      // Paso 1 — insertar cabecera en Rutinas
-      final rutinaResponse = await supabaseClient
-          .from('Rutinas')
-          .insert({...rutina.toMap(), 'user_id': userId})
-          .select('id_rutina')
-          .single();
+      final diasPayload = rutina.dias.map((dia) {
+        return {
+          'nombre_dia': dia.nombre,
+          'orden': dia.orden,
+          'bloques': dia.bloques.asMap().entries.map((entry) {
+            var orden = 0;
+            return {
+              'nombre': entry.value.nombre,
+              'orden': entry.key,
+              'ejercicios': entry.value.ejercicios
+                  .expand(
+                    (tarjeta) => tarjeta.miembros.map(
+                      (miembro) => {
+                        'id_ejercicio': miembro.ejercicio.idEjercicio,
+                        'series': miembro.series,
+                        'repeticiones': miembro.repeticiones,
+                        'observaciones': miembro.peso,
+                        'orden': orden++,
+                      },
+                    ),
+                  )
+                  .toList(),
+            };
+          }).toList(),
+        };
+      }).toList();
 
-      final idRutina = rutinaResponse['id_rutina'] as int;
+      final response = await supabaseClient.rpc(
+        'insert_rutina_completa',
+        params: {
+          'p_nombre': rutina.nombre,
+          'p_id_alumno': rutina.idAlumno,
+          'p_notas_generales': rutina.notasGenerales,
+          'p_es_predeterminada': rutina.esPredeterminada,
+          'p_dias': diasPayload,
+        },
+      );
 
-      // Paso 2 — insertar días, bloques y ejercicios
-      for (final dia in rutina.dias) {
-        final diaResponse = await supabaseClient
-            .from('Dias_Rutina')
-            .insert(dia.toMap(idRutina: idRutina))
-            .select('id_dia')
-            .single();
-
-        final idDia = diaResponse['id_dia'] as int;
-
-        for (
-          var bloqueIndex = 0;
-          bloqueIndex < dia.bloques.length;
-          bloqueIndex++
-        ) {
-          final bloque = dia.bloques[bloqueIndex];
-
-          // 👇 Insertar bloque
-          final bloqueResponse = await supabaseClient
-              .from('Bloques_Rutina')
-              .insert({
-                'id_dia': idDia,
-                'nombre': bloque.nombre,
-                'orden': bloqueIndex,
-              })
-              .select('id_bloque')
-              .single();
-
-          final idBloque = bloqueResponse['id_bloque'] as int;
-
-          // 👇 Insertar ejercicios del bloque
-          final ejerciciosData = <Map<String, dynamic>>[];
-          var orden = 0;
-
-          for (final tarjeta in bloque.ejercicios) {
-            for (final miembro in tarjeta.miembros) {
-              ejerciciosData.add({
-                'id_dia': idDia,
-                'id_bloque': idBloque,
-                'id_ejercicio': miembro.ejercicio.idEjercicio,
-                'series': miembro.series,
-                'repeticiones': miembro.repeticiones,
-                'orden': orden++,
-              });
-            }
-          }
-
-          if (ejerciciosData.isNotEmpty) {
-            await supabaseClient
-                .from('Rutina_Ejercicios')
-                .insert(ejerciciosData);
-          }
-        }
-      }
-
-      return idRutina;
+      return response as int;
     } on PostgrestException catch (e) {
       throw Exception('Error al guardar rutina: ${e.message}');
     } catch (e) {

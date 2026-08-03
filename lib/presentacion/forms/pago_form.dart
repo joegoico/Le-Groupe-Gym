@@ -10,6 +10,7 @@ import 'package:le_groupe_gym/data/models/descuento_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_forms_widgets/descuento_switch.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
+import 'package:uuid/uuid.dart';
 
 final planesProvider = FutureProvider.autoDispose<List<Precio>>((ref) async {
   return ref.read(precioRepositoryProvider).getPrecios();
@@ -38,7 +39,6 @@ class _PagoFormState extends ConsumerState<PagoForm> {
   Precio? _planSeleccionado;
   String _medioPago = 'Efectivo';
   DateTime _fechaPago = DateTime.now();
-  bool _isLoading = false;
   bool _aplicaDescuento = false;
 
   /// Error inline debajo del campo Comentarios (pago personalizado sin comentario)
@@ -71,7 +71,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
     super.dispose();
   }
 
-  Future<void> _guardarPago() async {
+  void _guardarPago() {
     // Limpiar errores previos
     setState(() {
       _errorComentario = null;
@@ -92,57 +92,23 @@ class _PagoFormState extends ConsumerState<PagoForm> {
     final isValid = _formKey.currentState!.validate();
     if (!isValid) return;
 
-    setState(() => _isLoading = true);
+    final monto = double.parse(_montoController.text);
+    final dias = int.parse(_diasController.text);
 
-    try {
-      final monto = double.parse(_montoController.text);
-      final dias = int.parse(_diasController.text);
+    final nuevoPago = Pago(
+      idPago: widget.pagoAEditar?.idPago ?? const Uuid().v4(),
+      idAlumno: widget.alumno.idAlumno,
+      fechaDePago: _fechaPago,
+      monto: monto,
+      medioDePago: _medioPago,
+      comentarios: _comentariosController.text.isNotEmpty
+          ? _comentariosController.text
+          : null,
+      cantidadDias: dias,
+      aplicaDescuento: _aplicaDescuento,
+    );
 
-      final nuevoPago = Pago(
-        idPago:
-            widget.pagoAEditar?.idPago ??
-            '', // Supabase generará el UUID automáticamente al crear
-        idAlumno: widget.alumno.idAlumno,
-        fechaDePago: _fechaPago,
-        monto: monto,
-        medioDePago: _medioPago,
-        comentarios: _comentariosController.text.isNotEmpty
-            ? _comentariosController.text
-            : null,
-        cantidadDias: dias,
-        aplicaDescuento: _aplicaDescuento,
-      );
-
-      if (widget.pagoAEditar == null) {
-        await ref.read(pagoRepositoryProvider).insertarPago(nuevoPago);
-      } else {
-        await ref.read(pagoRepositoryProvider).updatePago(nuevoPago);
-      }
-
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-    } catch (e) {
-      if (mounted) {
-        final msg = e.toString();
-        // Detectar error de unicidad de Supabase / Postgres
-        final esUnicidad = msg.contains('unique') ||
-            msg.contains('duplicate') ||
-            msg.contains('23505') ||
-            msg.contains('already exists');
-        setState(() {
-          if (esUnicidad) {
-            _errorFecha =
-                'Este alumno ya tiene un pago registrado para ese mes. '
-                'Solo se permite un pago por alumno por mes.';
-          } else {
-            _errorServidor = 'Ocurrió un error al guardar: $msg';
-          }
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    Navigator.pop(context, nuevoPago);
   }
 
   Widget _buildSectionTitle(String title) {
@@ -573,14 +539,8 @@ class _PagoFormState extends ConsumerState<PagoForm> {
           child: const Text('Cancelar'),
         ),
         ElevatedButton.icon(
-          onPressed: _isLoading ? null : _guardarPago,
-          icon: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.check_circle),
+          onPressed: _guardarPago,
+          icon: const Icon(Icons.check_circle),
           label: Text(
             widget.pagoAEditar != null ? 'Guardar Cambios' : 'Confirmar Pago',
           ),

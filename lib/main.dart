@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // falta esto
 import 'package:flutter_dotenv/flutter_dotenv.dart'; // Importamos dotenv para cargar variables de entorno
 import 'package:le_groupe_gym/core/router.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Le Groupe Gym - Panel',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF0A0A0A),
@@ -32,8 +34,6 @@ class MyApp extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         ),
       ),
-      // Apuntamos a la pantalla que ahora vive en su propio archivo
-      //home: const RutinasDashboardPage(),
       routerConfig: appRouter,
     );
   }

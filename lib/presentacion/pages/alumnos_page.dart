@@ -11,6 +11,7 @@ import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_form.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/services/auth_service.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'alumnos_widgets/alumnos_card.dart';
 // ── Página ───────────────────────────────────────────────────────────────────
@@ -133,41 +134,61 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   }
 
   void _onAlumnoGuardado(Alumno alumno, {required bool esEdicion}) {
-    if (esEdicion) {
-      setState(() {
+    // 1. Guardar estado anterior para posible rollback
+    final previousAlumnos = List<Alumno>.from(_alumnos);
+    final previousFiltrados = List<Alumno>.from(_alumnosFiltrados);
+
+    // 2. Optimistic Update (Actualización instantánea en UI)
+    setState(() {
+      if (esEdicion) {
         final idx = _alumnos.indexWhere((a) => a.idAlumno == alumno.idAlumno);
         if (idx != -1) _alumnos[idx] = alumno;
-        // _alumnosFiltrados se deriva de _alumnos para mantener consistencia
-        _alumnosFiltrados = _alumnoSeleccionado == null
-            ? List<Alumno>.from(_alumnos)
-            : [alumno];
-      });
-    } else {
-      setState(() {
+      } else {
         _alumnos.insert(0, alumno);
-        // deriva la lista filtrada a partir de la fuente de verdad
-        if (_alumnoSeleccionado == null) {
-          _alumnosFiltrados = List<Alumno>.from(_alumnos);
-        }
-      });
-    }
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            esEdicion
-                ? 'Alumno actualizado correctamente'
-                : 'Alumno creado correctamente',
-            style: AppTextStyles.subtittlesBold.copyWith(
-              color: AppColors.successContent,
-            ),
-          ),
-          backgroundColor: AppColors.successContainer,
-          behavior: SnackBarBehavior.floating,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
-          ),
-        ),
+      }
+
+      if (_alumnoSeleccionado == null) {
+        _alumnosFiltrados = List<Alumno>.from(_alumnos);
+      } else {
+        _alumnosFiltrados = [alumno];
+      }
+    });
+
+    // 3. Ejecutar guardado en segundo plano
+    _guardarEnBackground(
+      alumno: alumno,
+      esEdicion: esEdicion,
+      previousAlumnos: previousAlumnos,
+      previousFiltrados: previousFiltrados,
+    );
+  }
+
+  Future<void> _guardarEnBackground({
+    required Alumno alumno,
+    required bool esEdicion,
+    required List<Alumno> previousAlumnos,
+    required List<Alumno> previousFiltrados,
+  }) async {
+    try {
+      final repo = ref.read(alumnoRepositoryProvider);
+      if (esEdicion) {
+        await repo.updateAlumno(alumno);
+      } else {
+        await repo.createAlumno(alumno);
+      }
+      GlobalMessenger.showSuccessSnackbar(
+        esEdicion ? 'Alumno actualizado correctamente' : 'Alumno creado correctamente',
+      );
+    } catch (e) {
+      // 4. Rollback en caso de error
+      if (mounted) {
+        setState(() {
+          _alumnos = previousAlumnos;
+          _alumnosFiltrados = previousFiltrados;
+        });
+      }
+      GlobalMessenger.showErrorSnackbar(
+        'Ocurrió un error inesperado al guardar el alumno. Verifica tu conexión e intenta de nuevo.',
       );
     }
   }
@@ -189,28 +210,10 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
           _alumnos.removeWhere((a) => a.idAlumno == alumno.idAlumno);
           _alumnosFiltrados.removeWhere((a) => a.idAlumno == alumno.idAlumno);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Alumno eliminado',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: AppColors.successContent,
-              ),
-            ),
-            backgroundColor: AppColors.successContainer,
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
-          ),
-        );
       }
+      GlobalMessenger.showSuccessSnackbar('Alumno eliminado');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
-      }
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el alumno. Verifica tu conexión e intenta de nuevo.');
     }
   }
 

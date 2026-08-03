@@ -12,6 +12,7 @@ import '../builder/routine_workspace.dart';
 import '../builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 import 'package:le_groupe_gym/services/pdf_generator.dart';
 import 'package:le_groupe_gym/services/service_storage.dart';
 import 'package:le_groupe_gym/services/email_service.dart';
@@ -178,8 +179,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
-  Future<String> _savePDfInSupabase(Rutina rutina, int idRutina) async {
-    final routineRepo = ref.read(routineRepositoryProvider);
+  Future<String> _savePDfInSupabase(Rutina rutina, int idRutina, RoutineRepository routineRepo) async {
 
     final pdfBytes = await PdfGenerator().generate(
       rutina: rutina.copyWith(idRutina: idRutina),
@@ -229,37 +229,49 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
-  Future<void> _saveRoutine() async {
+  void _saveRoutine() {
     if (!widget.esPredeterminada && _alumnoSeleccionado == null) return;
 
     final nombreIngresado = _routineNameController.text.trim();
     if (nombreIngresado.isEmpty) {
-      setState(
-        () => _errorNombreRutina = 'El nombre de la rutina es obligatorio',
-      );
+      setState(() => _errorNombreRutina = 'El nombre de la rutina es obligatorio');
       return;
     }
 
-    setState(() => _isSaving = true);
+    final rutinaLocal = _routineController.buildRutina(
+      nombre: nombreIngresado,
+      idAlumno: widget.esPredeterminada ? null : _alumnoSeleccionado!.idAlumno,
+      idRutina: widget.rutinaExistente?.idRutina ?? -DateTime.now().millisecondsSinceEpoch,
+      notasGenerales: _notasController.text.isEmpty ? null : _notasController.text,
+      esPredeterminada: widget.esPredeterminada,
+    );
 
+    final backgroundFuture = _saveRoutineBackground(rutinaLocal, widget.solicitudOrigen);
+
+    if (widget.esPredeterminada) {
+      context.pop((rutinaLocal, backgroundFuture));
+    } else {
+      context.pop((
+        rutina: rutinaLocal,
+        alumno: _alumnoSeleccionado!,
+        future: backgroundFuture
+      ));
+    }
+  }
+
+  Future<Rutina> _saveRoutineBackground(Rutina rutina, SolicitudRutina? solicitudOrigen) async {
     try {
       final routineRepo = ref.read(routineRepositoryProvider);
+      final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
+      
+      // Damos 600ms para que la animación de "context.pop()" termine y el Dashboard
+      // se dibuje por completo con la rutina temporal antes de empezar el trabajo pesado.
+      // Esto previene que la app se congele a mitad de la animación en Flutter Web.
+      await Future.delayed(const Duration(milliseconds: 600));
+
       await _deleteOldRoutines(routineRepo);
 
-      final rutina = _routineController.buildRutina(
-        nombre: nombreIngresado,
-        idAlumno: widget.esPredeterminada
-            ? null
-            : _alumnoSeleccionado!.idAlumno,
-        idRutina: widget.rutinaExistente?.idRutina,
-        notasGenerales: _notasController.text.isEmpty
-            ? null
-            : _notasController.text,
-        esPredeterminada: widget.esPredeterminada,
-      );
-
       int idRutina;
-
       if (widget.rutinaExistente != null) {
         await routineRepo.updateRoutine(rutina);
         idRutina = widget.rutinaExistente!.idRutina!;
@@ -267,79 +279,63 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         idRutina = await routineRepo.saveRoutine(rutina);
       }
 
-      final pdfUrl = await _savePDfInSupabase(rutina, idRutina);
+      final pdfUrl = await _savePDfInSupabase(rutina, idRutina, routineRepo);
+      
+      final finalRutina = rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl);
+
       if (!widget.esPredeterminada) {
-        await _sendRoutineViaMail(rutina, pdfUrl);
+        await _sendRoutineViaMail(finalRutina, pdfUrl);
       }
 
-      if (widget.solicitudOrigen != null) {
-        final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
-        await solicitudRepo.deleteSolicitud(
-          widget.solicitudOrigen!.idSolicitud!,
-        );
+      if (solicitudOrigen != null) {
+        await solicitudRepo.deleteSolicitud(solicitudOrigen.idSolicitud!);
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.rutinaExistente != null
-                  ? 'Rutina actualizada correctamente'
-                  : 'Rutina guardada correctamente',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: AppColors.successContent,
-              ),
-            ),
-            backgroundColor: AppColors.successContainer,
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
-          ),
-        );
-        if (widget.esPredeterminada) {
-          context.pop(rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl));
-        } else {
-          context.pop((
-            rutina: rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl),
-            alumno: _alumnoSeleccionado!,
-          ));
-        }
-      }
+      GlobalMessenger.showSuccessSnackbar(widget.rutinaExistente != null ? 'Rutina actualizada correctamente' : 'Rutina guardada correctamente');
+      return finalRutina;
     } catch (e) {
-      if (mounted) {
-        final msg = e.toString();
-        final esUnicidad = msg.contains('unique') ||
-            msg.contains('duplicate') ||
-            msg.contains('23505') ||
-            msg.contains('already exists');
-
-        if (esUnicidad && widget.esPredeterminada) {
-          setState(() {
-            _errorNombreRutina =
-                'Ya existe una rutina genérica con este nombre';
-          });
-        } else {
-          AppSnackbar.show(
-            context,
-            message: 'Error al guardar: $msg',
-            type: SnackbarType.error,
-            bottomMargin: 120,
-          );
-        }
+      final msg = e.toString();
+      final esUnicidad = msg.contains('unique') || msg.contains('duplicate') || msg.contains('23505') || msg.contains('already exists');
+      if (esUnicidad && widget.esPredeterminada) {
+        GlobalMessenger.showErrorSnackbar('Ya existe una rutina genérica con este nombre');
+      } else {
+        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar la rutina. Verifica tu conexión e intenta de nuevo.');
       }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+      rethrow;
     }
   }
 
-  Future<void> _reloadExercises() async {
-    final exerciseRepo = ref.read(exerciseRepositoryProvider);
+  void _onCreateEjercicio(Ejercicio localExercise, List<int> categoriaIds) {
+    final previousExercises = List<Ejercicio>.from(_loadedExercises);
+    setState(() {
+      _loadedExercises = [localExercise, ..._loadedExercises];
+    });
+    
+    _guardarEjercicioBackground(localExercise, categoriaIds, previousExercises);
+  }
+
+  Future<void> _guardarEjercicioBackground(Ejercicio localExercise, List<int> categoriaIds, List<Ejercicio> previousExercises) async {
     try {
-      final exercises = await exerciseRepo.getExercises();
-      setState(() => _loadedExercises = exercises);
+      final exerciseRepo = ref.read(exerciseRepositoryProvider);
+      final id = await exerciseRepo.createExercise(
+        nombre: localExercise.nombre,
+        categoriaIds: categoriaIds,
+      );
+      
+      if (mounted) {
+        setState(() {
+          final index = _loadedExercises.indexOf(localExercise);
+          if (index != -1) {
+            _loadedExercises[index] = localExercise.copyWith(idEjercicio: id);
+          }
+        });
+      }
+      GlobalMessenger.showSuccessSnackbar('El ejercicio fue creado correctamente');
     } catch (e) {
-      debugPrint('Error al recargar ejercicios: $e');
+      if (mounted) {
+        setState(() => _loadedExercises = previousExercises);
+      }
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al crear el ejercicio. Verifica tu conexión e intenta de nuevo.');
     }
   }
 
@@ -537,7 +533,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                     );
                                   }
                                 },
-                                onCreateEjercicio: _reloadExercises,
+                                onCreateEjercicio: _onCreateEjercicio,
                               ),
                             ),
                           ),

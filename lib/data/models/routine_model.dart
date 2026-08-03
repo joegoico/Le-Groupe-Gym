@@ -66,7 +66,7 @@ class Rutina {
   Map<String, dynamic> toMap() {
     return {
       'nombre_rutina': nombre,
-      if (idRutina != null) 'id_rutina': idRutina,
+      if (idRutina != null && idRutina! > 0) 'id_rutina': idRutina,
       if (idAlumno != null) 'id_alumno': idAlumno,
       if (notasGenerales != null) 'notas_generales': notasGenerales,
       if (urlPdf != null) 'url_pdf': urlPdf,

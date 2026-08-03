@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
@@ -69,9 +70,9 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
         ),
         child: PrecioForm(
           precioRepository: ref.read(precioRepositoryProvider),
-          onGuardar: (_) {
-            _loadData();
+          onGuardar: (precio) {
             Navigator.of(dialogContext).pop();
+            _onPrecioGuardado(precio, esEdicion: false);
           },
           onCancelar: () => Navigator.of(dialogContext).pop(),
         ),
@@ -93,14 +94,43 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
         child: PrecioForm(
           precio: precio,
           precioRepository: ref.read(precioRepositoryProvider),
-          onGuardar: (_) {
-            _loadData();
+          onGuardar: (p) {
             Navigator.of(dialogContext).pop();
+            _onPrecioGuardado(p, esEdicion: true);
           },
           onCancelar: () => Navigator.of(dialogContext).pop(),
         ),
       ),
     );
+  }
+
+  void _onPrecioGuardado(Precio precio, {required bool esEdicion}) {
+    final previousPrecios = List<Precio>.from(_precios);
+
+    setState(() {
+      if (esEdicion) {
+        final idx = _precios.indexWhere((p) => p.idPrecio == precio.idPrecio);
+        if (idx != -1) _precios[idx] = precio;
+      } else {
+        _precios.add(precio);
+      }
+    });
+
+    _guardarPrecioEnBackground(precio, esEdicion, previousPrecios);
+  }
+
+  Future<void> _guardarPrecioEnBackground(Precio precio, bool esEdicion, List<Precio> previousPrecios) async {
+    try {
+      if (esEdicion) {
+        await ref.read(precioRepositoryProvider).updatePrecio(precio);
+      } else {
+        await ref.read(precioRepositoryProvider).createPrecio(precio);
+      }
+      GlobalMessenger.showSuccessSnackbar(esEdicion ? 'Plan actualizado' : 'Plan creado');
+    } catch (e) {
+      if (mounted) setState(() => _precios = previousPrecios);
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el plan. Verifica tu conexión e intenta de nuevo.');
+    }
   }
 
   Future<void> _eliminarPrecio(Precio precio) async {
@@ -120,12 +150,9 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
           () => _precios.removeWhere((p) => p.idPrecio == precio.idPrecio),
         );
       }
+      GlobalMessenger.showSuccessSnackbar('Plan eliminado');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error al eliminar: $e')));
-      }
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el plan. Verifica tu conexión e intenta de nuevo.');
     }
   }
 
@@ -139,9 +166,9 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
           child: DescuentoForm(
             descuento: descuento,
             onCancelar: () => Navigator.pop(context),
-            onGuardar: (d) async {
+            onGuardar: (d) {
               Navigator.pop(context);
-              await _guardarDescuento(d);
+              _guardarDescuento(d, esEdicion: descuento != null);
             },
           ),
         ),
@@ -149,28 +176,33 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
     );
   }
 
-  Future<void> _guardarDescuento(Descuento descuento) async {
+  void _guardarDescuento(Descuento descuento, {required bool esEdicion}) {
+    final previousDescuentos = List<Descuento>.from(_descuentos);
+    
+    setState(() {
+      if (esEdicion) {
+        final index = _descuentos.indexWhere((d) => d.id == descuento.id);
+        if (index != -1) _descuentos[index] = descuento;
+      } else {
+        _descuentos.add(descuento);
+      }
+    });
+
+    _guardarDescuentoEnBackground(descuento, esEdicion, previousDescuentos);
+  }
+
+  Future<void> _guardarDescuentoEnBackground(Descuento descuento, bool esEdicion, List<Descuento> previousDescuentos) async {
     try {
       final repo = ref.read(descuentoRepositoryProvider);
-      if (descuento.id != null) {
+      if (esEdicion) {
         await repo.updateDescuento(descuento);
-        setState(() {
-          final index = _descuentos.indexWhere((d) => d.id == descuento.id);
-          if (index != -1) _descuentos[index] = descuento;
-        });
       } else {
-        final id = await repo.createDescuento(descuento);
-        setState(() => _descuentos.add(descuento.copyWith(id: id)));
+        await repo.createDescuento(descuento);
       }
+      GlobalMessenger.showSuccessSnackbar(esEdicion ? 'Descuento actualizado' : 'Descuento creado');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')),
-            backgroundColor: AppColors.errorContainer,
-          ),
-        );
-      }
+      if (mounted) setState(() => _descuentos = previousDescuentos);
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el descuento. Verifica tu conexión e intenta de nuevo.');
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 
 import 'package:le_groupe_gym/presentacion/builder/widgets/top_bar.dart';
 import 'package:le_groupe_gym/providers/repository_providers.dart';
@@ -103,14 +104,79 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
     return '$n$a';
   }
 
-  void _editarPago(Pago pago) {
-    showDialog(
+  Future<void> _editarPago(Pago pago) async {
+    final nuevoPago = await showDialog<Pago>(
       context: context,
       builder: (ctx) => PagoForm(alumno: widget.alumno, pagoAEditar: pago),
-    ).then((_) {
-      ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
-      _loadData();
+    );
+    if (nuevoPago != null) {
+      _onPagoGuardado(nuevoPago, esEdicion: true);
+    }
+  }
+
+  Future<void> _crearPago() async {
+    final nuevoPago = await showDialog<Pago>(
+      context: context,
+      builder: (ctx) => PagoForm(alumno: widget.alumno),
+    );
+    if (nuevoPago != null) {
+      _onPagoGuardado(nuevoPago, esEdicion: false);
+    }
+  }
+
+  void _onPagoGuardado(Pago pago, {required bool esEdicion}) {
+    final previousPagos = List<Pago>.from(_pagos);
+    final previousUltimoPago = _ultimoPago;
+
+    setState(() {
+      if (esEdicion) {
+        final idx = _pagos.indexWhere((p) => p.idPago == pago.idPago);
+        if (idx != -1) _pagos[idx] = pago;
+        if (_ultimoPago?.idPago == pago.idPago) {
+          _ultimoPago = pago;
+        }
+      } else {
+        _pagos.insert(0, pago);
+        _pagos.sort((a, b) => b.fechaDePago.compareTo(a.fechaDePago));
+        _ultimoPago = _pagos.first;
+      }
     });
+
+    _guardarPagoEnBackground(pago, esEdicion, previousPagos, previousUltimoPago);
+  }
+
+  Future<void> _guardarPagoEnBackground(
+    Pago pago,
+    bool esEdicion,
+    List<Pago> previousPagos,
+    Pago? previousUltimoPago,
+  ) async {
+    try {
+      final repo = ref.read(pagoRepositoryProvider);
+      if (esEdicion) {
+        await repo.updatePago(pago);
+      } else {
+        await repo.insertarPago(pago);
+      }
+      GlobalMessenger.showSuccessSnackbar(
+        esEdicion ? 'Pago actualizado' : 'Pago registrado',
+      );
+      ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _pagos = previousPagos;
+          _ultimoPago = previousUltimoPago;
+        });
+      }
+      final msg = e.toString();
+      final esUnicidad = msg.contains('unique') || msg.contains('duplicate') || msg.contains('23505') || msg.contains('already exists');
+      if (esUnicidad) {
+        GlobalMessenger.showErrorSnackbar('El alumno ya tiene un pago para ese mes.');
+      } else {
+        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el pago. Verifica tu conexión e intenta de nuevo.');
+      }
+    }
   }
 
   Future<void> _confirmarEliminarPago(Pago pago) async {
@@ -129,12 +195,9 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
         await ref.read(pagoRepositoryProvider).deletePago(pago.idPago);
         ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
         _loadData();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error al eliminar pago: $e')));
-        }
+      GlobalMessenger.showSuccessSnackbar('Pago eliminado');
+    } catch (e) {
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el pago. Verifica tu conexión e intenta de nuevo.');
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
@@ -242,17 +305,7 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
                   height: 48,
                   child: OutlinedButton(
                     key: const Key('pagos_registrar_pago_btn'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => PagoForm(alumno: widget.alumno),
-                      ).then((_) {
-                        ref.invalidate(
-                          deudorAlumnoProvider(widget.alumno.idAlumno),
-                        );
-                        _loadData();
-                      });
-                    },
+                    onPressed: _crearPago,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(

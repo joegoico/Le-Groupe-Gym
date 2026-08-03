@@ -4,6 +4,7 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/widget_muscular_groups.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
+import 'package:le_groupe_gym/data/models/exercise_model.dart';
 
 class AddExerciseForm extends StatefulWidget {
   final List<CategoriaEjercicio> categorias;
@@ -54,62 +55,23 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
     return categoriasIds;
   }
 
-  Future<void> _guardarEjercicio() async {
+  void _guardarEjercicio() {
     if (!_canSave) return;
-    setState(() => _isSaving = true);
-
     final categoriaIds = getCategoriaIds();
-    try {
-      await widget.exerciseRepository.createExercise(
-        nombre: _nombreController.text.trim(),
-        categoriaIds: categoriaIds,
-      );
+    final localCategories = widget.categorias
+        .where((c) => categoriaIds.contains(c.idCategoria))
+        .toList();
 
-      widget.onGuardar({
-        'nombre': _nombreController.text.trim(),
-        'grupos': _selectedGroup,
-        'subgrupos': _selectedSubgroups.toList(),
-        'categoriaIds': categoriaIds,
-      });
+    final localExercise = Ejercicio(
+      idEjercicio: -DateTime.now().millisecondsSinceEpoch,
+      nombre: _nombreController.text.trim(),
+      categorias: localCategories,
+    );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'El ejercicio fue creado correctamente',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: const Color(0xFF0D1F00),
-              ),
-            ),
-            backgroundColor: const Color(0xFF7ECC3B),
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Ocurrió el error $e',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: const Color(0xFFFFEDEB),
-              ),
-            ),
-            backgroundColor: const Color(0xFF8B1A1A),
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(AppRadius.md),
-            ),
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
+    widget.onGuardar({
+      'ejercicio': localExercise,
+      'categoriaIds': categoriaIds,
+    });
   }
 
   @override

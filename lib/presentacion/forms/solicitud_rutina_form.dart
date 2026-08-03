@@ -62,6 +62,8 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
       idAlumno: _selectedAlumno!.idAlumno,
       fechaSolicitud: DateTime.now(),
       notas: _nombreRutinaController.text.trim(),
+      alumnoNombre: _selectedAlumno!.nombre,
+      alumnoApellido: _selectedAlumno!.apellido,
     );
 
     try {
@@ -101,15 +103,13 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
       }
 
 
-      final idSolicitud = await widget.solicitudRutinaRepository
-          .createSolicitud(solicitudRutina);
-      widget.onGuardar(solicitudRutina.copyWith(idSolicitud: idSolicitud));
+      widget.onGuardar(solicitudRutina);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Error al crear la solicitud de rutina',
+            'Error al validar deudas: $e',
             style: AppTextStyles.subtittlesBold.copyWith(
               color: const Color(0xFFFFEDEB),
             ),

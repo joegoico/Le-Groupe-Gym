@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
+import 'package:uuid/uuid.dart';
 
 class AlumnoForm extends StatefulWidget {
   /// Si es null, el formulario funciona en modo creación.
@@ -27,7 +28,6 @@ class _AlumnoFormState extends State<AlumnoForm> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoCtrl;
   late final TextEditingController _mailCtrl;
-  bool _isLoading = false;
 
   bool get _esEdicion => widget.alumno != null;
 
@@ -72,43 +72,16 @@ class _AlumnoFormState extends State<AlumnoForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    try {
-      final alumno = Alumno(
-        idAlumno: widget.alumno?.idAlumno ?? '',
-        nombre: _nombreCtrl.text.trim(),
-        apellido: _apellidoCtrl.text.trim(),
-        mail: _mailCtrl.text.trim().isEmpty ? null : _mailCtrl.text.trim(),
-      );
+    
+    final id = _esEdicion ? widget.alumno!.idAlumno : const Uuid().v4();
+    final alumno = Alumno(
+      idAlumno: id,
+      nombre: _nombreCtrl.text.trim(),
+      apellido: _apellidoCtrl.text.trim(),
+      mail: _mailCtrl.text.trim().isEmpty ? null : _mailCtrl.text.trim(),
+    );
 
-      if (_esEdicion) {
-        await widget.alumnoRepository.updateAlumno(alumno);
-        widget.onGuardar(alumno);
-      } else {
-        final newId = await widget.alumnoRepository.createAlumno(alumno);
-        widget.onGuardar(
-          Alumno(
-            idAlumno: newId,
-            nombre: alumno.nombre,
-            apellido: alumno.apellido,
-            mail: alumno.mail,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Error: ${e.toString().replaceAll('Exception: ', '')}',
-            ),
-            backgroundColor: AppColors.errorContainer,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    widget.onGuardar(alumno);
   }
 
   // ── Build ───────────────────────────────────────────────────────────────────
@@ -165,7 +138,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  onPressed: _isLoading ? null : widget.onCancelar,
+                  onPressed: widget.onCancelar,
                   icon: const Icon(
                     Icons.close,
                     color: AppColors.onSurfaceVariant,
@@ -267,7 +240,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
                         child: SizedBox(
                           height: 44,
                           child: OutlinedButton(
-                            onPressed: _isLoading ? null : widget.onCancelar,
+                            onPressed: widget.onCancelar,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.onSurfaceVariant,
                               side: const BorderSide(
@@ -287,23 +260,12 @@ class _AlumnoFormState extends State<AlumnoForm> {
                           height: 44,
                           child: ElevatedButton.icon(
                             key: const Key('alumno_guardar_button'),
-                            onPressed: _isLoading ? null : _submit,
-                            icon: _isLoading
-                                ? const SizedBox(
-                                    width: 14,
-                                    height: 14,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: AppColors.onPrimary,
-                                    ),
-                                  )
-                                : const Icon(Icons.check, size: 16),
+                            onPressed: _submit,
+                            icon: const Icon(Icons.check, size: 16),
                             label: Text(
-                              _isLoading
-                                  ? 'Guardando...'
-                                  : (_esEdicion
-                                        ? 'Guardar cambios'
-                                        : 'Crear Alumno'),
+                              _esEdicion
+                                  ? 'Guardar cambios'
+                                  : 'Crear Alumno',
                               style: AppTextStyles.buttonText.copyWith(
                                 color: AppColors.onPrimary,
                               ),

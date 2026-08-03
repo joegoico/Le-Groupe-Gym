@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/descuento_model.dart';
+import 'package:uuid/uuid.dart';
 
 class DescuentoForm extends StatefulWidget {
   final Descuento? descuento;
@@ -60,7 +61,7 @@ class _DescuentoFormState extends State<DescuentoForm> {
     if (!_canSave) return;
     widget.onGuardar(
       Descuento(
-        id: widget.descuento?.id,
+        id: widget.descuento?.id ?? const Uuid().v4(),
         valor: int.parse(_valorController.text),
       ),
     );
@@ -135,14 +136,7 @@ class _DescuentoFormState extends State<DescuentoForm> {
               TextButton(onPressed: widget.onCancelar, child: Text('Cancelar')),
               const SizedBox(width: AppSpacing.sm),
               ElevatedButton(
-                onPressed: _canSave
-                    ? () => widget.onGuardar(
-                        Descuento(
-                          id: widget.descuento?.id,
-                          valor: int.parse(_valorController.text),
-                        ),
-                      )
-                    : null,
+                onPressed: _canSave ? _guardar : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: AppColors.onPrimary,

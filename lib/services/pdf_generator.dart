@@ -45,18 +45,55 @@ class PdfGenerator {
     required Rutina rutina,
     Alumno? alumno,
   }) async {
-    final pdf = pw.Document();
-
+    // Cargar los bytes crudos (rápido, no bloquea el hilo principal pesadamente)
     final fontData = await rootBundle.load(style.regularFontAsset);
     final boldFontData = await rootBundle.load(style.boldFontAsset);
-    final font = pw.Font.ttf(fontData);
-    final boldFont = pw.Font.ttf(boldFontData);
-    final blockSeparatorFont = style.blockSeparatorFontAsset == null
-        ? (style.blockSeparatorBold ? boldFont : font)
-        : pw.Font.ttf(await rootBundle.load(style.blockSeparatorFontAsset!));
-
+    final blockSepData = style.blockSeparatorFontAsset != null 
+        ? await rootBundle.load(style.blockSeparatorFontAsset!)
+        : null;
     final logoBytes = await rootBundle.load('assets/logo.png');
-    final logoImage = pw.MemoryImage(logoBytes.buffer.asUint8List());
+
+    // Despachar el trabajo de dibujo del PDF (que es muy costoso) a otro hilo (Isolate)
+    return await compute(_buildPdfInBackground, {
+      'rutina': rutina,
+      'alumno': alumno,
+      'fontBytes': fontData.buffer.asUint8List(),
+      'boldFontBytes': boldFontData.buffer.asUint8List(),
+      'blockSepBytes': blockSepData?.buffer.asUint8List(),
+      'logoBytes': logoBytes.buffer.asUint8List(),
+      'style': style,
+    });
+  }
+
+  static Future<Uint8List> _buildPdfInBackground(Map<String, dynamic> args) async {
+    final generator = PdfGenerator(style: args['style'] as PdfGeneratorStyle);
+    return await generator._buildDocument(
+      rutina: args['rutina'] as Rutina,
+      alumno: args['alumno'] as Alumno?,
+      fontBytes: args['fontBytes'] as Uint8List,
+      boldFontBytes: args['boldFontBytes'] as Uint8List,
+      blockSepBytes: args['blockSepBytes'] as Uint8List?,
+      logoBytes: args['logoBytes'] as Uint8List,
+    );
+  }
+
+  Future<Uint8List> _buildDocument({
+    required Rutina rutina,
+    Alumno? alumno,
+    required Uint8List fontBytes,
+    required Uint8List boldFontBytes,
+    Uint8List? blockSepBytes,
+    required Uint8List logoBytes,
+  }) async {
+    final pdf = pw.Document();
+
+    final font = pw.Font.ttf(fontBytes.buffer.asByteData());
+    final boldFont = pw.Font.ttf(boldFontBytes.buffer.asByteData());
+    final blockSeparatorFont = blockSepBytes == null
+        ? (style.blockSeparatorBold ? boldFont : font)
+        : pw.Font.ttf(blockSepBytes.buffer.asByteData());
+
+    final logoImage = pw.MemoryImage(logoBytes);
 
     final baseStyle = pw.TextStyle(font: font, fontSize: 12);
     final boldStyle = pw.TextStyle(font: boldFont, fontSize: 12);
@@ -111,7 +148,7 @@ class PdfGenerator {
       );
     }
 
-    return pdf.save();
+    return await pdf.save();
   }
 
   pw.Widget _buildHeader(

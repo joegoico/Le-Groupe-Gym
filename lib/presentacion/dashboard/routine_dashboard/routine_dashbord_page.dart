@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/core/global_messenger.dart';
 import 'package:le_groupe_gym/services/auth_service.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
@@ -35,7 +36,7 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
   bool _isLoading = true;
   bool _sidebarCollapsed = false;
   List<SolicitudRutina> _solicitudes = [];
-  final List<SolicitudRutina> _recentlyCreatedSolicitudes = [];
+  List<SolicitudRutina> _recentlyCreatedSolicitudes = [];
   List<({Rutina rutina, Alumno alumno})> _rutinas = [];
   List<Rutina> _rutinasPredeterminadas = [];
 
@@ -113,29 +114,8 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
               deudorRepository: ref.read(deudorRepositoryProvider),
               onCancelar: () => Navigator.of(dialogContext).pop(),
               onGuardar: (solicitud) {
-                if (mounted) {
-                  setState(() {
-                    _recentlyCreatedSolicitudes.insert(0, solicitud);
-                    _solicitudes = [solicitud, ..._solicitudes];
-                  });
-                }
                 Navigator.of(dialogContext).pop();
-                _loadData();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Solicitud de rutina creada exitosamente',
-                      style: AppTextStyles.subtittlesBold.copyWith(
-                        color: AppColors.successContent,
-                      ),
-                    ),
-                    backgroundColor: AppColors.successContainer,
-                    behavior: SnackBarBehavior.floating,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(AppRadius.md),
-                    ),
-                  ),
-                );
+                _onSolicitudGuardada(solicitud);
               },
             ),
           ),
@@ -144,50 +124,100 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
     );
   }
 
-  Future<void> _addGenericRoutine(Rutina r, Alumno alumno) async {
+  void _onSolicitudGuardada(SolicitudRutina solicitud) {
+    final previousSolicitudes = List<SolicitudRutina>.from(_solicitudes);
+    final previousRecent = List<SolicitudRutina>.from(_recentlyCreatedSolicitudes);
+
+    setState(() {
+      _solicitudes.insert(0, solicitud);
+      _recentlyCreatedSolicitudes.insert(0, solicitud);
+    });
+
+    _guardarSolicitudEnBackground(solicitud, previousSolicitudes, previousRecent);
+  }
+
+  Future<void> _guardarSolicitudEnBackground(SolicitudRutina solicitud, List<SolicitudRutina> previousSolicitudes, List<SolicitudRutina> previousRecent) async {
     try {
-      setState(() => _isLoading = true);
+      final idSolicitud = await ref.read(solicitudRutinaRepositoryProvider).createSolicitud(solicitud);
+      
+      if (mounted) {
+        setState(() {
+          final idx = _solicitudes.indexOf(solicitud);
+          if (idx != -1) _solicitudes[idx] = solicitud.copyWith(idSolicitud: idSolicitud);
+          
+          final idx2 = _recentlyCreatedSolicitudes.indexOf(solicitud);
+          if (idx2 != -1) _recentlyCreatedSolicitudes[idx2] = solicitud.copyWith(idSolicitud: idSolicitud);
+        });
+      }
+      
+      GlobalMessenger.showSuccessSnackbar('Solicitud de rutina creada exitosamente');
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _solicitudes = previousSolicitudes;
+          _recentlyCreatedSolicitudes = previousRecent;
+        });
+      }
+      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al crear la solicitud de rutina. Verifica tu conexión e intenta de nuevo.');
+    }
+  }
+
+  void _addGenericRoutine(Rutina r, Alumno alumno) {
+    final rutinaClonada = Rutina(
+      idRutina: -DateTime.now().millisecondsSinceEpoch,
+      idAlumno: alumno.idAlumno,
+      nombre: r.nombre,
+      dias: [], 
+      fechaCreacion: DateTime.now(),
+      notasGenerales: r.notasGenerales,
+      urlPdf: null,
+      esPredeterminada: false,
+    );
+
+    final item = (rutina: rutinaClonada, alumno: alumno);
+    final previousRutinas = List<({Rutina rutina, Alumno alumno})>.from(_rutinas);
+
+    setState(() {
+      _rutinas.insert(0, item);
+      if (_rutinas.length > 10) _rutinas.removeLast();
+    });
+
+    _addGenericRoutineBackground(r, alumno, rutinaClonada, previousRutinas);
+  }
+
+  Future<void> _addGenericRoutineBackground(
+    Rutina r, 
+    Alumno alumno, 
+    Rutina rutinaClonada, 
+    List<({Rutina rutina, Alumno alumno})> previousRutinas
+  ) async {
+    try {
       final repo = ref.read(routineRepositoryProvider);
 
-      // 1. Obtener la rutina completa (con días, bloques, etc)
       final rutinaCompleta = await repo.getRutinaCompleta(r.idRutina!);
-      if (rutinaCompleta == null)
+      if (rutinaCompleta == null) {
         throw Exception('No se pudo cargar la rutina original');
+      }
 
-      // 2. Clonarla para este alumno (instanciamos nueva para borrar el ID)
-      final rutinaClonada = Rutina(
-        idAlumno: alumno.idAlumno,
-        nombre: rutinaCompleta.nombre,
-        dias: rutinaCompleta.dias,
-        fechaCreacion: DateTime.now(),
-        notasGenerales: rutinaCompleta.notasGenerales,
-        urlPdf: null,
-        esPredeterminada: false,
-      );
+      final rutinaConDias = rutinaClonada.copyWith(dias: rutinaCompleta.dias);
 
-      // 3. Chequear si el alumno ya tiene 3 rutinas y borrar la más antigua
       final rutinasAlumno = await repo.getRutinasPorAlumno(alumno.idAlumno);
       if (rutinasAlumno.length >= 3) {
         final masAntigua = rutinasAlumno.last;
         if (masAntigua.rutina.urlPdf != null) {
-          await StorageService().deletePdf(
-            urlPdf: masAntigua.rutina.urlPdf!,
-          );
+          await StorageService().deletePdf(urlPdf: masAntigua.rutina.urlPdf!);
         }
         await repo.deleteRoutine(masAntigua.rutina.idRutina!);
       }
 
-      // 4. Guardar la nueva rutina
-      final newId = await repo.saveRoutine(rutinaClonada);
+      final newId = await repo.saveRoutine(rutinaConDias);
 
-      // 5. Generar PDF
       final pdfGenerator = PdfGenerator();
       final newPdfBytes = await pdfGenerator.generate(
-        rutina: rutinaClonada,
+        rutina: rutinaConDias.copyWith(idRutina: newId),
         alumno: alumno,
       );
 
-      // 6. Subir PDF a Storage
       final storage = StorageService();
       final newPdfUrl = await storage.uploadPdf(
         bytes: newPdfBytes,
@@ -195,53 +225,36 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
         nombreAlumno: alumno.nombreCompleto,
       );
 
-      // 7. Actualizar URL en la BD
       await repo.updatePdfUrl(idRutina: newId, url: newPdfUrl);
 
-      // 8. Enviar correo al alumno
-      await EmailService().enviarRutina(
-        pdfUrl: newPdfUrl,
-        mailAlumno: alumno.mail!,
-        nombreAlumno: alumno.nombreCompleto,
-        nombreRutina: rutinaClonada.nombre,
-      );
+      if (alumno.mail != null && alumno.mail!.isNotEmpty) {
+        await EmailService().enviarRutina(
+          pdfUrl: newPdfUrl,
+          mailAlumno: alumno.mail!,
+          nombreAlumno: alumno.nombreCompleto,
+          nombreRutina: rutinaConDias.nombre,
+        );
+      }
 
       if (mounted) {
-        // Reflejamos los cambios en el UI localmente
         setState(() {
-          final rFinal = rutinaClonada.copyWith(
-            idRutina: newId,
-            urlPdf: newPdfUrl,
+          final idx = _rutinas.indexWhere(
+            (element) => element.rutina.idRutina == rutinaClonada.idRutina
           );
-          _rutinas.insert(0, (rutina: rFinal, alumno: alumno));
-          if (_rutinas.length > 10) {
-            _rutinas.removeLast();
+          if (idx != -1) {
+            _rutinas[idx] = (
+              rutina: rutinaConDias.copyWith(idRutina: newId, urlPdf: newPdfUrl),
+              alumno: alumno
+            );
           }
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Rutina asignada y enviada a ${alumno.mail}',
-              style: AppTextStyles.subtittlesBold.copyWith(
-                color: AppColors.successContent,
-              ),
-            ),
-            backgroundColor: AppColors.successContainer,
-          ),
-        );
+        GlobalMessenger.showSuccessSnackbar('Rutina asignada y enviada a ${alumno.mail}');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al asignar rutina: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        setState(() => _rutinas = previousRutinas);
+        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al asignar la rutina. Verifica tu conexión e intenta de nuevo.');
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -325,17 +338,31 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                   actionsEnd: [
                     ElevatedButton.icon(
                       onPressed: () async {
-                        final nuevaRutina = await context
-                            .push<({Rutina rutina, Alumno alumno})?>(
+                        final result = await context
+                            .push<({Rutina rutina, Alumno alumno, Future<Rutina> future})?>(
                               '/crear-rutina',
                             );
-                        if (nuevaRutina != null) {
+                        if (result != null) {
                           setState(() {
-                            _rutinas.insert(0, nuevaRutina);
-                            if (_rutinas.length > 10) {
-                              _rutinas.removeLast();
-                            }
+                            _rutinas.insert(0, (rutina: result.rutina, alumno: result.alumno));
+                            if (_rutinas.length > 10) _rutinas.removeLast();
                           });
+
+                          try {
+                            final realRutina = await result.future;
+                            if (mounted) {
+                              setState(() {
+                                final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                              });
+                            }
+                          } catch (_) {
+                            if (mounted) {
+                              setState(() {
+                                _rutinas.removeWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                              });
+                            }
+                          }
                         }
                       },
                       icon: const Icon(Icons.add, size: 16),
@@ -377,13 +404,32 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                     onRegistrarSolicitud:
                                         _showRegistrarSolicitudForm,
                                     onResolverSolicitud: (solicitud) async {
-                                      final resultado = await context.push(
+                                      final result = await context.push<({Rutina rutina, Alumno alumno, Future<Rutina> future})?>(
                                         '/crear-rutina',
                                         extra: solicitud,
                                       );
-                                      _loadRutinas();
-                                      if (resultado != null) {
+                                      if (result != null) {
                                         _eliminarSolicitudLocal(solicitud);
+                                        setState(() {
+                                          _rutinas.insert(0, (rutina: result.rutina, alumno: result.alumno));
+                                          if (_rutinas.length > 10) _rutinas.removeLast();
+                                        });
+
+                                        try {
+                                          final realRutina = await result.future;
+                                          if (mounted) {
+                                            setState(() {
+                                              final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                              if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                                            });
+                                          }
+                                        } catch (_) {
+                                          if (mounted) {
+                                            setState(() {
+                                              _rutinas.removeWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                            });
+                                          }
+                                        }
                                       }
                                     },
                                     onEliminarSolicitud: (solicitud) async {
@@ -419,31 +465,44 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final rutinaActualizada =
+                                            final result =
                                                 await context.push<
                                                   ({
                                                     Rutina rutina,
                                                     Alumno alumno,
+                                                    Future<Rutina> future
                                                   })?
                                                 >(
                                                   '/editar-rutina',
                                                   extra: rutina,
                                                 );
-                                            if (rutinaActualizada != null) {
+                                            if (result != null) {
                                               setState(() {
                                                 final index = _rutinas
                                                     .indexWhere(
                                                       (r) =>
                                                           r.rutina.idRutina ==
-                                                          rutinaActualizada
+                                                          result
                                                               .rutina
                                                               .idRutina,
                                                     );
                                                 if (index != -1) {
-                                                  _rutinas[index] =
-                                                      rutinaActualizada;
+                                                  _rutinas[index] = (rutina: result.rutina, alumno: result.alumno);
                                                 }
                                               });
+
+                                              try {
+                                                final realRutina = await result.future;
+                                                if (mounted) {
+                                                  setState(() {
+                                                    final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                                    if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                                                  });
+                                                }
+                                              } catch (_) {
+                                                // On edit error, we could revert to original. For now we just let it be or reload
+                                                _loadRutinas();
+                                              }
                                             }
                                           },
                                           onEliminarRutina: (rutina) async {
@@ -479,31 +538,11 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                           rutina.idRutina,
                                                     );
                                                   });
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Rutina eliminada exitosamente',
-                                                      ),
-                                                      backgroundColor: AppColors
-                                                          .successContainer,
-                                                    ),
-                                                  );
+                                                  GlobalMessenger.showSuccessSnackbar('Rutina eliminada exitosamente');
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Error al eliminar rutina: $e',
-                                                      ),
-                                                      backgroundColor:
-                                                          AppColors.error,
-                                                    ),
-                                                  );
+                                                  GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.');
                                                 }
                                               }
                                             }
@@ -515,17 +554,30 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                         child: RutinasPredeterminadasPanel(
                                           rutinas: _rutinasPredeterminadas,
                                           onNuevaRutina: () async {
-                                            final nuevaRutina = await context
-                                                .push<Rutina?>(
+                                            final result = await context
+                                                .push<(Rutina, Future<Rutina>)?>(
                                                   '/nueva-rutina-predeterminada',
                                                 );
-                                            if (nuevaRutina != null) {
+                                            if (result != null) {
+                                              final (rutinaLocal, future) = result;
                                               setState(() {
-                                                _rutinasPredeterminadas.insert(
-                                                  0,
-                                                  nuevaRutina,
-                                                );
+                                                _rutinasPredeterminadas.insert(0, rutinaLocal);
                                               });
+                                              try {
+                                                final realRutina = await future;
+                                                if (mounted) {
+                                                  setState(() {
+                                                    final idx = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaLocal.idRutina);
+                                                    if (idx != -1) _rutinasPredeterminadas[idx] = realRutina;
+                                                  });
+                                                }
+                                              } catch (_) {
+                                                if (mounted) {
+                                                  setState(() {
+                                                    _rutinasPredeterminadas.removeWhere((r) => r.idRutina == rutinaLocal.idRutina);
+                                                  });
+                                                }
+                                              }
                                             }
                                           },
                                           onVerDetalle: (rutina) async {
@@ -543,26 +595,38 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final rutinaActualizada =
-                                                await context.push<Rutina?>(
+                                            final result =
+                                                await context.push<(Rutina, Future<Rutina>)?>(
                                                   '/editar-rutina',
                                                   extra: rutina,
                                                 );
-                                            if (rutinaActualizada != null) {
+                                            if (result != null) {
+                                              final (rutinaLocal, future) = result;
                                               setState(() {
                                                 final index =
                                                     _rutinasPredeterminadas
                                                         .indexWhere(
                                                           (r) =>
                                                               r.idRutina ==
-                                                              rutinaActualizada
+                                                              rutinaLocal
                                                                   .idRutina,
                                                         );
                                                 if (index != -1) {
                                                   _rutinasPredeterminadas[index] =
-                                                      rutinaActualizada;
+                                                      rutinaLocal;
                                                 }
                                               });
+                                              try {
+                                                final realRutina = await future;
+                                                if (mounted) {
+                                                  setState(() {
+                                                    final idx = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaLocal.idRutina);
+                                                    if (idx != -1) _rutinasPredeterminadas[idx] = realRutina;
+                                                  });
+                                                }
+                                              } catch (_) {
+                                                _loadRutinasPredeterminadas();
+                                              }
                                             }
                                           },
                                           onEliminarRutina: (rutina) async {
@@ -599,29 +663,11 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                               rutina.idRutina,
                                                         );
                                                   });
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Rutina eliminada exitosamente',
-                                                      ),
-                                                      backgroundColor: AppColors
-                                                          .successContainer,
-                                                    ),
-                                                  );
+                                                  GlobalMessenger.showSuccessSnackbar('Rutina eliminada exitosamente');
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Error: $e',
-                                                      ),
-                                                    ),
-                                                  );
+                                                  GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.');
                                                 }
                                               }
                                             }
