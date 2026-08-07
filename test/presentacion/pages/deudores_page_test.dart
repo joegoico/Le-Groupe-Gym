@@ -26,13 +26,31 @@ void main() {
       });
       // Sobrescribir datos en el mock
       mockDeudorRepo.insertarDeudor(
-        Deudor(idDeudor: 'abc-123', nombre: 'Juan', apellido: 'Pérez', diasAdeudados: 30, createdAt: DateTime.now()),
+        Deudor(
+          idDeudor: 'abc-123',
+          nombre: 'Juan',
+          apellido: 'Pérez',
+          diasAdeudados: 30,
+          createdAt: DateTime.now(),
+        ),
       );
       mockDeudorRepo.insertarDeudor(
-        Deudor(idDeudor: 'def-456', nombre: 'María', apellido: 'García', diasAdeudados: 15, createdAt: DateTime.now()),
+        Deudor(
+          idDeudor: 'def-456',
+          nombre: 'María',
+          apellido: 'García',
+          diasAdeudados: 15,
+          createdAt: DateTime.now(),
+        ),
       );
       mockDeudorRepo.insertarDeudor(
-        Deudor(idDeudor: 'ghi-789', nombre: 'Carlos', apellido: 'López', diasAdeudados: 65, createdAt: DateTime.now()),
+        Deudor(
+          idDeudor: 'ghi-789',
+          nombre: 'Carlos',
+          apellido: 'López',
+          diasAdeudados: 65,
+          createdAt: DateTime.now(),
+        ),
       );
 
       mockPagoRepo = MockPagoRepository();
@@ -63,7 +81,9 @@ void main() {
       );
     }
 
-    testWidgets('Debe renderizar los filtros superiores de morosidad', (tester) async {
+    testWidgets('Debe renderizar los filtros superiores de morosidad', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
@@ -77,7 +97,9 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('Debe filtrar la lista de deudores al seleccionar un chip', (tester) async {
+    testWidgets('Debe filtrar la lista de deudores al seleccionar un chip', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
@@ -99,7 +121,7 @@ void main() {
       // Tocar "Más de 60 días"
       await tester.tap(find.text('Más de 60 días'));
       await tester.pumpAndSettle();
-      
+
       expect(find.text('Carlos López'), findsOneWidget);
       expect(find.text('Juan Pérez'), findsNothing);
       expect(find.text('María García'), findsNothing);
@@ -107,65 +129,46 @@ void main() {
       // Tocar "Vencido este mes" (< 30)
       await tester.tap(find.text('Vencido este mes'));
       await tester.pumpAndSettle();
-      
+
       expect(find.text('María García'), findsOneWidget);
       expect(find.text('Carlos López'), findsNothing);
 
       addTearDown(tester.view.resetPhysicalSize);
     });
 
-    testWidgets('Debe mostrar la card de deudor con la foto, plan, días de mora y último pago', (tester) async {
+    testWidgets(
+      'Debe mostrar la card de deudor con la foto, plan, días de mora y último pago',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 800);
+        tester.view.devicePixelRatio = 1.0;
+        await tester.pumpWidget(createWidgetUnderTest());
+        await tester.pumpAndSettle();
+
+        // Buscar textos en mayúsculas
+        expect(find.text('HACE 30 DÍAS'), findsOneWidget); // De Juan
+        expect(
+          find.text('Plan de 30 días'),
+          findsOneWidget,
+        ); // Del último pago de Juan
+        expect(find.textContaining('Último pago:'), findsWidgets);
+
+        // Buscar el icono de email
+        expect(find.byIcon(Icons.email_outlined), findsWidgets);
+
+        addTearDown(tester.view.resetPhysicalSize);
+      },
+    );
+
+    testWidgets('No permite eliminar deudores desde la pantalla', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1.0;
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
-
-      // Buscar textos en mayúsculas
-      expect(find.text('HACE 30 DÍAS'), findsOneWidget); // De Juan
-      expect(find.text('Plan de 30 días'), findsOneWidget); // Del último pago de Juan
-      expect(find.textContaining('Último pago:'), findsWidgets);
-      
-      // Buscar el icono de email
-      expect(find.byIcon(Icons.email_outlined), findsWidgets);
-      
-      
-      addTearDown(tester.view.resetPhysicalSize);
-    });
-
-    testWidgets('Debe eliminar un deudor al confirmar en el dialogo', (tester) async {
-      tester.view.physicalSize = const Size(1280, 800);
-      tester.view.devicePixelRatio = 1.0;
-      await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle();
-
       expect(find.text('Juan Pérez'), findsOneWidget);
-
-      // Tocar el botón de eliminar del primer deudor
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
-      await tester.pumpAndSettle();
-
-      // Debería mostrar el diálogo
-      expect(find.text('Eliminar deudor'), findsOneWidget);
-      expect(find.text('¿Seguro que querés eliminar a Juan Pérez de la lista de deudores? Esta acción no se puede deshacer.'), findsOneWidget);
-
-      // Cancelar no debería hacer nada
-      await tester.tap(find.text('Cancelar'));
-      await tester.pumpAndSettle();
-      expect(find.text('Juan Pérez'), findsOneWidget);
-
-      // Tocar eliminar de nuevo
-      await tester.tap(find.byIcon(Icons.delete_outline).first);
-      await tester.pumpAndSettle();
-
-      // Confirmar eliminación
-      await tester.tap(find.text('Eliminar'));
-      await tester.pumpAndSettle();
-
-      // Debería desaparecer Juan Pérez
-      expect(find.text('Juan Pérez'), findsNothing);
-
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
       addTearDown(tester.view.resetPhysicalSize);
     });
   });
 }
-

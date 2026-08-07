@@ -42,7 +42,8 @@ class _AsignarRutinaFormState extends State<AsignarRutinaForm> {
 
     if (_selectedAlumno == null) return;
 
-    if (_selectedAlumno!.mail == null || _selectedAlumno!.mail!.trim().isEmpty) {
+    if (_selectedAlumno!.mail == null ||
+        _selectedAlumno!.mail!.trim().isEmpty) {
       setState(() {
         _errorMail = 'El alumno no tiene un correo electrónico asociado.';
       });

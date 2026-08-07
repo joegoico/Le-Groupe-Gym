@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/app_snackbar.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 import 'package:le_groupe_gym/data/repositories/solicitud_rutina_repository.dart';
@@ -68,11 +69,15 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
 
     try {
       final deudores = await widget.deudorRepository.getDeudores();
-      final deudorIndex = deudores.indexWhere((d) => d.idDeudor == _selectedAlumno!.idAlumno);
+      final deudorIndex = deudores.indexWhere(
+        (d) => d.idDeudor == _selectedAlumno!.idAlumno,
+      );
       final isDebtor = deudorIndex != -1;
       final diasAdeudados = isDebtor ? deudores[deudorIndex].diasAdeudados : 0;
 
-      final ultimoPago = await widget.pagoRepository.getUltimoPago(_selectedAlumno!.idAlumno);
+      final ultimoPago = await widget.pagoRepository.getUltimoPago(
+        _selectedAlumno!.idAlumno,
+      );
       final hasNoPayments = ultimoPago == null;
 
       if (isDebtor || hasNoPayments) {
@@ -80,15 +85,18 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
 
         String alertMessage = '';
         if (isDebtor && !hasNoPayments) {
-          alertMessage = 'El alumno se encuentra en situación de deudor (hace $diasAdeudados días).';
+          alertMessage =
+              'El alumno se encuentra en situación de deudor (hace $diasAdeudados días).';
         } else if (!isDebtor && hasNoPayments) {
           alertMessage = 'El alumno no registra pagos.';
         } else {
-          alertMessage = 'El alumno es deudor (hace $diasAdeudados días) y no registra pagos.';
+          alertMessage =
+              'El alumno es deudor (hace $diasAdeudados días) y no registra pagos.';
         }
 
         alertMessage += '\n\n¿Desea continuar de todas formas?';
 
+        if (!mounted) return;
         final proceed = await showConfirmDialog(
           context,
           titulo: 'Advertencia',
@@ -97,29 +105,19 @@ class _AddSolicitudRutinaFormState extends State<AddSolicitudRutinaForm> {
           confirmColor: AppColors.warningLow,
           headerIcon: Icons.warning_amber_rounded,
         );
+        if (!mounted) return;
 
         if (proceed != true) return;
         if (mounted) setState(() => _isSaving = true);
       }
 
-
       widget.onGuardar(solicitudRutina);
-    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error al validar deudas: $e',
-            style: AppTextStyles.subtittlesBold.copyWith(
-              color: const Color(0xFFFFEDEB),
-            ),
-          ),
-          backgroundColor: const Color(0xFF8B1A1A),
-          behavior: SnackBarBehavior.floating,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
-          ),
-        ),
+    } catch (e) {
+      AppSnackbar.show(
+        context,
+        message: "No se pudo validar el estado de deuda. Intentá nuevamente.",
+        type: SnackbarType.error,
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -404,7 +402,7 @@ class _FieldLabel extends StatelessWidget {
   final String text;
   final IconData? icon;
 
-  const _FieldLabel(this.text, {this.icon});
+  const _FieldLabel(this.text) : icon = null;
 
   @override
   Widget build(BuildContext context) {

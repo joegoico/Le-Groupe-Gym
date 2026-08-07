@@ -4,16 +4,11 @@ import 'package:le_groupe_gym/presentacion/controllers/routine_dashboard_control
 
 void main() {
   group('RoutineDashboardController', () {
-    Rutina _makeRutina(int id, String nombre) => Rutina(
-          idRutina: id,
-          nombre: nombre,
-        );
+    Rutina makeRutina(int id, String nombre) =>
+        Rutina(idRutina: id, nombre: nombre);
 
     test('routines expone la lista completa pasada en el constructor', () {
-      final rutinas = [
-        _makeRutina(1, 'Rutina A'),
-        _makeRutina(2, 'Rutina B'),
-      ];
+      final rutinas = [makeRutina(1, 'Rutina A'), makeRutina(2, 'Rutina B')];
 
       final controller = RoutineDashboardController(routines: rutinas);
 
@@ -23,11 +18,11 @@ void main() {
     });
 
     test('routines devuelve una copia inmutable de la lista interna', () {
-      final rutinas = [_makeRutina(1, 'Rutina A')];
+      final rutinas = [makeRutina(1, 'Rutina A')];
       final controller = RoutineDashboardController(routines: rutinas);
 
       // Modificar la lista devuelta no debe afectar al controller
-      controller.routines.add(_makeRutina(2, 'Rutina B'));
+      controller.routines.add(makeRutina(2, 'Rutina B'));
 
       expect(controller.routines.length, 1);
     });

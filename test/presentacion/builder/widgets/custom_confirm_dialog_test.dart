@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/custom_confirm_dialog.dart';
 
-
 void main() {
   group('CustomConfirmDialog', () {
-    testWidgets('Muestra el título, mensaje y botones correctamente', (tester) async {
+    testWidgets('Muestra el título, mensaje y botones correctamente', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

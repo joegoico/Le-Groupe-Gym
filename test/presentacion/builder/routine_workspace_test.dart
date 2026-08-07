@@ -4,7 +4,6 @@ import 'package:le_groupe_gym/data/models/exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/exercise_sidebar.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_builder_controller.dart';
 import 'package:le_groupe_gym/presentacion/builder/routine_workspace.dart';
-import '../../mocks/mock_category_exercise_repository.dart';
 import '../../mocks/mock_exercise_repository.dart';
 
 void main() {
@@ -48,8 +47,6 @@ void main() {
                         controller.handleExerciseFromSidebar(ejercicio);
                       },
                       exerciseRepository: MockExerciseRepository(),
-                      categoryExerciseRepository:
-                          MockCategoryExerciseRepository(),
                     ),
                   ),
                   Expanded(

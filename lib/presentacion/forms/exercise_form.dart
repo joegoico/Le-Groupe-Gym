@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/widget_muscular_groups.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
@@ -29,13 +31,19 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
   String? _selectedGroup;
   final Set<String> _selectedSubgroups = {};
   bool _isSaving = false;
+  String? _errorEjercicio;
 
   bool get _canSave => !_isSaving && _nombreController.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    _nombreController.addListener(() => setState(() {}));
+    _nombreController.addListener(_onNombreChanged);
+  }
+
+  void _onNombreChanged() {
+    if (!mounted) return;
+    setState(() => _errorEjercicio = null);
   }
 
   @override
@@ -55,23 +63,58 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
     return categoriasIds;
   }
 
-  void _guardarEjercicio() {
+  Future<void> _guardarEjercicio() async {
     if (!_canSave) return;
+    setState(() {
+      _isSaving = true;
+      _errorEjercicio = null;
+    });
     final categoriaIds = getCategoriaIds();
     final localCategories = widget.categorias
         .where((c) => categoriaIds.contains(c.idCategoria))
         .toList();
 
-    final localExercise = Ejercicio(
-      idEjercicio: -DateTime.now().millisecondsSinceEpoch,
-      nombre: _nombreController.text.trim(),
-      categorias: localCategories,
-    );
+    try {
+      final nombreNormalizado = _nombreController.text.trim().toLowerCase();
+      final ejerciciosExistentes = await widget.exerciseRepository
+          .getExercises();
+      final yaExiste = ejerciciosExistentes.any(
+        (ejercicio) =>
+            ejercicio.nombre.trim().toLowerCase() == nombreNormalizado,
+      );
+      if (yaExiste) {
+        setState(
+          () => _errorEjercicio = 'Ya existe un ejercicio con este nombre.',
+        );
+        return;
+      }
 
-    widget.onGuardar({
-      'ejercicio': localExercise,
-      'categoriaIds': categoriaIds,
-    });
+      final id = await widget.exerciseRepository.createExercise(
+        nombre: _nombreController.text.trim(),
+        categoriaIds: categoriaIds,
+      );
+
+      final realExercise = Ejercicio(
+        idEjercicio: id,
+        nombre: _nombreController.text.trim(),
+        categorias: localCategories,
+      );
+
+      widget.onGuardar({
+        'ejercicio': realExercise,
+        'categoriaIds': categoriaIds,
+      });
+    } on DuplicateFailure catch (_) {
+      if (mounted) setState(() => _errorEjercicio = "Ya existe un ejercicio con este nombre.");
+    } on AppFailure catch (e) {
+      if (mounted) setState(() => _errorEjercicio = e.message);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _errorEjercicio = "No se pudo crear el ejercicio. Intentá nuevamente.");
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -184,6 +227,14 @@ class _AddExerciseFormState extends State<AddExerciseForm> {
                     ),
                   ),
                 ),
+
+                if (_errorEjercicio != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  InlineError(
+                    key: const Key('error-ejercicio'),
+                    mensaje: _errorEjercicio!,
+                  ),
+                ],
 
                 const SizedBox(height: AppSpacing.lg),
 

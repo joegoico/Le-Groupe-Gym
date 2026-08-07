@@ -7,8 +7,6 @@ import '../controllers/sidebar_exercise_controller.dart';
 import 'package:le_groupe_gym/presentacion/forms/exercise_form.dart';
 import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/widget_muscular_groups.dart';
-import 'package:le_groupe_gym/data/repositories/category_exercise_repository.dart';
-import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 
 class ExcerciseSidebar extends StatefulWidget {
   final List<Ejercicio> allExercises;
@@ -16,7 +14,6 @@ class ExcerciseSidebar extends StatefulWidget {
   final RoutineBuilderController controller;
   final VoidCallback? onCreateExercise;
   final ExerciseRepository exerciseRepository;
-  final ICategoryExerciseRepository categoryExerciseRepository;
   final void Function(Ejercicio, List<int>)? onCreateEjercicio;
 
   const ExcerciseSidebar({
@@ -26,7 +23,6 @@ class ExcerciseSidebar extends StatefulWidget {
     required this.controller,
     this.onCreateExercise,
     required this.exerciseRepository,
-    required this.categoryExerciseRepository,
     this.onCreateEjercicio,
   });
 
@@ -36,20 +32,11 @@ class ExcerciseSidebar extends StatefulWidget {
 
 class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
   late SidebarController _controller;
-  List<CategoriaEjercicio> _categories = [];
-  bool _disposed = false;
-
-  @override
-  void dispose() {
-    _disposed = true;
-    super.dispose();
-  }
 
   @override
   void initState() {
     super.initState();
     _controller = SidebarController(allExercises: widget.allExercises);
-    _loadCategories();
   }
 
   @override
@@ -59,13 +46,6 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
       setState(() {
         _controller = SidebarController(allExercises: widget.allExercises);
       });
-    }
-  }
-
-  Future<void> _loadCategories() async {
-    final categories = await widget.categoryExerciseRepository.getCategories();
-    if (mounted) {
-      setState(() => _categories = categories);
     }
   }
 
@@ -389,7 +369,10 @@ class _ExcerciseSidebarState extends State<ExcerciseSidebar> {
                           onGuardar: (data) {
                             Navigator.pop(context);
                             if (widget.onCreateEjercicio != null) {
-                              widget.onCreateEjercicio!(data['ejercicio'] as Ejercicio, data['categoriaIds'] as List<int>);
+                              widget.onCreateEjercicio!(
+                                data['ejercicio'] as Ejercicio,
+                                data['categoriaIds'] as List<int>,
+                              );
                             }
                           },
                         ),

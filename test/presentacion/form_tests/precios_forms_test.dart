@@ -53,10 +53,11 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextFormField).at(0), '0');
+      await tester.enterText(find.byType(TextFormField).at(1), '1');
       await tester.tap(find.byType(ElevatedButton).last);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text('Debe ser mayor a 0'), findsOneWidget);
+      expect(find.text('El valor debe ser mayor a 0'), findsOneWidget);
     });
 
     testWidgets('debe validar que el precio sea numérico', (tester) async {
@@ -75,23 +76,21 @@ void main() {
       tester,
     ) async {
       bool guardado = false;
-      Precio precioGuardado;
 
       await tester.pumpWidget(
         createWidgetUnderTest(
           precioRepository: MockPrecioRepository(),
           onGuardar: (precio) {
             guardado = true;
-            precioGuardado = precio;
           },
         ),
       );
 
       await tester.enterText(find.byType(TextFormField).at(0), '50000');
-      await tester.enterText(find.byType(TextFormField).at(1), '2');
+      await tester.enterText(find.byType(TextFormField).at(1), '1');
 
       await tester.tap(find.byType(ElevatedButton).last);
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(guardado, isTrue);
     });
@@ -113,5 +112,26 @@ void main() {
 
       expect(cancelado, isTrue);
     });
+
+    testWidgets(
+      'debe mostrar error inline si ya existe un plan con esa duración',
+      (tester) async {
+        await tester.pumpWidget(
+          createWidgetUnderTest(precioRepository: MockPrecioRepository()),
+        );
+
+        // Usamos duración 2 que ya existe en el MockPrecioRepository
+        await tester.enterText(find.byType(TextFormField).at(0), '50000');
+        await tester.enterText(find.byType(TextFormField).at(1), '2');
+
+        await tester.tap(find.byType(ElevatedButton).last);
+        await tester.pumpAndSettle(); // Espera a que termine el async _submit
+
+        expect(
+          find.text('Ya existe un plan con esta duración.'),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }

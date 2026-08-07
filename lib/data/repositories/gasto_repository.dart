@@ -1,9 +1,13 @@
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/gasto_model.dart';
 
 abstract class GastoRepository {
-  Future<List<Gasto>> getGastosPorPeriodo({required DateTime desde, required DateTime hasta});
+  Future<List<Gasto>> getGastosPorPeriodo({
+    required DateTime desde,
+    required DateTime hasta,
+  });
   Future<String> createGasto(Gasto gasto);
   Future<void> updateGasto(Gasto gasto);
   Future<void> deleteGasto(String idGasto);
@@ -33,9 +37,9 @@ class SupabaseGastoRepository implements GastoRepository {
           .map((json) => Gasto.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener gastos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -51,9 +55,9 @@ class SupabaseGastoRepository implements GastoRepository {
 
       return response['id_gasto'] as String;
     } on PostgrestException catch (e) {
-      throw Exception('Error al crear gasto: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -66,23 +70,20 @@ class SupabaseGastoRepository implements GastoRepository {
           .update(gasto.toMap())
           .eq('id_gasto', gasto.idGasto!);
     } on PostgrestException catch (e) {
-      throw Exception('Error al actualizar gasto: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
   @override
   Future<void> deleteGasto(String idGasto) async {
     try {
-      await supabaseClient
-          .from('Gastos')
-          .delete()
-          .eq('id_gasto', idGasto);
+      await supabaseClient.from('Gastos').delete().eq('id_gasto', idGasto);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar gasto: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

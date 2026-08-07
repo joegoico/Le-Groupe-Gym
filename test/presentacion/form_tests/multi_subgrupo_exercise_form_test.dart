@@ -8,16 +8,8 @@ import '../../mocks/mock_exercise_repository.dart';
 // Datos compartidos
 // ---------------------------------------------------------------------------
 final _categoriasConSubgrupos = [
-  CategoriaEjercicio(
-    idCategoria: 1,
-    nombre: 'Pecho',
-    tipo: 'grupo_muscular',
-  ),
-  CategoriaEjercicio(
-    idCategoria: 2,
-    nombre: 'Espalda',
-    tipo: 'grupo_muscular',
-  ),
+  CategoriaEjercicio(idCategoria: 1, nombre: 'Pecho', tipo: 'grupo_muscular'),
+  CategoriaEjercicio(idCategoria: 2, nombre: 'Espalda', tipo: 'grupo_muscular'),
   CategoriaEjercicio(
     idCategoria: 10,
     nombre: 'Pectoral Mayor',
@@ -58,53 +50,51 @@ Widget buildForm({
 
 void main() {
   group('AddExerciseForm – multi-selección de subgrupos', () {
-    testWidgets(
-      '1. muestra todos los subgrupos del grupo seleccionado',
-      (tester) async {
-        // Arrange
-        await tester.pumpWidget(buildForm());
+    testWidgets('1. muestra todos los subgrupos del grupo seleccionado', (
+      tester,
+    ) async {
+      // Arrange
+      await tester.pumpWidget(buildForm());
 
-        // Act: seleccionar grupo "Pecho"
-        await tester.tap(find.text('Pecho'));
-        await tester.pump();
+      // Act: seleccionar grupo "Pecho"
+      await tester.tap(find.text('Pecho'));
+      await tester.pump();
 
-        // Assert: deben aparecer ambos subgrupos de Pecho
-        expect(find.text('Pectoral Mayor'), findsOneWidget);
-        expect(find.text('Pectoral Menor'), findsOneWidget);
-        // El subgrupo de Espalda no debe aparecer
-        expect(find.text('Dorsal Ancho'), findsNothing);
-      },
-    );
+      // Assert: deben aparecer ambos subgrupos de Pecho
+      expect(find.text('Pectoral Mayor'), findsOneWidget);
+      expect(find.text('Pectoral Menor'), findsOneWidget);
+      // El subgrupo de Espalda no debe aparecer
+      expect(find.text('Dorsal Ancho'), findsNothing);
+    });
 
-    testWidgets(
-      '2. permite seleccionar múltiples subgrupos simultáneamente',
-      (tester) async {
-        // Arrange
-        await tester.pumpWidget(buildForm());
-        await tester.tap(find.text('Pecho'));
-        await tester.pump();
+    testWidgets('2. permite seleccionar múltiples subgrupos simultáneamente', (
+      tester,
+    ) async {
+      // Arrange
+      await tester.pumpWidget(buildForm());
+      await tester.tap(find.text('Pecho'));
+      await tester.pump();
 
-        // Act: seleccionar dos subgrupos
-        await tester.tap(find.text('Pectoral Mayor'));
-        await tester.pump();
-        await tester.tap(find.text('Pectoral Menor'));
-        await tester.pump();
+      // Act: seleccionar dos subgrupos
+      await tester.tap(find.text('Pectoral Mayor'));
+      await tester.pump();
+      await tester.tap(find.text('Pectoral Menor'));
+      await tester.pump();
 
-        // Assert: ambos chips deben estar visualmente seleccionados.
-        // Verificamos que al tocar uno no deselecciona al otro.
-        // Usamos key para distinguir el estado seleccionado.
-        expect(
-          find.byKey(const Key('subgrupo_chip_selected_Pectoral Mayor')),
-          findsOneWidget,
-          reason: 'Pectoral Mayor debe seguir seleccionado',
-        );
-        expect(
-          find.byKey(const Key('subgrupo_chip_selected_Pectoral Menor')),
-          findsOneWidget,
-          reason: 'Pectoral Menor debe estar seleccionado al mismo tiempo',
-        );
-      },
-    );
+      // Assert: ambos chips deben estar visualmente seleccionados.
+      // Verificamos que al tocar uno no deselecciona al otro.
+      // Usamos key para distinguir el estado seleccionado.
+      expect(
+        find.byKey(const Key('subgrupo_chip_selected_Pectoral Mayor')),
+        findsOneWidget,
+        reason: 'Pectoral Mayor debe seguir seleccionado',
+      );
+      expect(
+        find.byKey(const Key('subgrupo_chip_selected_Pectoral Menor')),
+        findsOneWidget,
+        reason: 'Pectoral Menor debe estar seleccionado al mismo tiempo',
+      );
+    });
 
     testWidgets(
       '3. deselecciona un subgrupo individual al volver a tocarlo (toggle)',
@@ -172,7 +162,8 @@ void main() {
         List<int>? capturedIds;
         await tester.pumpWidget(
           buildForm(
-            onGuardar: (data) => capturedIds = data['categoriaIds'] as List<int>,
+            onGuardar: (data) =>
+                capturedIds = data['categoriaIds'] as List<int>,
           ),
         );
 
@@ -209,7 +200,8 @@ void main() {
         List<int>? capturedIds;
         await tester.pumpWidget(
           buildForm(
-            onGuardar: (data) => capturedIds = data['categoriaIds'] as List<int>,
+            onGuardar: (data) =>
+                capturedIds = data['categoriaIds'] as List<int>,
           ),
         );
 

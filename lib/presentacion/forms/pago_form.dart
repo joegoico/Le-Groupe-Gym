@@ -16,7 +16,9 @@ final planesProvider = FutureProvider.autoDispose<List<Precio>>((ref) async {
   return ref.read(precioRepositoryProvider).getPrecios();
 });
 
-final descuentosProvider = FutureProvider.autoDispose<List<Descuento>>((ref) async {
+final descuentosProvider = FutureProvider.autoDispose<List<Descuento>>((
+  ref,
+) async {
   return ref.read(descuentoRepositoryProvider).getDescuentos();
 });
 
@@ -44,8 +46,10 @@ class _PagoFormState extends ConsumerState<PagoForm> {
 
   /// Error inline debajo del campo Comentarios (pago personalizado sin comentario)
   String? _errorComentario;
+
   /// Error inline debajo del selector de fecha (pago duplicado en el mes)
   String? _errorFecha;
+
   /// Error inline del servidor genérico (red, BD, etc.) mostrado antes del botón
   String? _errorServidor;
 
@@ -93,7 +97,8 @@ class _PagoFormState extends ConsumerState<PagoForm> {
         widget.pagoAEditar == null &&
         _comentariosController.text.trim().isEmpty) {
       setState(() {
-        _errorComentario = 'El comentario es obligatorio para pagos personalizados.';
+        _errorComentario =
+            'El comentario es obligatorio para pagos personalizados.';
       });
       return;
     }
@@ -138,7 +143,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
       setState(() {
         if (mensaje.contains('unique') ||
             mensaje.contains('duplicate') ||
-            mensaje.contains('23505') ||
+            mensaje.contains('ya tiene un pago registrado para ese mes') ||
             mensaje.contains('already exists')) {
           _errorFecha = 'El alumno ya tiene un pago registrado para ese mes.';
           _errorServidor = null;
@@ -208,7 +213,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                       child: const Icon(
                         Icons.person,
                         size: 18,
@@ -266,7 +271,8 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                           ),
                           enabled: _personalizadoSeleccionado,
                           validator: (val) {
-                            if (!_personalizadoSeleccionado && _planSeleccionado == null) {
+                            if (!_personalizadoSeleccionado &&
+                                _planSeleccionado == null) {
                               return null;
                             }
                             if (val == null || val.isEmpty) return 'Requerido';
@@ -311,7 +317,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          '${DateFormat('E, d MMMM yyyy', 'es').format(_fechaPago)}',
+                          DateFormat('E, d MMMM yyyy', 'es').format(_fechaPago),
                           style: GoogleFonts.inter(
                             color: Colors.white,
                             fontSize: 14,
@@ -405,12 +411,16 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                                   _errorServidor = null;
 
                                   double baseMonto = p.valor.toDouble();
-                                  if (_aplicaDescuento && descuentosAsync.value != null && descuentosAsync.value!.isNotEmpty) {
-                                    final descValue = descuentosAsync.value!.first.valor;
-                                    baseMonto = baseMonto - descValue.toDouble();
+                                  if (_aplicaDescuento &&
+                                      descuentosAsync.value != null &&
+                                      descuentosAsync.value!.isNotEmpty) {
+                                    final descValue =
+                                        descuentosAsync.value!.first.valor;
+                                    baseMonto =
+                                        baseMonto - descValue.toDouble();
                                     if (baseMonto < 0.0) baseMonto = 0.0;
                                   }
-                                  
+
                                   _montoController.text = (baseMonto % 1 == 0)
                                       ? baseMonto.toInt().toString()
                                       : baseMonto.toString();
@@ -501,7 +511,7 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                     }),
                   ),
                 ),
-                
+
                 // Descuento
                 _buildSectionTitle('Descuento'),
                 DescuentoSwitch(
@@ -509,7 +519,9 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                   onChanged: (v) {
                     setState(() {
                       _aplicaDescuento = v;
-                      if (_planSeleccionado != null && descuentosAsync.value != null && descuentosAsync.value!.isNotEmpty) {
+                      if (_planSeleccionado != null &&
+                          descuentosAsync.value != null &&
+                          descuentosAsync.value!.isNotEmpty) {
                         double baseMonto = _planSeleccionado!.valor.toDouble();
                         if (_aplicaDescuento) {
                           final descValue = descuentosAsync.value!.first.valor;
@@ -550,7 +562,10 @@ class _PagoFormState extends ConsumerState<PagoForm> {
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: _errorComentario != null
-                          ? const BorderSide(color: Colors.redAccent, width: 1.5)
+                          ? const BorderSide(
+                              color: Colors.redAccent,
+                              width: 1.5,
+                            )
                           : BorderSide.none,
                     ),
                     hintText: 'Nota para el pago...',

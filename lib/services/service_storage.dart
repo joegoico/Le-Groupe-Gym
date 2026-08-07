@@ -46,12 +46,11 @@ class StorageService {
       final pathSegments = uri.pathSegments;
       // Buscamos el bucket en los segmentos y tomamos lo que sigue
       final bucketIndex = pathSegments.indexOf(_bucket);
-      
+
       if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
         final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
         await Supabase.instance.client.storage.from(_bucket).remove([filePath]);
       }
-
     } catch (e) {
       debugPrint('Error al eliminar PDF: $e');
     }

@@ -18,7 +18,7 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 class _AuthNotifier extends ChangeNotifier {
   bool _initialized = false;
-  
+
   void initialize() {
     if (_initialized) return;
     _initialized = true;

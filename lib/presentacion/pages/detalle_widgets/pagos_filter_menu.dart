@@ -5,10 +5,7 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 class PagosFilterMenu extends StatelessWidget {
   final Function(String) onFilterSelected;
 
-  const PagosFilterMenu({
-    super.key,
-    required this.onFilterSelected,
-  });
+  const PagosFilterMenu({super.key, required this.onFilterSelected});
 
   @override
   Widget build(BuildContext context) {

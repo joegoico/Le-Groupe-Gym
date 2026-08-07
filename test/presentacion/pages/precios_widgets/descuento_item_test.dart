@@ -55,21 +55,18 @@ void main() {
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
     });
 
-    testWidgets(
-      'debe mostrar correctamente distintos valores de descuento',
-      (tester) async {
-        // Arrange + Act
-        await tester.pumpWidget(
-          createWidgetUnderTest(
-            descuento: Descuento(id: 'xyz-999', valor: 2000),
-          ),
-        );
+    testWidgets('debe mostrar correctamente distintos valores de descuento', (
+      tester,
+    ) async {
+      // Arrange + Act
+      await tester.pumpWidget(
+        createWidgetUnderTest(descuento: Descuento(id: 'xyz-999', valor: 2000)),
+      );
 
-        // Assert
-        expect(find.text(r'$2000'), findsOneWidget);
-        expect(find.text(r'$15'), findsNothing);
-      },
-    );
+      // Assert
+      expect(find.text(r'$2000'), findsOneWidget);
+      expect(find.text(r'$15'), findsNothing);
+    });
 
     // ── Callbacks ───────────────────────────────────────────────────────────
 
@@ -113,28 +110,27 @@ void main() {
       expect(eliminado, isTrue);
     });
 
-    testWidgets(
-      'onEditar y onEliminar son independientes entre sí',
-      (tester) async {
-        // Arrange
-        bool editado = false;
-        bool eliminado = false;
-        await tester.pumpWidget(
-          createWidgetUnderTest(
-            descuento: Descuento(id: 'abc-123', valor: 15),
-            onEditar: () => editado = true,
-            onEliminar: () => eliminado = true,
-          ),
-        );
+    testWidgets('onEditar y onEliminar son independientes entre sí', (
+      tester,
+    ) async {
+      // Arrange
+      bool editado = false;
+      bool eliminado = false;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          descuento: Descuento(id: 'abc-123', valor: 15),
+          onEditar: () => editado = true,
+          onEliminar: () => eliminado = true,
+        ),
+      );
 
-        // Act — solo tocamos editar
-        await tester.tap(find.byIcon(Icons.edit_outlined));
-        await tester.pump();
+      // Act — solo tocamos editar
+      await tester.tap(find.byIcon(Icons.edit_outlined));
+      await tester.pump();
 
-        // Assert — onEliminar no fue invocado
-        expect(editado, isTrue);
-        expect(eliminado, isFalse);
-      },
-    );
+      // Assert — onEliminar no fue invocado
+      expect(editado, isTrue);
+      expect(eliminado, isFalse);
+    });
   });
 }

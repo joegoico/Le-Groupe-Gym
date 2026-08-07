@@ -36,7 +36,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
       listenable: widget.controller,
       selector: () =>
           (widget.controller.dias.length, widget.controller.totalEjercicios),
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         return Container(
           color: AppColors.surfaceContainerLow,
           padding: const EdgeInsets.all(24.0),
@@ -136,7 +136,8 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
                   context: context,
                   builder: (_) => const DeleteConfirmDialog(
                     title: 'Limpiar rutina',
-                    message: '¿Estás seguro de que querés eliminar toda la rutina?',
+                    message:
+                        '¿Estás seguro de que querés eliminar toda la rutina?',
                   ),
                 );
                 if (ok == true) widget.controller.clearRoutine();
@@ -193,9 +194,7 @@ class _RoutineWorkspaceState extends State<RoutineWorkspace> {
           decoration: BoxDecoration(
             color: AppColors.surfaceContainerHigh,
             borderRadius: const BorderRadius.all(AppRadius.lg),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.07),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
           ),
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(

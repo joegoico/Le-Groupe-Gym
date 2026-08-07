@@ -63,6 +63,10 @@ final gastoRepositoryProvider = Provider<GastoRepository>((ref) {
   return SupabaseGastoRepository(supabaseClient: Supabase.instance.client);
 });
 
-final categoriaGastoRepositoryProvider = Provider<CategoriaGastoRepository>((ref) {
-  return SupabaseCategoriaGastoRepository(supabaseClient: Supabase.instance.client);
+final categoriaGastoRepositoryProvider = Provider<CategoriaGastoRepository>((
+  ref,
+) {
+  return SupabaseCategoriaGastoRepository(
+    supabaseClient: Supabase.instance.client,
+  );
 });

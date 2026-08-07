@@ -41,97 +41,80 @@ void main() {
 
     Widget createWidgetUnderTest() {
       return ProviderScope(
-        overrides: [
-          pagoRepositoryProvider.overrideWithValue(mockPagoRepo),
-        ],
+        overrides: [pagoRepositoryProvider.overrideWithValue(mockPagoRepo)],
         child: MaterialApp(
           home: Scaffold(
-            body: DeudorCard(
-              deudor: deudorMock,
-              onRegistrarPago: () {},
-              onEliminar: () {},
-            ),
+            body: DeudorCard(deudor: deudorMock, onRegistrarPago: () {}),
           ),
         ),
       );
     }
 
-    testWidgets('Debe mostrar la foto, plan, días de mora y último pago', (tester) async {
+    testWidgets('Debe mostrar la foto, plan, días de mora y último pago', (
+      tester,
+    ) async {
       await tester.pumpWidget(createWidgetUnderTest());
-      await tester.pumpAndSettle(); // para esperar al FutureProvider/FutureBuilder
+      await tester
+          .pumpAndSettle(); // para esperar al FutureProvider/FutureBuilder
 
       expect(find.text('Juan Pérez'), findsOneWidget);
       expect(find.text('HACE 45 DÍAS'), findsOneWidget); // Badge
-      expect(find.text('Plan de 30 días'), findsOneWidget); // Plan deducido de Pago
+      expect(
+        find.text('Plan de 30 días'),
+        findsOneWidget,
+      ); // Plan deducido de Pago
       expect(find.textContaining('Último pago:'), findsOneWidget);
-      expect(find.byIcon(Icons.email_outlined), findsOneWidget); // Footer email icon
+      expect(
+        find.byIcon(Icons.email_outlined),
+        findsOneWidget,
+      ); // Footer email icon
     });
 
-    testWidgets('Debe disparar el callback de Registrar Pago y Enviar Mensaje', (tester) async {
-      bool pagoRegistrado = false;
-      bool mensajeEnviado = false;
+    testWidgets(
+      'Debe disparar el callback de Registrar Pago y Enviar Mensaje',
+      (tester) async {
+        bool pagoRegistrado = false;
+        bool mensajeEnviado = false;
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            pagoRepositoryProvider.overrideWithValue(mockPagoRepo),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: DeudorCard(
-                deudor: deudorMock,
-                onRegistrarPago: () {
-                  pagoRegistrado = true;
-                },
-                onEnviarMensaje: () {
-                  mensajeEnviado = true;
-                },
-                onEliminar: () {},
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [pagoRepositoryProvider.overrideWithValue(mockPagoRepo)],
+            child: MaterialApp(
+              home: Scaffold(
+                body: DeudorCard(
+                  deudor: deudorMock,
+                  onRegistrarPago: () {
+                    pagoRegistrado = true;
+                  },
+                  onEnviarMensaje: () {
+                    mensajeEnviado = true;
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Registrar Pago'));
+
+        // Tap on Email icon
+        await tester.tap(find.byIcon(Icons.email_outlined));
+
+        await tester.pumpAndSettle();
+
+        expect(pagoRegistrado, true);
+        expect(mensajeEnviado, true);
+      },
+    );
+
+    testWidgets('No expone acciones para eliminar o editar una deuda', (
+      tester,
+    ) async {
+      await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Registrar Pago'));
-      
-      // Tap on Email icon
-      await tester.tap(find.byIcon(Icons.email_outlined));
-      
-      await tester.pumpAndSettle();
-
-      expect(pagoRegistrado, true);
-      expect(mensajeEnviado, true);
-    });
-
-    testWidgets('Debe disparar el callback onEliminar', (tester) async {
-      bool deudorEliminado = false;
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            pagoRepositoryProvider.overrideWithValue(mockPagoRepo),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: DeudorCard(
-                deudor: deudorMock,
-                onRegistrarPago: () {},
-                onEliminar: () {
-                  deudorEliminado = true;
-                },
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byIcon(Icons.delete_outline));
-      await tester.pumpAndSettle();
-
-      expect(deudorEliminado, true);
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
+      expect(find.byIcon(Icons.edit_outlined), findsNothing);
     });
   });
 }

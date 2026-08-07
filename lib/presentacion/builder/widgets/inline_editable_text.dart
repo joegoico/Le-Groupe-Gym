@@ -1,6 +1,8 @@
 /// Widget reutilizable que muestra un Text y al hacer doble tap
 /// lo convierte en un TextField editable. Al presionar Done o perder foco,
 /// llama a [onChanged] con el nuevo valor.
+library;
+
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 
@@ -10,6 +12,7 @@ class InlineEditableText extends StatefulWidget {
   final ValueChanged<String> onChanged;
 
   const InlineEditableText({
+    super.key,
     required this.text,
     required this.style,
     required this.onChanged,

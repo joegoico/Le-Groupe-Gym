@@ -1,0 +1,2 @@
+-- Esta migración ya fue aplicada en el proyecto remoto.
+-- Se conserva para mantener alineado el historial de Supabase.

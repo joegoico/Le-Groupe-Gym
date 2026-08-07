@@ -52,16 +52,17 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            solicitudRutinaRepositoryProvider
-                .overrideWithValue(mockRepository),
-            routineRepositoryProvider
-                .overrideWithValue(MockRoutineRepository()),
-            alumnoRepositoryProvider
-                .overrideWithValue(MockAlumnoRepository()),
-            exerciseRepositoryProvider
-                .overrideWithValue(MockExerciseRepository()),
-            categoryExerciseRepositoryProvider
-                .overrideWithValue(MockCategoryExerciseRepository()),
+            solicitudRutinaRepositoryProvider.overrideWithValue(mockRepository),
+            routineRepositoryProvider.overrideWithValue(
+              MockRoutineRepository(),
+            ),
+            alumnoRepositoryProvider.overrideWithValue(MockAlumnoRepository()),
+            exerciseRepositoryProvider.overrideWithValue(
+              MockExerciseRepository(),
+            ),
+            categoryExerciseRepositoryProvider.overrideWithValue(
+              MockCategoryExerciseRepository(),
+            ),
           ],
           child: MaterialApp.router(routerConfig: router),
         ),

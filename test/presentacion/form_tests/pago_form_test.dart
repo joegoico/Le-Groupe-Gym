@@ -19,8 +19,7 @@ class MockPagoRepositoryConError implements PagoRepository {
   MockPagoRepositoryConError(this.mensajeError);
 
   @override
-  Future<void> insertarPago(Pago pago) async =>
-      throw Exception(mensajeError);
+  Future<void> insertarPago(Pago pago) async => throw Exception(mensajeError);
 
   @override
   Future<List<Pago>> getPagosPorAlumno(
@@ -46,7 +45,11 @@ void main() {
   late MockPrecioRepository mockPrecioRepository;
   late MockDescuentoRepository mockDescuentoRepository;
 
-  final alumnoPrueba = Alumno(idAlumno: 'abc', nombre: 'Juan', apellido: 'Perez');
+  final alumnoPrueba = Alumno(
+    idAlumno: 'abc',
+    nombre: 'Juan',
+    apellido: 'Perez',
+  );
 
   setUp(() async {
     await initializeDateFormatting('es', null);
@@ -58,7 +61,9 @@ void main() {
   Widget buildWidget({PagoRepository? pagoRepo}) {
     return ProviderScope(
       overrides: [
-        pagoRepositoryProvider.overrideWithValue(pagoRepo ?? mockPagoRepository),
+        pagoRepositoryProvider.overrideWithValue(
+          pagoRepo ?? mockPagoRepository,
+        ),
         precioRepositoryProvider.overrideWithValue(mockPrecioRepository),
         descuentoRepositoryProvider.overrideWithValue(mockDescuentoRepository),
       ],
@@ -80,7 +85,10 @@ void main() {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
-  Future<void> abrirForm(WidgetTester tester, {PagoRepository? pagoRepo}) async {
+  Future<void> abrirForm(
+    WidgetTester tester, {
+    PagoRepository? pagoRepo,
+  }) async {
     await tester.pumpWidget(buildWidget(pagoRepo: pagoRepo));
     await tester.tap(find.text('Abrir'));
     await tester.pumpAndSettle();
@@ -100,7 +108,9 @@ void main() {
     expect(find.text('Personalizado'), findsOneWidget);
   });
 
-  testWidgets('por default no debe venir seleccionado el plan Personalizado', (tester) async {
+  testWidgets('por default no debe venir seleccionado el plan Personalizado', (
+    tester,
+  ) async {
     await abrirForm(tester);
 
     final chip = tester.widget<ChoiceChip>(
@@ -110,7 +120,9 @@ void main() {
     expect(chip.selected, isFalse);
   });
 
-  testWidgets('guarda el pago correctamente cuando es un plan normal', (tester) async {
+  testWidgets('guarda el pago correctamente cuando es un plan normal', (
+    tester,
+  ) async {
     await abrirForm(tester);
     await tester.ensureVisible(find.text('3 días'));
     await tester.tap(find.text('3 días'));
@@ -174,30 +186,29 @@ void main() {
     },
   );
 
-  testWidgets(
-    'error de comentario desaparece al escribir en el campo',
-    (tester) async {
-      await abrirForm(tester);
-      await tester.tap(find.text('Personalizado'));
-      await tester.pumpAndSettle();
-      await tocarConfirmar(tester);
+  testWidgets('error de comentario desaparece al escribir en el campo', (
+    tester,
+  ) async {
+    await abrirForm(tester);
+    await tester.tap(find.text('Personalizado'));
+    await tester.pumpAndSettle();
+    await tocarConfirmar(tester);
 
-      expect(
-        find.text('El comentario es obligatorio para pagos personalizados.'),
-        findsOneWidget,
-      );
+    expect(
+      find.text('El comentario es obligatorio para pagos personalizados.'),
+      findsOneWidget,
+    );
 
-      // Escribir en el campo de comentarios
-      final comentariosField = find.byType(TextFormField).last;
-      await tester.enterText(comentariosField, 'un comentario');
-      await tester.pump();
+    // Escribir en el campo de comentarios
+    final comentariosField = find.byType(TextFormField).last;
+    await tester.enterText(comentariosField, 'un comentario');
+    await tester.pump();
 
-      expect(
-        find.text('El comentario es obligatorio para pagos personalizados.'),
-        findsNothing,
-      );
-    },
-  );
+    expect(
+      find.text('El comentario es obligatorio para pagos personalizados.'),
+      findsNothing,
+    );
+  });
 
   // ── Error de unicidad (pago duplicado en el mes) ───────────────────────────
 
@@ -235,45 +246,47 @@ void main() {
     },
   );
 
-  testWidgets(
-    'error de unicidad detecta keyword "unique" en el mensaje',
-    (tester) async {
-      final repoConError = MockPagoRepositoryConError('unique constraint violated');
-      await abrirForm(tester, pagoRepo: repoConError);
+  testWidgets('error de unicidad detecta keyword "unique" en el mensaje', (
+    tester,
+  ) async {
+    final repoConError = MockPagoRepositoryConError(
+      'unique constraint violated',
+    );
+    await abrirForm(tester, pagoRepo: repoConError);
 
-      await tester.ensureVisible(find.text('3 días'));
-      await tester.tap(find.text('3 días'));
-      await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('3 días'));
+    await tester.tap(find.text('3 días'));
+    await tester.pumpAndSettle();
 
-      await tocarConfirmar(tester);
+    await tocarConfirmar(tester);
 
-      expect(find.byKey(const Key('error-fecha-duplicada')), findsOneWidget);
-      expect(
-        find.textContaining('ya tiene un pago registrado para ese mes'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.byKey(const Key('error-fecha-duplicada')), findsOneWidget);
+    expect(
+      find.textContaining('ya tiene un pago registrado para ese mes'),
+      findsOneWidget,
+    );
+  });
 
-  testWidgets(
-    'error de unicidad detecta keyword "duplicate" en el mensaje',
-    (tester) async {
-      final repoConError = MockPagoRepositoryConError('duplicate entry for this month');
-      await abrirForm(tester, pagoRepo: repoConError);
+  testWidgets('error de unicidad detecta keyword "duplicate" en el mensaje', (
+    tester,
+  ) async {
+    final repoConError = MockPagoRepositoryConError(
+      'duplicate entry for this month',
+    );
+    await abrirForm(tester, pagoRepo: repoConError);
 
-      await tester.ensureVisible(find.text('3 días'));
-      await tester.tap(find.text('3 días'));
-      await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('3 días'));
+    await tester.tap(find.text('3 días'));
+    await tester.pumpAndSettle();
 
-      await tocarConfirmar(tester);
+    await tocarConfirmar(tester);
 
-      expect(find.byKey(const Key('error-fecha-duplicada')), findsOneWidget);
-      expect(
-        find.textContaining('ya tiene un pago registrado para ese mes'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.byKey(const Key('error-fecha-duplicada')), findsOneWidget);
+    expect(
+      find.textContaining('ya tiene un pago registrado para ese mes'),
+      findsOneWidget,
+    );
+  });
 
   // ── Error genérico de servidor ─────────────────────────────────────────────
 
@@ -295,7 +308,10 @@ void main() {
       // NO usa la key de fecha duplicada
       expect(find.byKey(const Key('error-fecha-duplicada')), findsNothing);
 
-      expect(find.textContaining('Ocurrió un error al guardar'), findsOneWidget);
+      expect(
+        find.textContaining('Ocurrió un error al guardar'),
+        findsOneWidget,
+      );
       expect(find.byType(SnackBar), findsNothing);
 
       // El diálogo permanece abierto
@@ -318,13 +334,19 @@ void main() {
       await tocarConfirmar(tester);
 
       // Verificar que el error aparece
-      expect(find.textContaining('Ocurrió un error al guardar'), findsOneWidget);
+      expect(
+        find.textContaining('Ocurrió un error al guardar'),
+        findsOneWidget,
+      );
 
       // Al intentar guardar de nuevo, el error se limpia primero (setState al inicio de _guardarPago)
       // y vuelve a aparecer (porque el mock sigue fallando)
       await tocarConfirmar(tester);
       // El error de servidor sigue ahí porque el repo sigue fallando
-      expect(find.textContaining('Ocurrió un error al guardar'), findsOneWidget);
+      expect(
+        find.textContaining('Ocurrió un error al guardar'),
+        findsOneWidget,
+      );
     },
   );
 

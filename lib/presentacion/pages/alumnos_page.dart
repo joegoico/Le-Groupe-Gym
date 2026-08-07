@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -58,12 +59,12 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
   Future<void> _loadMoreAlumnos() async {
     if (_isLoadingMore || !_hasMore) return;
     setState(() => _isLoadingMore = true);
-    
+
     try {
       final repo = ref.read(alumnoRepositoryProvider);
       final offset = _alumnos.length;
       final newAlumnos = await repo.getAlumnos(limit: 50, offset: offset);
-      
+
       if (mounted) {
         if (newAlumnos.isEmpty) {
           setState(() {
@@ -72,7 +73,10 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('No hay más alumnos para cargar', style: AppTextStyles.subtittlesBold),
+              content: Text(
+                'No hay más alumnos para cargar',
+                style: AppTextStyles.subtittlesBold,
+              ),
               backgroundColor: AppColors.surfaceContainerHigh,
             ),
           );
@@ -177,7 +181,9 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
         await repo.createAlumno(alumno);
       }
       GlobalMessenger.showSuccessSnackbar(
-        esEdicion ? 'Alumno actualizado correctamente' : 'Alumno creado correctamente',
+        esEdicion
+            ? 'Alumno actualizado correctamente'
+            : 'Alumno creado correctamente',
       );
     } catch (e) {
       // 4. Rollback en caso de error
@@ -187,9 +193,7 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
           _alumnosFiltrados = previousFiltrados;
         });
       }
-      GlobalMessenger.showErrorSnackbar(
-        'Ocurrió un error inesperado al guardar el alumno. Verifica tu conexión e intenta de nuevo.',
-      );
+      GlobalMessenger.showErrorSnackbar(e is AppFailure ? e.message : 'Error inesperado');
     }
   }
 
@@ -198,7 +202,8 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
       context: context,
       builder: (_) => DeleteConfirmDialog(
         title: 'Eliminar alumno',
-        message: '¿Seguro que querés eliminar a ${alumno.nombreCompleto}? Esta acción no se puede deshacer.',
+        message:
+            '¿Seguro que querés eliminar a ${alumno.nombreCompleto}? Esta acción no se puede deshacer.',
       ),
     );
     if (confirmar != true) return;
@@ -213,7 +218,7 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
       }
       GlobalMessenger.showSuccessSnackbar('Alumno eliminado');
     } catch (e) {
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el alumno. Verifica tu conexión e intenta de nuevo.');
+      GlobalMessenger.showErrorSnackbar(e is AppFailure ? e.message : 'Error inesperado');
     }
   }
 
@@ -235,7 +240,8 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
               );
               if (confirm == true) {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               }
             },
             onNavigate: (route) => context.go(route),
@@ -338,9 +344,14 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
                       )
                       .toList(),
                 ),
-          if (_alumnoSeleccionado == null && _hasMore && _alumnosFiltrados.isNotEmpty)
+          if (_alumnoSeleccionado == null &&
+              _hasMore &&
+              _alumnosFiltrados.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xl, bottom: AppSpacing.lg),
+              padding: const EdgeInsets.only(
+                top: AppSpacing.xl,
+                bottom: AppSpacing.lg,
+              ),
               child: Center(
                 child: _isLoadingMore
                     ? const CircularProgressIndicator(color: AppColors.primary)
@@ -350,16 +361,17 @@ class _AlumnosPageState extends ConsumerState<AlumnosPage> {
                           backgroundColor: AppColors.surfaceContainerHigh,
                           foregroundColor: AppColors.primary,
                           elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.all(AppRadius.md),
                           ),
                         ),
                         child: Text(
                           'Cargar Más',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                         ),
                       ),
               ),

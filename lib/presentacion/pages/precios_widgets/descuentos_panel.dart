@@ -11,6 +11,7 @@ class DescuentosPanel extends StatelessWidget {
   final Function(Descuento) onEditarDescuento;
 
   const DescuentosPanel({
+    super.key,
     required this.descuentos,
     required this.onAgregarDescuento,
     required this.onEliminarDescuento,

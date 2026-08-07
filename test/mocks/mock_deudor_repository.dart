@@ -22,7 +22,6 @@ class MockDeudorRepository implements DeudorRepository {
   @override
   Future<List<Deudor>> getDeudores() async => List.from(_mockData);
 
-  @override
   Future<void> eliminarDeudor(String idDeudor) async {
     _mockData.removeWhere((d) => d.idDeudor == idDeudor);
   }

@@ -3,7 +3,6 @@ import 'package:le_groupe_gym/services/email_service.dart';
 
 void main() {
   group('EmailService Tests', () {
-
     test('buildPayload debe armar el body correcto para la Edge Function', () {
       // Arrange
       final service = EmailService();
@@ -17,7 +16,10 @@ void main() {
       );
 
       // Assert
-      expect(payload['pdfUrl'], 'https://storage.supabase.co/rutinas-pdf/test.pdf');
+      expect(
+        payload['pdfUrl'],
+        'https://storage.supabase.co/rutinas-pdf/test.pdf',
+      );
       expect(payload['mailAlumno'], 'juan@mail.com');
       expect(payload['nombreAlumno'], 'Juan Pérez');
       expect(payload['nombreRutina'], 'Día 1 - Empuje');

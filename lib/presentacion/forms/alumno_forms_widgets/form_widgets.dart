@@ -8,6 +8,7 @@ class FormActions extends StatelessWidget {
   final VoidCallback onGuardar;
 
   const FormActions({
+    super.key,
     required this.isLoading,
     required this.onCancelar,
     required this.onGuardar,
@@ -70,7 +71,7 @@ class FormHeader extends StatelessWidget {
   final String titulo;
   final VoidCallback onClose;
 
-  const FormHeader({required this.titulo, required this.onClose});
+  const FormHeader({super.key, required this.titulo, required this.onClose});
 
   @override
   Widget build(BuildContext context) {

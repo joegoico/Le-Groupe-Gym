@@ -43,7 +43,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
   List<Ejercicio> _loadedExercises = [];
   Alumno? _alumnoSeleccionado;
   bool _isLoading = true;
-  bool _isSaving = false;
+  final bool _isSaving = false;
 
   // Agregá esto junto a las otras variables de estado
   late TextEditingController _routineNameController = TextEditingController();
@@ -91,12 +91,13 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
         // Preseleccionar alumno solo si no es predeterminada
         Alumno? alumno;
-        if (!widget.esPredeterminada && widget.rutinaExistente!.idAlumno != null) {
+        if (!widget.esPredeterminada &&
+            widget.rutinaExistente!.idAlumno != null) {
           alumno = await alumnoRepo.getAlumnoById(
             widget.rutinaExistente!.idAlumno!,
           );
         }
-        
+
         if (mounted) {
           setState(() {
             _loadedExercises = exercises;
@@ -179,8 +180,11 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     }
   }
 
-  Future<String> _savePDfInSupabase(Rutina rutina, int idRutina, RoutineRepository routineRepo) async {
-
+  Future<String> _savePDfInSupabase(
+    Rutina rutina,
+    int idRutina,
+    RoutineRepository routineRepo,
+  ) async {
     final pdfBytes = await PdfGenerator().generate(
       rutina: rutina.copyWith(idRutina: idRutina),
       alumno: widget.esPredeterminada ? null : _alumnoSeleccionado,
@@ -189,7 +193,9 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
     final pdfUrl = await storageService.uploadPdf(
       bytes: pdfBytes,
       idRutina: idRutina,
-      nombreAlumno: widget.esPredeterminada ? 'genérica' : _alumnoSeleccionado!.nombreCompleto,
+      nombreAlumno: widget.esPredeterminada
+          ? 'genérica'
+          : _alumnoSeleccionado!.nombreCompleto,
     );
     await routineRepo.updatePdfUrl(idRutina: idRutina, url: pdfUrl);
 
@@ -222,9 +228,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       final masAntigua = rutinasAlumno.last;
 
       if (masAntigua.rutina.urlPdf != null) {
-        await storageService.deletePdf(
-          urlPdf: masAntigua.rutina.urlPdf!,
-        );
+        await storageService.deletePdf(urlPdf: masAntigua.rutina.urlPdf!);
       }
     }
   }
@@ -234,19 +238,28 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
 
     final nombreIngresado = _routineNameController.text.trim();
     if (nombreIngresado.isEmpty) {
-      setState(() => _errorNombreRutina = 'El nombre de la rutina es obligatorio');
+      setState(
+        () => _errorNombreRutina = 'El nombre de la rutina es obligatorio',
+      );
       return;
     }
 
     final rutinaLocal = _routineController.buildRutina(
       nombre: nombreIngresado,
       idAlumno: widget.esPredeterminada ? null : _alumnoSeleccionado!.idAlumno,
-      idRutina: widget.rutinaExistente?.idRutina ?? -DateTime.now().millisecondsSinceEpoch,
-      notasGenerales: _notasController.text.isEmpty ? null : _notasController.text,
+      idRutina:
+          widget.rutinaExistente?.idRutina ??
+          -DateTime.now().millisecondsSinceEpoch,
+      notasGenerales: _notasController.text.isEmpty
+          ? null
+          : _notasController.text,
       esPredeterminada: widget.esPredeterminada,
     );
 
-    final backgroundFuture = _saveRoutineBackground(rutinaLocal, widget.solicitudOrigen);
+    final backgroundFuture = _saveRoutineBackground(
+      rutinaLocal,
+      widget.solicitudOrigen,
+    );
 
     if (widget.esPredeterminada) {
       context.pop((rutinaLocal, backgroundFuture));
@@ -254,16 +267,19 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       context.pop((
         rutina: rutinaLocal,
         alumno: _alumnoSeleccionado!,
-        future: backgroundFuture
+        future: backgroundFuture,
       ));
     }
   }
 
-  Future<Rutina> _saveRoutineBackground(Rutina rutina, SolicitudRutina? solicitudOrigen) async {
+  Future<Rutina> _saveRoutineBackground(
+    Rutina rutina,
+    SolicitudRutina? solicitudOrigen,
+  ) async {
     try {
       final routineRepo = ref.read(routineRepositoryProvider);
       final solicitudRepo = ref.read(solicitudRutinaRepositoryProvider);
-      
+
       // Damos 600ms para que la animación de "context.pop()" termine y el Dashboard
       // se dibuje por completo con la rutina temporal antes de empezar el trabajo pesado.
       // Esto previene que la app se congele a mitad de la animación en Flutter Web.
@@ -280,7 +296,7 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
       }
 
       final pdfUrl = await _savePDfInSupabase(rutina, idRutina, routineRepo);
-      
+
       final finalRutina = rutina.copyWith(idRutina: idRutina, urlPdf: pdfUrl);
 
       if (!widget.esPredeterminada) {
@@ -291,52 +307,39 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
         await solicitudRepo.deleteSolicitud(solicitudOrigen.idSolicitud!);
       }
 
-      GlobalMessenger.showSuccessSnackbar(widget.rutinaExistente != null ? 'Rutina actualizada correctamente' : 'Rutina guardada correctamente');
+      GlobalMessenger.showSuccessSnackbar(
+        widget.rutinaExistente != null
+            ? 'Rutina actualizada correctamente'
+            : 'Rutina guardada correctamente',
+      );
       return finalRutina;
     } catch (e) {
       final msg = e.toString();
-      final esUnicidad = msg.contains('unique') || msg.contains('duplicate') || msg.contains('23505') || msg.contains('already exists');
+      final esUnicidad =
+          msg.contains('unique') ||
+          msg.contains('duplicate') ||
+          msg.contains('23505') ||
+          msg.contains('already exists');
       if (esUnicidad && widget.esPredeterminada) {
-        GlobalMessenger.showErrorSnackbar('Ya existe una rutina genérica con este nombre');
+        GlobalMessenger.showErrorSnackbar(
+          'Ya existe una rutina genérica con este nombre',
+        );
       } else {
-        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar la rutina. Verifica tu conexión e intenta de nuevo.');
+        GlobalMessenger.showErrorSnackbar(
+          'Ocurrió un error inesperado al guardar la rutina. Verifica tu conexión e intenta de nuevo.',
+        );
       }
       rethrow;
     }
   }
 
-  void _onCreateEjercicio(Ejercicio localExercise, List<int> categoriaIds) {
-    final previousExercises = List<Ejercicio>.from(_loadedExercises);
+  void _onCreateEjercicio(Ejercicio realExercise, List<int> categoriaIds) {
     setState(() {
-      _loadedExercises = [localExercise, ..._loadedExercises];
+      _loadedExercises = [realExercise, ..._loadedExercises];
     });
-    
-    _guardarEjercicioBackground(localExercise, categoriaIds, previousExercises);
-  }
-
-  Future<void> _guardarEjercicioBackground(Ejercicio localExercise, List<int> categoriaIds, List<Ejercicio> previousExercises) async {
-    try {
-      final exerciseRepo = ref.read(exerciseRepositoryProvider);
-      final id = await exerciseRepo.createExercise(
-        nombre: localExercise.nombre,
-        categoriaIds: categoriaIds,
-      );
-      
-      if (mounted) {
-        setState(() {
-          final index = _loadedExercises.indexOf(localExercise);
-          if (index != -1) {
-            _loadedExercises[index] = localExercise.copyWith(idEjercicio: id);
-          }
-        });
-      }
-      GlobalMessenger.showSuccessSnackbar('El ejercicio fue creado correctamente');
-    } catch (e) {
-      if (mounted) {
-        setState(() => _loadedExercises = previousExercises);
-      }
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al crear el ejercicio. Verifica tu conexión e intenta de nuevo.');
-    }
+    GlobalMessenger.showSuccessSnackbar(
+      'El ejercicio fue creado correctamente',
+    );
   }
 
   Future<void> _confirmarSalida(BuildContext context) async {
@@ -493,9 +496,6 @@ class _MainPanelPageState extends ConsumerState<MainPanelPage> {
                                 controller: _routineController,
                                 exerciseRepository: ref.read(
                                   exerciseRepositoryProvider,
-                                ),
-                                categoryExerciseRepository: ref.read(
-                                  categoryExerciseRepositoryProvider,
                                 ),
                                 onAddExercise: (ejercicio) {
                                   // Validación: debe haber día y bloque seleccionados

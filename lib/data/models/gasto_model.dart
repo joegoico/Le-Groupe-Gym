@@ -22,7 +22,9 @@ class Gasto {
       monto: map['monto'] as int,
       fecha: DateTime.parse(map['fecha'] as String),
       categoria: map['Categorias_gastos'] != null
-          ? CategoriaGasto.fromMap(map['Categorias_gastos'] as Map<String, dynamic>)
+          ? CategoriaGasto.fromMap(
+              map['Categorias_gastos'] as Map<String, dynamic>,
+            )
           : null,
     );
   }

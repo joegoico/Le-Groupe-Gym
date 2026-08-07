@@ -1,4 +1,5 @@
-import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/routine_model.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
@@ -32,16 +33,15 @@ class SupabaseRoutineRepository implements RoutineRepository {
   }) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
-      final userId = user.id;
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       await supabaseClient
           .from('Rutinas')
-          .update({'url_pdf': url, 'user_id': userId})
+          .update({'url_pdf': url})
           .eq('id_rutina', idRutina);
     } on PostgrestException catch (e) {
-      throw Exception('Error al actualizar url_pdf: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al actualizar url_pdf: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -49,8 +49,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   Future<int> saveRoutine(Rutina rutina) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
-      final userId = user.id;
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final diasPayload = rutina.dias.map((dia) {
         return {
           'nombre_dia': dia.nombre,
@@ -91,9 +90,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
       return response as int;
     } on PostgrestException catch (e) {
-      throw Exception('Error al guardar rutina: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al guardar: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -102,7 +101,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   Future<List<({Rutina rutina, Alumno alumno})>> getRutinas() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
@@ -118,9 +117,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
         return (rutina: rutina, alumno: alumno);
       }).toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener rutinas: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -163,9 +162,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
         },
       );
     } on PostgrestException catch (e) {
-      throw Exception('Error al actualizar rutina: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al actualizar: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -173,7 +172,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   Future<void> deleteRoutine(int idRutina) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient
           .from('Rutinas')
@@ -181,9 +180,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
           .eq('id_rutina', idRutina)
           .eq('user_id', userId);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar rutina: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al eliminar: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -191,7 +190,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   Future<Rutina?> getRutinaCompleta(int idRutina) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
@@ -254,9 +253,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
 
       return Rutina.fromMap(response, dias: dias);
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener rutina completa: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -266,7 +265,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   ) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Rutinas')
@@ -281,9 +280,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
         return (rutina: rutina, alumno: alumno);
       }).toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener rutinas por alumno: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -291,7 +290,7 @@ class SupabaseRoutineRepository implements RoutineRepository {
   Future<List<Rutina>> getRutinasPredeterminadas() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
 
       // Filtramos solo las rutinas predeterminadas
@@ -307,9 +306,9 @@ class SupabaseRoutineRepository implements RoutineRepository {
           .map((json) => Rutina.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener rutinas predeterminadas: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

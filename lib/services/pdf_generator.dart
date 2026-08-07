@@ -41,14 +41,11 @@ class PdfGenerator {
 
   const PdfGenerator({this.style = const PdfGeneratorStyle()});
 
-  Future<Uint8List> generate({
-    required Rutina rutina,
-    Alumno? alumno,
-  }) async {
+  Future<Uint8List> generate({required Rutina rutina, Alumno? alumno}) async {
     // Cargar los bytes crudos (rápido, no bloquea el hilo principal pesadamente)
     final fontData = await rootBundle.load(style.regularFontAsset);
     final boldFontData = await rootBundle.load(style.boldFontAsset);
-    final blockSepData = style.blockSeparatorFontAsset != null 
+    final blockSepData = style.blockSeparatorFontAsset != null
         ? await rootBundle.load(style.blockSeparatorFontAsset!)
         : null;
     final logoBytes = await rootBundle.load('assets/logo.png');
@@ -65,7 +62,9 @@ class PdfGenerator {
     });
   }
 
-  static Future<Uint8List> _buildPdfInBackground(Map<String, dynamic> args) async {
+  static Future<Uint8List> _buildPdfInBackground(
+    Map<String, dynamic> args,
+  ) async {
     final generator = PdfGenerator(style: args['style'] as PdfGeneratorStyle);
     return await generator._buildDocument(
       rutina: args['rutina'] as Rutina,
@@ -385,28 +384,6 @@ class PdfGenerator {
         .nombre;
   }
 
-  _ExerciseTableRow? _rowForTableIndex(
-    List<_ExerciseTableRow> filas,
-    int rowNum,
-  ) {
-    final dataIndex = rowNum - 1;
-    if (dataIndex < 0 || dataIndex >= filas.length) return null;
-    return filas[dataIndex];
-  }
-
-  PdfColor? _backgroundColorForRow(_ExerciseTableRowType? type) {
-    if (type == _ExerciseTableRowType.dayHeader) {
-      return style.dayHeaderBackgroundColor;
-    }
-    if (type == _ExerciseTableRowType.blockSeparator) {
-      return style.blockSeparatorBackgroundColor;
-    }
-    if (type == _ExerciseTableRowType.superserie) {
-      return style.superserieBackgroundColor;
-    }
-    return null;
-  }
-
   pw.Widget _buildNotes(
     String notas,
     pw.TextStyle baseStyle,
@@ -421,34 +398,15 @@ class PdfGenerator {
       ],
     );
   }
-
-  pw.Widget _buildFooter(pw.TextStyle baseStyle) {
-    return pw.Center(
-      child: pw.Text(
-        'Le Groupe Gym',
-        style: baseStyle.copyWith(fontSize: 10, color: PdfColors.grey500),
-      ),
-    );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return '-';
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
-  }
 }
 
-enum _ExerciseTableRowType { dayHeader, blockSeparator, normal, superserie }
+enum _ExerciseTableRowType { blockSeparator, normal, superserie }
 
 class _ExerciseTableRow {
   final _ExerciseTableRowType type;
   final List<String> cells;
 
   const _ExerciseTableRow._(this.type, this.cells);
-
-  factory _ExerciseTableRow.dayHeader(List<String> cells) =>
-      _ExerciseTableRow._(_ExerciseTableRowType.dayHeader, cells);
 
   factory _ExerciseTableRow.blockSeparator(List<String> cells) =>
       _ExerciseTableRow._(_ExerciseTableRowType.blockSeparator, cells);

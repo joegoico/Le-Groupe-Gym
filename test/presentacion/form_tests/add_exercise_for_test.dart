@@ -4,6 +4,20 @@ import 'package:le_groupe_gym/data/models/category_exercise_model.dart';
 import 'package:le_groupe_gym/presentacion/forms/exercise_form.dart';
 import '../../mocks/mock_exercise_repository.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
+import 'package:le_groupe_gym/data/repositories/exercise_repository.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+
+class _FailingExerciseRepository implements ExerciseRepository {
+  @override
+  Future<int> createExercise({
+    required String nombre,
+    required List<int> categoriaIds,
+    String? id,
+  }) async => throw const DuplicateFailure('Ya existe un ejercicio con este nombre.');
+
+  @override
+  Future<List<Ejercicio>> getExercises() async => [];
+}
 
 void main() {
   group('AddExerciseForm Tests', () {
@@ -25,23 +39,10 @@ void main() {
       ),
     ];
 
-    final mockEjercicios = [
-      Ejercicio(idEjercicio: 1, nombre: 'Press de Banca Plano', categorias: []),
-      Ejercicio(
-        idEjercicio: 2,
-        nombre: 'Press de Banca Inclinado',
-        categorias: [],
-      ),
-      Ejercicio(
-        idEjercicio: 3,
-        nombre: 'Press de Banca Declinado',
-        categorias: [],
-      ),
-    ];
-
     Widget createWidgetUnderTest({
       VoidCallback? onCancelar,
       Function(Map<String, dynamic>)? onGuardar,
+      ExerciseRepository? exerciseRepository,
     }) {
       return MaterialApp(
         home: Scaffold(
@@ -49,7 +50,7 @@ void main() {
             categorias: mockCategorias,
             onCancelar: onCancelar ?? () {},
             onGuardar: onGuardar ?? (_) {},
-            exerciseRepository: MockExerciseRepository(),
+            exerciseRepository: exerciseRepository ?? MockExerciseRepository(),
           ),
         ),
       );
@@ -136,5 +137,63 @@ void main() {
       );
       expect(boton.onPressed, isNotNull);
     });
+
+    testWidgets(
+      'detecta como duplicado un nombre que solo cambia mayúsculas o espacios',
+      (tester) async {
+        var guardados = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(onGuardar: (_) => guardados++),
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('exercise_name_field')),
+          '  press de banca  ',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Guardar Ejercicio'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('error-ejercicio')), findsOneWidget);
+        expect(
+          find.text('Ya existe un ejercicio con este nombre.'),
+          findsOneWidget,
+        );
+        expect(guardados, isZero);
+      },
+    );
+
+    testWidgets(
+      'muestra el error de ejercicio duplicado inline y lo limpia al editar',
+      (tester) async {
+        await tester.pumpWidget(
+          createWidgetUnderTest(
+            exerciseRepository: _FailingExerciseRepository(),
+          ),
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('exercise_name_field')),
+          'Press de Banca',
+        );
+        await tester.pump();
+        await tester.tap(find.text('Guardar Ejercicio'));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('error-ejercicio')), findsOneWidget);
+        expect(
+          find.text('Ya existe un ejercicio con este nombre.'),
+          findsOneWidget,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('exercise_name_field')),
+          'Press con Mancuernas',
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('error-ejercicio')), findsNothing);
+      },
+    );
   });
 }

@@ -3,7 +3,6 @@ import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
 void main() {
   group('Alumno Model Tests', () {
-
     test('debe instanciar un Alumno correctamente', () {
       // Arrange
       const idEsperado = 'abc-123';
@@ -26,25 +25,28 @@ void main() {
       expect(alumno.mail, mailEsperado);
     });
 
-    test('fromMap debe reconstruir un Alumno desde la respuesta de Supabase', () {
-      // Arrange — refleja exactamente las columnas de la tabla
-      final jsonMock = {
-        'id_alumno': 'abc-123',
-        'Nombre': 'Juan',
-        'Apellido': 'Pérez',
-        'Mail': 'juan@mail.com',
-        'aplica_descuento': false,
-      };
+    test(
+      'fromMap debe reconstruir un Alumno desde la respuesta de Supabase',
+      () {
+        // Arrange — refleja exactamente las columnas de la tabla
+        final jsonMock = {
+          'id_alumno': 'abc-123',
+          'Nombre': 'Juan',
+          'Apellido': 'Pérez',
+          'Mail': 'juan@mail.com',
+          'aplica_descuento': false,
+        };
 
-      // Act
-      final alumno = Alumno.fromMap(jsonMock);
+        // Act
+        final alumno = Alumno.fromMap(jsonMock);
 
-      // Assert
-      expect(alumno.idAlumno, 'abc-123');
-      expect(alumno.nombre, 'Juan');
-      expect(alumno.apellido, 'Pérez');
-      expect(alumno.mail, 'juan@mail.com');
-    });
+        // Assert
+        expect(alumno.idAlumno, 'abc-123');
+        expect(alumno.nombre, 'Juan');
+        expect(alumno.apellido, 'Pérez');
+        expect(alumno.mail, 'juan@mail.com');
+      },
+    );
 
     test('mail puede ser nulo', () {
       // Arrange

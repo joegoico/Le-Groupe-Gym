@@ -10,7 +10,11 @@ class MockPagoRepository implements PagoRepository {
   }
 
   @override
-  Future<List<Pago>> getPagosPorAlumno(String idAlumno, {int? anio, int? mes}) async {
+  Future<List<Pago>> getPagosPorAlumno(
+    String idAlumno, {
+    int? anio,
+    int? mes,
+  }) async {
     return _pagos.where((p) {
       if (p.idAlumno != idAlumno) return false;
       if (anio != null && p.fechaDePago.year != anio) return false;
@@ -21,8 +25,7 @@ class MockPagoRepository implements PagoRepository {
 
   @override
   Future<Pago?> getUltimoPago(String idAlumno) async {
-    final pagosAlumno =
-        _pagos.where((p) => p.idAlumno == idAlumno).toList();
+    final pagosAlumno = _pagos.where((p) => p.idAlumno == idAlumno).toList();
     if (pagosAlumno.isEmpty) return null;
     pagosAlumno.sort((a, b) => b.fechaDePago.compareTo(a.fechaDePago));
     return pagosAlumno.first;

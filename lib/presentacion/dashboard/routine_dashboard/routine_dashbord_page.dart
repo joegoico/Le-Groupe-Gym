@@ -126,31 +126,51 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
 
   void _onSolicitudGuardada(SolicitudRutina solicitud) {
     final previousSolicitudes = List<SolicitudRutina>.from(_solicitudes);
-    final previousRecent = List<SolicitudRutina>.from(_recentlyCreatedSolicitudes);
+    final previousRecent = List<SolicitudRutina>.from(
+      _recentlyCreatedSolicitudes,
+    );
 
     setState(() {
       _solicitudes.insert(0, solicitud);
       _recentlyCreatedSolicitudes.insert(0, solicitud);
     });
 
-    _guardarSolicitudEnBackground(solicitud, previousSolicitudes, previousRecent);
+    _guardarSolicitudEnBackground(
+      solicitud,
+      previousSolicitudes,
+      previousRecent,
+    );
   }
 
-  Future<void> _guardarSolicitudEnBackground(SolicitudRutina solicitud, List<SolicitudRutina> previousSolicitudes, List<SolicitudRutina> previousRecent) async {
+  Future<void> _guardarSolicitudEnBackground(
+    SolicitudRutina solicitud,
+    List<SolicitudRutina> previousSolicitudes,
+    List<SolicitudRutina> previousRecent,
+  ) async {
     try {
-      final idSolicitud = await ref.read(solicitudRutinaRepositoryProvider).createSolicitud(solicitud);
-      
+      final idSolicitud = await ref
+          .read(solicitudRutinaRepositoryProvider)
+          .createSolicitud(solicitud);
+
       if (mounted) {
         setState(() {
           final idx = _solicitudes.indexOf(solicitud);
-          if (idx != -1) _solicitudes[idx] = solicitud.copyWith(idSolicitud: idSolicitud);
-          
+          if (idx != -1) {
+            _solicitudes[idx] = solicitud.copyWith(idSolicitud: idSolicitud);
+          }
+
           final idx2 = _recentlyCreatedSolicitudes.indexOf(solicitud);
-          if (idx2 != -1) _recentlyCreatedSolicitudes[idx2] = solicitud.copyWith(idSolicitud: idSolicitud);
+          if (idx2 != -1) {
+            _recentlyCreatedSolicitudes[idx2] = solicitud.copyWith(
+              idSolicitud: idSolicitud,
+            );
+          }
         });
       }
-      
-      GlobalMessenger.showSuccessSnackbar('Solicitud de rutina creada exitosamente');
+
+      GlobalMessenger.showSuccessSnackbar(
+        'Solicitud de rutina creada exitosamente',
+      );
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -158,7 +178,9 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
           _recentlyCreatedSolicitudes = previousRecent;
         });
       }
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al crear la solicitud de rutina. Verifica tu conexión e intenta de nuevo.');
+      GlobalMessenger.showErrorSnackbar(
+        'Ocurrió un error inesperado al crear la solicitud de rutina. Verifica tu conexión e intenta de nuevo.',
+      );
     }
   }
 
@@ -167,7 +189,7 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
       idRutina: -DateTime.now().millisecondsSinceEpoch,
       idAlumno: alumno.idAlumno,
       nombre: r.nombre,
-      dias: [], 
+      dias: [],
       fechaCreacion: DateTime.now(),
       notasGenerales: r.notasGenerales,
       urlPdf: null,
@@ -175,7 +197,9 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
     );
 
     final item = (rutina: rutinaClonada, alumno: alumno);
-    final previousRutinas = List<({Rutina rutina, Alumno alumno})>.from(_rutinas);
+    final previousRutinas = List<({Rutina rutina, Alumno alumno})>.from(
+      _rutinas,
+    );
 
     setState(() {
       _rutinas.insert(0, item);
@@ -186,10 +210,10 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
   }
 
   Future<void> _addGenericRoutineBackground(
-    Rutina r, 
-    Alumno alumno, 
-    Rutina rutinaClonada, 
-    List<({Rutina rutina, Alumno alumno})> previousRutinas
+    Rutina r,
+    Alumno alumno,
+    Rutina rutinaClonada,
+    List<({Rutina rutina, Alumno alumno})> previousRutinas,
   ) async {
     try {
       final repo = ref.read(routineRepositoryProvider);
@@ -239,21 +263,28 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
       if (mounted) {
         setState(() {
           final idx = _rutinas.indexWhere(
-            (element) => element.rutina.idRutina == rutinaClonada.idRutina
+            (element) => element.rutina.idRutina == rutinaClonada.idRutina,
           );
           if (idx != -1) {
             _rutinas[idx] = (
-              rutina: rutinaConDias.copyWith(idRutina: newId, urlPdf: newPdfUrl),
-              alumno: alumno
+              rutina: rutinaConDias.copyWith(
+                idRutina: newId,
+                urlPdf: newPdfUrl,
+              ),
+              alumno: alumno,
             );
           }
         });
-        GlobalMessenger.showSuccessSnackbar('Rutina asignada y enviada a ${alumno.mail}');
+        GlobalMessenger.showSuccessSnackbar(
+          'Rutina asignada y enviada a ${alumno.mail}',
+        );
       }
     } catch (e) {
       if (mounted) {
         setState(() => _rutinas = previousRutinas);
-        GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al asignar la rutina. Verifica tu conexión e intenta de nuevo.');
+        GlobalMessenger.showErrorSnackbar(
+          'Ocurrió un error inesperado al asignar la rutina. Verifica tu conexión e intenta de nuevo.',
+        );
       }
     }
   }
@@ -305,7 +336,8 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
               );
               if (confirm == true) {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               }
             },
             onNavigate: (route) => context.go(route),
@@ -339,12 +371,19 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                     ElevatedButton.icon(
                       onPressed: () async {
                         final result = await context
-                            .push<({Rutina rutina, Alumno alumno, Future<Rutina> future})?>(
-                              '/crear-rutina',
-                            );
+                            .push<
+                              ({
+                                Rutina rutina,
+                                Alumno alumno,
+                                Future<Rutina> future,
+                              })?
+                            >('/crear-rutina');
                         if (result != null) {
                           setState(() {
-                            _rutinas.insert(0, (rutina: result.rutina, alumno: result.alumno));
+                            _rutinas.insert(0, (
+                              rutina: result.rutina,
+                              alumno: result.alumno,
+                            ));
                             if (_rutinas.length > 10) _rutinas.removeLast();
                           });
 
@@ -352,14 +391,27 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                             final realRutina = await result.future;
                             if (mounted) {
                               setState(() {
-                                final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
-                                if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                                final idx = _rutinas.indexWhere(
+                                  (r) =>
+                                      r.rutina.idRutina ==
+                                      result.rutina.idRutina,
+                                );
+                                if (idx != -1) {
+                                  _rutinas[idx] = (
+                                    rutina: realRutina,
+                                    alumno: result.alumno,
+                                  );
+                                }
                               });
                             }
                           } catch (_) {
                             if (mounted) {
                               setState(() {
-                                _rutinas.removeWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                _rutinas.removeWhere(
+                                  (r) =>
+                                      r.rutina.idRutina ==
+                                      result.rutina.idRutina,
+                                );
                               });
                             }
                           }
@@ -404,29 +456,52 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                     onRegistrarSolicitud:
                                         _showRegistrarSolicitudForm,
                                     onResolverSolicitud: (solicitud) async {
-                                      final result = await context.push<({Rutina rutina, Alumno alumno, Future<Rutina> future})?>(
-                                        '/crear-rutina',
-                                        extra: solicitud,
-                                      );
+                                      final result = await context
+                                          .push<
+                                            ({
+                                              Rutina rutina,
+                                              Alumno alumno,
+                                              Future<Rutina> future,
+                                            })?
+                                          >('/crear-rutina', extra: solicitud);
                                       if (result != null) {
                                         _eliminarSolicitudLocal(solicitud);
                                         setState(() {
-                                          _rutinas.insert(0, (rutina: result.rutina, alumno: result.alumno));
-                                          if (_rutinas.length > 10) _rutinas.removeLast();
+                                          _rutinas.insert(0, (
+                                            rutina: result.rutina,
+                                            alumno: result.alumno,
+                                          ));
+                                          if (_rutinas.length > 10) {
+                                            _rutinas.removeLast();
+                                          }
                                         });
 
                                         try {
-                                          final realRutina = await result.future;
+                                          final realRutina =
+                                              await result.future;
                                           if (mounted) {
                                             setState(() {
-                                              final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
-                                              if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                                              final idx = _rutinas.indexWhere(
+                                                (r) =>
+                                                    r.rutina.idRutina ==
+                                                    result.rutina.idRutina,
+                                              );
+                                              if (idx != -1) {
+                                                _rutinas[idx] = (
+                                                  rutina: realRutina,
+                                                  alumno: result.alumno,
+                                                );
+                                              }
                                             });
                                           }
                                         } catch (_) {
                                           if (mounted) {
                                             setState(() {
-                                              _rutinas.removeWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
+                                              _rutinas.removeWhere(
+                                                (r) =>
+                                                    r.rutina.idRutina ==
+                                                    result.rutina.idRutina,
+                                              );
                                             });
                                           }
                                         }
@@ -465,12 +540,12 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final result =
-                                                await context.push<
+                                            final result = await context
+                                                .push<
                                                   ({
                                                     Rutina rutina,
                                                     Alumno alumno,
-                                                    Future<Rutina> future
+                                                    Future<Rutina> future,
                                                   })?
                                                 >(
                                                   '/editar-rutina',
@@ -487,16 +562,34 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                               .idRutina,
                                                     );
                                                 if (index != -1) {
-                                                  _rutinas[index] = (rutina: result.rutina, alumno: result.alumno);
+                                                  _rutinas[index] = (
+                                                    rutina: result.rutina,
+                                                    alumno: result.alumno,
+                                                  );
                                                 }
                                               });
 
                                               try {
-                                                final realRutina = await result.future;
+                                                final realRutina =
+                                                    await result.future;
                                                 if (mounted) {
                                                   setState(() {
-                                                    final idx = _rutinas.indexWhere((r) => r.rutina.idRutina == result.rutina.idRutina);
-                                                    if (idx != -1) _rutinas[idx] = (rutina: realRutina, alumno: result.alumno);
+                                                    final idx = _rutinas
+                                                        .indexWhere(
+                                                          (r) =>
+                                                              r
+                                                                  .rutina
+                                                                  .idRutina ==
+                                                              result
+                                                                  .rutina
+                                                                  .idRutina,
+                                                        );
+                                                    if (idx != -1) {
+                                                      _rutinas[idx] = (
+                                                        rutina: realRutina,
+                                                        alumno: result.alumno,
+                                                      );
+                                                    }
                                                   });
                                                 }
                                               } catch (_) {
@@ -538,11 +631,15 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                           rutina.idRutina,
                                                     );
                                                   });
-                                                  GlobalMessenger.showSuccessSnackbar('Rutina eliminada exitosamente');
+                                                  GlobalMessenger.showSuccessSnackbar(
+                                                    'Rutina eliminada exitosamente',
+                                                  );
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.');
+                                                  GlobalMessenger.showErrorSnackbar(
+                                                    'Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.',
+                                                  );
                                                 }
                                               }
                                             }
@@ -555,26 +652,48 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                           rutinas: _rutinasPredeterminadas,
                                           onNuevaRutina: () async {
                                             final result = await context
-                                                .push<(Rutina, Future<Rutina>)?>(
+                                                .push<
+                                                  (Rutina, Future<Rutina>)?
+                                                >(
                                                   '/nueva-rutina-predeterminada',
                                                 );
                                             if (result != null) {
-                                              final (rutinaLocal, future) = result;
+                                              final (rutinaLocal, future) =
+                                                  result;
                                               setState(() {
-                                                _rutinasPredeterminadas.insert(0, rutinaLocal);
+                                                _rutinasPredeterminadas.insert(
+                                                  0,
+                                                  rutinaLocal,
+                                                );
                                               });
                                               try {
                                                 final realRutina = await future;
                                                 if (mounted) {
                                                   setState(() {
-                                                    final idx = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaLocal.idRutina);
-                                                    if (idx != -1) _rutinasPredeterminadas[idx] = realRutina;
+                                                    final idx =
+                                                        _rutinasPredeterminadas
+                                                            .indexWhere(
+                                                              (r) =>
+                                                                  r.idRutina ==
+                                                                  rutinaLocal
+                                                                      .idRutina,
+                                                            );
+                                                    if (idx != -1) {
+                                                      _rutinasPredeterminadas[idx] =
+                                                          realRutina;
+                                                    }
                                                   });
                                                 }
                                               } catch (_) {
                                                 if (mounted) {
                                                   setState(() {
-                                                    _rutinasPredeterminadas.removeWhere((r) => r.idRutina == rutinaLocal.idRutina);
+                                                    _rutinasPredeterminadas
+                                                        .removeWhere(
+                                                          (r) =>
+                                                              r.idRutina ==
+                                                              rutinaLocal
+                                                                  .idRutina,
+                                                        );
                                                   });
                                                 }
                                               }
@@ -595,13 +714,16 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                             }
                                           },
                                           onEditarRutina: (rutina) async {
-                                            final result =
-                                                await context.push<(Rutina, Future<Rutina>)?>(
+                                            final result = await context
+                                                .push<
+                                                  (Rutina, Future<Rutina>)?
+                                                >(
                                                   '/editar-rutina',
                                                   extra: rutina,
                                                 );
                                             if (result != null) {
-                                              final (rutinaLocal, future) = result;
+                                              final (rutinaLocal, future) =
+                                                  result;
                                               setState(() {
                                                 final index =
                                                     _rutinasPredeterminadas
@@ -620,8 +742,18 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                 final realRutina = await future;
                                                 if (mounted) {
                                                   setState(() {
-                                                    final idx = _rutinasPredeterminadas.indexWhere((r) => r.idRutina == rutinaLocal.idRutina);
-                                                    if (idx != -1) _rutinasPredeterminadas[idx] = realRutina;
+                                                    final idx =
+                                                        _rutinasPredeterminadas
+                                                            .indexWhere(
+                                                              (r) =>
+                                                                  r.idRutina ==
+                                                                  rutinaLocal
+                                                                      .idRutina,
+                                                            );
+                                                    if (idx != -1) {
+                                                      _rutinasPredeterminadas[idx] =
+                                                          realRutina;
+                                                    }
                                                   });
                                                 }
                                               } catch (_) {
@@ -663,11 +795,15 @@ class _RutinasDashboardPageState extends ConsumerState<RutinasDashboardPage> {
                                                               rutina.idRutina,
                                                         );
                                                   });
-                                                  GlobalMessenger.showSuccessSnackbar('Rutina eliminada exitosamente');
+                                                  GlobalMessenger.showSuccessSnackbar(
+                                                    'Rutina eliminada exitosamente',
+                                                  );
                                                 }
                                               } catch (e) {
                                                 if (mounted) {
-                                                  GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.');
+                                                  GlobalMessenger.showErrorSnackbar(
+                                                    'Ocurrió un error inesperado al eliminar la rutina. Verifica tu conexión e intenta de nuevo.',
+                                                  );
                                                 }
                                               }
                                             }

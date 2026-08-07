@@ -1,4 +1,5 @@
-import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/solicitud_rutina_model.dart';
 
@@ -21,7 +22,7 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
       // todos los campos de la solicitud y que haga un JOIN automático con la tabla
       // 'alumnos' (o como se llame en tu BD) trayendo solo nombre y apellido.
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
@@ -33,9 +34,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
           .map((json) => SolicitudRutina.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener solicitudes: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -43,7 +44,7 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   Future<int> createSolicitud(SolicitudRutina solicitud) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
@@ -53,9 +54,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
 
       return response['id_solicitud'] as int;
     } on PostgrestException catch (e) {
-      throw Exception('Error al crear solicitud: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -63,7 +64,7 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   Future<void> deleteSolicitud(int idSolicitud) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient
           .from('Solicitudes_Rutina')
@@ -71,9 +72,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
           .eq('id_solicitud', idSolicitud)
           .eq('user_id', userId);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar solicitud: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -81,7 +82,7 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
   Future<int> contarSolicitudesPendientes() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Solicitudes_Rutina')
@@ -91,9 +92,9 @@ class SupabaseSolicitudRutinaRepository implements SolicitudRutinaRepository {
 
       return response.count;
     } on PostgrestException catch (e) {
-      throw Exception('Error al contar solicitudes: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

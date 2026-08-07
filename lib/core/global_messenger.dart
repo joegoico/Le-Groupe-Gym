@@ -17,22 +17,23 @@ class GlobalMessenger {
     _showSnackbar(message, AppColors.errorContainer, AppColors.error);
   }
 
-  static void _showSnackbar(String message, Color bgColor, Color textColor) {
-    final messengerState = rootScaffoldMessengerKey.currentState;
-    if (messengerState != null) {
-      messengerState.showSnackBar(
-        SnackBar(
-          content: Text(
-            message,
-            style: AppTextStyles.subtittlesBold.copyWith(color: textColor),
-          ),
-          backgroundColor: bgColor,
-          behavior: SnackBarBehavior.floating,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(AppRadius.md),
-          ),
+  static void _showSnackbar(
+    String message,
+    Color backgroundColor,
+    Color textColor,
+  ) {
+    rootScaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: AppTextStyles.subtittlesBold.copyWith(color: textColor),
         ),
-      );
-    }
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(AppRadius.md),
+        ),
+      ),
+    );
   }
 }

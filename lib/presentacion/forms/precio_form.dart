@@ -3,6 +3,7 @@ import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 import 'package:le_groupe_gym/data/repositories/precio_repository.dart';
 import 'package:uuid/uuid.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 
 class PrecioForm extends StatefulWidget {
   final Precio? precio;
@@ -26,6 +27,7 @@ class _PrecioFormState extends State<PrecioForm> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _precioController;
   late TextEditingController _cantidadDiasController;
+  String? _errorPrecio;
 
   @override
   void initState() {
@@ -45,17 +47,63 @@ class _PrecioFormState extends State<PrecioForm> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
+    setState(() => _errorPrecio = null);
+
+    final strValor = _precioController.text.trim();
+    final strDias = _cantidadDiasController.text.trim();
+
+    if (strValor.isEmpty || strDias.isEmpty) {
+      return; // El validator de TextFormField ya muestra que es requerido
+    }
+
+    final nuevoValor = int.tryParse(strValor);
+    final nuevaCantidadDias = int.tryParse(strDias);
+
+    if (nuevoValor == null || nuevaCantidadDias == null) {
+      return; // El validator de TextFormField ya muestra que no es numérico
+    }
+
+    if (nuevoValor <= 0) {
+      setState(() => _errorPrecio = 'El valor debe ser mayor a 0');
+      return;
+    }
+
+    if (nuevaCantidadDias <= 0 || nuevaCantidadDias >= 8) {
+      setState(
+        () => _errorPrecio = 'La cantidad de días debe estar entre 1 y 7',
+      );
+      return;
+    }
+
+    try {
+      final preciosExistentes = await widget.precioRepository.getPrecios();
+      final yaExiste = preciosExistentes.any(
+        (p) =>
+            p.cantidadDias == nuevaCantidadDias &&
+            p.idPrecio != widget.precio?.idPrecio,
+      );
+
+      if (yaExiste) {
+        setState(() {
+          _errorPrecio = 'Ya existe un plan con esta duración.';
+        });
+        return;
+      }
+    } catch (e) {
+      // Si falla la obtención, procedemos para que falle en guardar y se muestre ahí
+    }
+
     final precio = Precio(
       idPrecio: widget.precio?.idPrecio ?? const Uuid().v4(),
-      valor: int.parse(_precioController.text.trim()),
-      cantidadDias: int.parse(_cantidadDiasController.text.trim()),
+      valor: nuevoValor,
+      cantidadDias: nuevaCantidadDias,
     );
-    
+
     widget.onGuardar(precio);
   }
 
@@ -172,12 +220,8 @@ class _PrecioFormState extends State<PrecioForm> {
                         if (value == null || value.trim().isEmpty) {
                           return 'El precio es requerido';
                         }
-                        final valorInt = int.tryParse(value.trim());
-                        if (valorInt == null) {
+                        if (int.tryParse(value.trim()) == null) {
                           return 'Debe ser un número válido';
-                        }
-                        if (valorInt <= 0) {
-                          return 'Debe ser mayor a 0';
                         }
                         return null;
                       },
@@ -196,7 +240,7 @@ class _PrecioFormState extends State<PrecioForm> {
                       controller: _cantidadDiasController,
                       style: AppTextStyles.subtittles.copyWith(fontSize: 14),
                       decoration: InputDecoration(
-                        hintText: 'Ej. 30',
+                        hintText: 'Ej. 3',
                         hintStyle: AppTextStyles.subtittles.copyWith(
                           fontSize: 14,
                           color: AppColors.onSurfaceVariant.withValues(
@@ -228,15 +272,23 @@ class _PrecioFormState extends State<PrecioForm> {
                         if (value == null || value.trim().isEmpty) {
                           return 'La cantidad de días es requerida';
                         }
-                        final dias = int.tryParse(value);
-                        if (dias == null || dias <= 0) {
-                          return 'Debe ser mayor a 0';
+                        if (int.tryParse(value) == null) {
+                          return 'Debe ser un número válido';
                         }
                         return null;
                       },
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
+
+                  if (_errorPrecio != null) ...[
+                    InlineError(
+                      key: const Key('error-precio-existente'),
+                      mensaje: _errorPrecio!,
+                      icon: Icons.warning_amber_rounded,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
 
                   // Botones
                   Row(
@@ -267,9 +319,7 @@ class _PrecioFormState extends State<PrecioForm> {
                             onPressed: _submit,
                             icon: const Icon(Icons.check, size: 16),
                             label: Text(
-                              widget.precio == null
-                                  ? 'Crear Plan'
-                                  : 'Guardar',
+                              widget.precio == null ? 'Crear Plan' : 'Guardar',
                               style: AppTextStyles.buttonText.copyWith(
                                 color: AppColors.onPrimary,
                               ),

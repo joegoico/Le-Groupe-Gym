@@ -27,7 +27,8 @@ class DetalleCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (accentLeft) Container(width: 4, color: accentColor ?? AppColors.primary),
+              if (accentLeft)
+                Container(width: 4, color: accentColor ?? AppColors.primary),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.lg),

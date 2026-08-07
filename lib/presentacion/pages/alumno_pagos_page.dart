@@ -183,12 +183,15 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
       }
 
       if (borrabaUltimoPago) {
-        pagoRepository.getUltimoPago(widget.alumno.idAlumno).then((ultimoPago) {
-          if (!mounted) return;
-          setState(() => _ultimoPago = ultimoPago);
-        }).catchError((_) {
-          // Conservamos el estado local si el refresco del resumen falla.
-        });
+        pagoRepository
+            .getUltimoPago(widget.alumno.idAlumno)
+            .then((ultimoPago) {
+              if (!mounted) return;
+              setState(() => _ultimoPago = ultimoPago);
+            })
+            .catchError((_) {
+              // Conservamos el estado local si el refresco del resumen falla.
+            });
       }
 
       ref.invalidate(deudorAlumnoProvider(widget.alumno.idAlumno));
@@ -242,101 +245,104 @@ class _AlumnoPagosPageState extends ConsumerState<AlumnoPagosPage> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // ── Cabecera (Avatar y Nombre) ──────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: avatarColor,
-                      child: Text(
-                        _getInitials(),
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                      children: [
+                        // ── Cabecera (Avatar y Nombre) ──────────────────────────────────
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: avatarColor,
+                              child: Text(
+                                _getInitials(),
+                                style: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                widget.alumno.nombreCompleto,
+                                style: GoogleFonts.inter(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.onSurface,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        widget.alumno.nombreCompleto,
-                        style: GoogleFonts.inter(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.onSurface,
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // ── Estado de Cuenta ──────────────────────────────────────────
+                        EstadoCuentaCard(
+                          ultimoPago: _ultimoPago,
+                          deudor: deudor,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.xl),
 
-                // ── Estado de Cuenta ──────────────────────────────────────────
-                EstadoCuentaCard(ultimoPago: _ultimoPago, deudor: deudor),
-                const SizedBox(height: AppSpacing.xl),
+                        // ── Historial de Pagos ──────────────────────────────────────────
+                        HistorialPagosCard(
+                          pagos: _pagos,
+                          isLoading: _isLoading,
+                          alumno: widget.alumno,
+                          onEdit: _editarPago,
+                          onDelete: _confirmarEliminarPago,
+                          onFilterSelected: (val) {
+                            if (val == 'todos') {
+                              setState(() {
+                                _selectedMonth = null;
+                                _selectedYear = DateTime.now().year;
+                              });
+                              _loadData();
+                            } else if (val.startsWith('mes_')) {
+                              setState(() {
+                                _selectedMonth = int.parse(val.split('_')[1]);
+                              });
+                              _loadData();
+                            }
+                          },
+                        ),
 
-                // ── Historial de Pagos ──────────────────────────────────────────
-                HistorialPagosCard(
-                  pagos: _pagos,
-                  isLoading: _isLoading,
-                  alumno: widget.alumno,
-                  onEdit: _editarPago,
-                  onDelete: _confirmarEliminarPago,
-                  onFilterSelected: (val) {
-                    if (val == 'todos') {
-                      setState(() {
-                        _selectedMonth = null;
-                        _selectedYear = DateTime.now().year;
-                      });
-                      _loadData();
-                    } else if (val.startsWith('mes_')) {
-                      setState(() {
-                        _selectedMonth = int.parse(val.split('_')[1]);
-                      });
-                      _loadData();
-                    }
-                  },
-                ),
+                        const SizedBox(height: AppSpacing.xl),
 
-                const SizedBox(height: AppSpacing.xl),
-
-                // ── Botón Registrar Pago ──────────────────────────────────────────
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
-                    key: const Key('pagos_registrar_pago_btn'),
-                    onPressed: _crearPago,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(
-                        color: AppColors.primary,
-                        width: 1.5,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(AppRadius.md),
-                      ),
-                    ),
-                    child: Text(
-                      'Registrar Pago',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        // ── Botón Registrar Pago ──────────────────────────────────────────
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            key: const Key('pagos_registrar_pago_btn'),
+                            onPressed: _crearPago,
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                            child: Text(
+                              'Registrar Pago',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
-      ),
           ],
         ),
       ),

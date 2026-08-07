@@ -79,7 +79,7 @@ void main() {
           isA<Exception>().having(
             (e) => e.toString(),
             'message',
-            contains('Error al obtener ejercicios'),
+            contains('No se pudo completar la operación'),
           ),
         ),
       );

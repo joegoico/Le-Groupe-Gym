@@ -49,7 +49,7 @@ class RoutineBlockSection extends StatelessWidget {
 
         return "${currentBloque.nombre}_${currentBloque.ejercicios.length}_${isActive}_${canDelete}_$exercisesState";
       },
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         if (dayIndex >= controller.dias.length) {
           return const SizedBox.shrink();
         }
@@ -151,14 +151,15 @@ class RoutineBlockSection extends StatelessWidget {
                           Builder(
                             builder: (btnContext) => IconButton(
                               onPressed: () async {
-                                  final confirmed = await showDialog<bool>(
-                                    context: btnContext,
-                                    builder: (_) => const DeleteConfirmDialog(
-                                      title: 'Eliminar bloque',
-                                      message: '¿Estás seguro de que querés eliminar este bloque?',
-                                    ),
-                                  );
-                                  if (confirmed != true) return;
+                                final confirmed = await showDialog<bool>(
+                                  context: btnContext,
+                                  builder: (_) => const DeleteConfirmDialog(
+                                    title: 'Eliminar bloque',
+                                    message:
+                                        '¿Estás seguro de que querés eliminar este bloque?',
+                                  ),
+                                );
+                                if (confirmed != true) return;
                                 final ok = controller.removeBlock(blockIndex);
                                 if (!ok) {
                                   onShowMessage?.call('No se pudo eliminar.');
@@ -219,7 +220,12 @@ class RoutineBlockSection extends StatelessWidget {
                       itemCount: currentBloque.ejercicios.length,
                       itemBuilder: (context, exerciseIndex) {
                         return RoutineExerciseCard(
-                          key: ValueKey(currentBloque.ejercicios[exerciseIndex].ejercicio.idEjercicio),
+                          key: ValueKey(
+                            currentBloque
+                                .ejercicios[exerciseIndex]
+                                .ejercicio
+                                .idEjercicio,
+                          ),
                           blockIndex: blockIndex,
                           exerciseIndex: exerciseIndex,
                           item: currentBloque.ejercicios[exerciseIndex],

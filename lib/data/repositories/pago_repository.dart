@@ -1,4 +1,5 @@
-import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/pago_model.dart';
 
@@ -19,7 +20,7 @@ class SupabasePagoRepository implements PagoRepository {
   Future<void> insertarPago(Pago pago) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient.from('Pagos').insert({
         'id_pago': pago.idPago,
@@ -33,9 +34,9 @@ class SupabasePagoRepository implements PagoRepository {
         'user_id': userId,
       });
     } on PostgrestException catch (e) {
-      throw Exception('Error al insertar pago: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -47,7 +48,7 @@ class SupabasePagoRepository implements PagoRepository {
   }) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
 
       var query = supabaseClient
@@ -85,9 +86,9 @@ class SupabasePagoRepository implements PagoRepository {
           .map((json) => Pago.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener pagos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -95,7 +96,7 @@ class SupabasePagoRepository implements PagoRepository {
   Future<Pago?> getUltimoPago(String idAlumno) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
 
       final response = await supabaseClient
@@ -109,9 +110,9 @@ class SupabasePagoRepository implements PagoRepository {
       if (response == null) return null;
       return Pago.fromMap(response);
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener el último pago: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -130,23 +131,30 @@ class SupabasePagoRepository implements PagoRepository {
           })
           .eq('id_pago', pago.idPago);
     } on PostgrestException catch (e) {
-      throw Exception('Error al actualizar pago: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
   @override
   Future<void> deletePago(String idPago) async {
     try {
-      await supabaseClient.from('Pagos').delete().eq('id_pago', idPago).select().single();
+      await supabaseClient
+          .from('Pagos')
+          .delete()
+          .eq('id_pago', idPago)
+          .select()
+          .single();
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
-        throw Exception('El pago no pudo ser eliminado (permisos insuficientes o no existe).');
+        throw Exception(
+          'El pago no pudo ser eliminado (permisos insuficientes o no existe).',
+        );
       }
-      throw Exception('Error al eliminar pago: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

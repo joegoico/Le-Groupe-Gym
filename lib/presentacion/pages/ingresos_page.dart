@@ -77,7 +77,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error al cargar ingresos: $e')));
+        ).showSnackBar(SnackBar(content: Text("Error al cargar ingresos: $e")));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -100,7 +100,7 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
         rangePickerBackgroundColor: AppColors.surfaceContainerHigh,
         rangePickerHeaderBackgroundColor: AppColors.surfaceContainerHigh,
         rangeSelectionOverlayColor: WidgetStateProperty.all(
-          AppColors.primary.withOpacity(0.15),
+          AppColors.primary.withValues(alpha: 0.15),
         ),
       ),
     ),
@@ -176,7 +176,8 @@ class _IngresoPageState extends ConsumerState<IngresoPage> {
               );
               if (confirm == true) {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               }
             },
             onNavigate: (route) => context.go(route),

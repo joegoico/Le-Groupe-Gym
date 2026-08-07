@@ -1,5 +1,6 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/ingreso_model.dart';
 import 'package:le_groupe_gym/data/models/resumen_mensual_model.dart';
 
@@ -33,7 +34,7 @@ class SupabaseIngresoRepository implements IngresoRepository {
   Future<List<Ingreso>> getIngresos() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
@@ -45,9 +46,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
           .map((json) => Ingreso.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener ingresos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -62,8 +63,12 @@ class SupabaseIngresoRepository implements IngresoRepository {
       if (fecha != null) {
         params['p_fecha'] = fecha.toIso8601String().split('T')[0];
       } else {
-        if (desde != null) params['p_desde'] = desde.toIso8601String().split('T')[0];
-        if (hasta != null) params['p_hasta'] = hasta.toIso8601String().split('T')[0];
+        if (desde != null) {
+          params['p_desde'] = desde.toIso8601String().split('T')[0];
+        }
+        if (hasta != null) {
+          params['p_hasta'] = hasta.toIso8601String().split('T')[0];
+        }
       }
 
       final response = await supabaseClient.rpc(
@@ -75,9 +80,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
           .map((json) => ResumenMensual.fromRpc(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener resúmenes mensuales: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -85,7 +90,7 @@ class SupabaseIngresoRepository implements IngresoRepository {
   Future<String> createIngreso(Ingreso ingreso) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
@@ -95,9 +100,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
 
       return response['id_ingreso'] as String;
     } on PostgrestException catch (e) {
-      throw Exception('Error al crear ingreso: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -108,7 +113,7 @@ class SupabaseIngresoRepository implements IngresoRepository {
   }) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
@@ -122,9 +127,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
           .map((json) => Ingreso.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener ingresos por período: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -132,7 +137,7 @@ class SupabaseIngresoRepository implements IngresoRepository {
   Future<List<Ingreso>> getIngresosPorFecha({required DateTime fecha}) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Ingresos')
@@ -145,9 +150,9 @@ class SupabaseIngresoRepository implements IngresoRepository {
           .map((json) => Ingreso.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener ingresos por fecha: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

@@ -17,10 +17,7 @@ void main() {
 
     test('fromMap debe mapear correctamente desde Supabase', () {
       // Arrange
-      final jsonMock = {
-        'id_categoria': 'abc-123',
-        'nombre': 'Servicios',
-      };
+      final jsonMock = {'id_categoria': 'abc-123', 'nombre': 'Servicios'};
 
       // Act
       final categoria = CategoriaGasto.fromMap(jsonMock);

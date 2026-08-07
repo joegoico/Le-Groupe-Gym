@@ -14,7 +14,7 @@ class Ejercicio {
   factory Ejercicio.fromJson(Map<String, dynamic> json) {
     // Extraemos la lista de la relación muchos a muchos
     final relList = json['Rel_Ejercicio_Categoria'] as List? ?? [];
-    
+
     // Mapeamos cada elemento interno hacia nuestro modelo de CategoriaEjercicio
     final List<CategoriaEjercicio> cats = relList.map((rel) {
       final jsonCategoria = rel['Categorias_Ejercicio'] as Map<String, dynamic>;

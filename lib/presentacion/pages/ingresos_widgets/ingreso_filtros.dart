@@ -112,7 +112,11 @@ class IngresoFiltros extends StatelessWidget {
                       padding: const EdgeInsets.all(4),
                       child: Row(
                         children: [
-                          const Icon(Icons.close, size: 14, color: AppColors.primary),
+                          const Icon(
+                            Icons.close,
+                            size: 14,
+                            color: AppColors.primary,
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             'Limpiar',
@@ -188,7 +192,9 @@ class _FechaField extends StatelessWidget {
                     label,
                     style: AppTextStyles.labelCaps.copyWith(
                       fontSize: 10,
-                      color: isActive ? AppColors.primary : AppColors.onSurfaceVariant,
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 2),

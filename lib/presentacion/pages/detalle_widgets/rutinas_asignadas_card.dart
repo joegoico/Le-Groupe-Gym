@@ -10,10 +10,7 @@ import 'package:le_groupe_gym/presentacion/pages/detalle_widgets/detalle_rutina_
 class RutinasAsignadasCard extends StatelessWidget {
   final AsyncValue<List<({Rutina rutina, Alumno alumno})>> rutinasAsync;
 
-  const RutinasAsignadasCard({
-    super.key,
-    required this.rutinasAsync,
-  });
+  const RutinasAsignadasCard({super.key, required this.rutinasAsync});
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +45,7 @@ class RutinasAsignadasCard extends StatelessWidget {
             data: (lista) {
               if (lista.isEmpty) {
                 return Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.md,
-                  ),
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   child: Text(
                     'No tiene rutinas asignadas',
                     style: GoogleFonts.inter(
@@ -65,9 +60,7 @@ class RutinasAsignadasCard extends StatelessWidget {
                   final rutina = item.rutina;
                   final diasText = '${rutina.dias.length} días/semana';
                   return Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppSpacing.sm,
-                    ),
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: DetalleRutinaTile(
                       icon: Icons.fitness_center,
                       title: rutina.nombre,
@@ -78,21 +71,14 @@ class RutinasAsignadasCard extends StatelessWidget {
               );
             },
             loading: () => const Padding(
-              padding: EdgeInsets.symmetric(
-                vertical: AppSpacing.md,
-              ),
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Center(child: CircularProgressIndicator()),
             ),
             error: (err, stack) => Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.md,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Text(
                 'Error cargando rutinas: $err',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppColors.error,
-                ),
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.error),
               ),
             ),
           ),

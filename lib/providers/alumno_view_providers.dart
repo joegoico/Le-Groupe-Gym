@@ -31,7 +31,10 @@ final pagosAlumnoAnoProvider = FutureProvider.family<List<Pago>, String>((
   return repository.getPagosPorAlumno(idAlumno, anio: currentYear);
 });
 
-final deudorAlumnoProvider = FutureProvider.family<Deudor?, String>((ref, idAlumno) async {
+final deudorAlumnoProvider = FutureProvider.family<Deudor?, String>((
+  ref,
+  idAlumno,
+) async {
   final repository = ref.watch(deudorRepositoryProvider);
   final deudores = await repository.getDeudores();
   final index = deudores.indexWhere((d) => d.idDeudor == idAlumno);

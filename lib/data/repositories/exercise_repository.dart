@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/exercise_model.dart';
 
@@ -25,13 +26,9 @@ class SupabaseExerciseRepository implements ExerciseRepository {
           .map((json) => Ejercicio.fromJson(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception(
-        'Error al obtener ejercicios: ${e.message} (code: ${e.code})',
-      );
-    } on Exception catch (e) {
-      throw Exception('Error de red al obtener ejercicios: $e');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -63,9 +60,9 @@ class SupabaseExerciseRepository implements ExerciseRepository {
 
       return idEjercicio;
     } on PostgrestException catch (e) {
-      throw Exception('Error al crear ejercicio: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al crear ejercicio: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

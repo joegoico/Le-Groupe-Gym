@@ -1,4 +1,5 @@
-import 'package:le_groupe_gym/core/supabase_client.dart';
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 
@@ -29,7 +30,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<List<Alumno>> getAlumnos({int limit = 50, int offset = 0}) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
 
       final response = await supabaseClient
@@ -42,9 +43,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .map((json) => Alumno.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener alumnos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al obtener alumnos: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -52,7 +53,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<List<Alumno>> searchAlumnos(String query, {int limit = 10}) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final pattern = '%$query%';
       final response = await supabaseClient
@@ -67,9 +68,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .map((json) => Alumno.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al buscar alumnos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al buscar alumnos: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -77,7 +78,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<Alumno?> getAlumnoById(String idAlumno) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Alumno')
@@ -89,9 +90,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
       if (response == null) return null;
       return Alumno.fromMap(response);
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener alumno: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -99,7 +100,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<String> createAlumno(Alumno alumno) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Alumno')
@@ -113,9 +114,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .single();
       return response['id_alumno'] as String;
     } on PostgrestException catch (e) {
-      throw Exception('Error al crear alumno: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al crear alumno: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -123,7 +124,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<void> updateAlumno(Alumno alumno) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient
           .from('Alumno')
@@ -135,9 +136,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .eq('id_alumno', alumno.idAlumno)
           .eq('user_id', userId);
     } on PostgrestException catch (e) {
-      throw Exception('Error al actualizar alumno: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al actualizar alumno: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -145,7 +146,7 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
   Future<void> deleteAlumno(String idAlumno) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       await supabaseClient
           .from('Alumno')
@@ -153,9 +154,9 @@ class SupabaseAlumnoRepository implements AlumnoRepository {
           .eq('id_alumno', idAlumno)
           .eq('user_id', userId);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar alumno: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado al eliminar alumno: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

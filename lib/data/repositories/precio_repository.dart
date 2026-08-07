@@ -1,5 +1,6 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/precio_model.dart';
 
 abstract class PrecioRepository {
@@ -18,7 +19,7 @@ class SupabasePrecioRepository implements PrecioRepository {
   Future<List<Precio>> getPrecios() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Precios')
@@ -30,9 +31,9 @@ class SupabasePrecioRepository implements PrecioRepository {
           .map((json) => Precio.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener precios: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -40,7 +41,7 @@ class SupabasePrecioRepository implements PrecioRepository {
   Future<String> createPrecio(Precio precio) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Precios')
@@ -56,9 +57,9 @@ class SupabasePrecioRepository implements PrecioRepository {
       if (e.message.contains('check_precio_valor')) {
         throw Exception('El valor debe ser mayor a 0');
       }
-      throw Exception('Error al crear precio: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -76,9 +77,9 @@ class SupabasePrecioRepository implements PrecioRepository {
       if (e.message.contains('check_precio_valor')) {
         throw Exception('El valor debe ser mayor a 0');
       }
-      throw Exception('Error al actualizar precio: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -87,9 +88,9 @@ class SupabasePrecioRepository implements PrecioRepository {
     try {
       await supabaseClient.from('Precios').delete().eq('id_precio', idPrecio);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar precio: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

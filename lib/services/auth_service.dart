@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class AuthService {
   final SupabaseClient? _supabaseClient;
 
-  AuthService({SupabaseClient? supabaseClient}) : _supabaseClient = supabaseClient;
+  AuthService({this._supabaseClient});
 
   SupabaseClient get _client => _supabaseClient ?? SupabaseConfig.client;
 

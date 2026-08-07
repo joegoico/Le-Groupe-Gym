@@ -88,120 +88,118 @@ class AlumnoDetallePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                // Avatar
-                CircleAvatar(
-                  radius: 46,
-                  backgroundColor: avatarColor,
-                  child: Text(
-                    _getInitials(),
-                    style: GoogleFonts.inter(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Nombre
-                Text(
-                  alumno.nombreCompleto,
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-
-
-
-                // Información Personal Card
-                DetalleCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'INFORMACIÓN PERSONAL',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                          color: AppColors.onSurfaceVariant,
+                        // Avatar
+                        CircleAvatar(
+                          radius: 46,
+                          backgroundColor: avatarColor,
+                          child: Text(
+                            _getInitials(),
+                            style: GoogleFonts.inter(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                      DetalleInfoRow(
-                        icon: Icons.mail_outline,
-                        text: alumno.mail ?? 'Sin email registrado',
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      DetalleInfoRow(
-                        icon: Icons.person_outline,
-                        text: alumno.nombreCompleto,
-                      ),
-                    ],
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Nombre
+                        Text(
+                          alumno.nombreCompleto,
+                          style: GoogleFonts.inter(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.onSurface,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+
+                        // Información Personal Card
+                        DetalleCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'INFORMACIÓN PERSONAL',
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.2,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.lg),
+                              DetalleInfoRow(
+                                icon: Icons.mail_outline,
+                                text: alumno.mail ?? 'Sin email registrado',
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              DetalleInfoRow(
+                                icon: Icons.person_outline,
+                                text: alumno.nombreCompleto,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Estado de Cuenta Card
+                        EstadoCuentaCard(
+                          ultimoPago: ultimoPago,
+                          deudor: deudor,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Rutinas Asignadas Card
+                        RutinasAsignadasCard(rutinasAsync: rutinasAsync),
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // Botones de Acción Inferior
+                        const SizedBox(height: AppSpacing.md),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48,
+                          child: OutlinedButton(
+                            key: const Key('detalle_registrar_pago_btn'),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => PagoForm(alumno: alumno),
+                              ).then((_) {
+                                ref.invalidate(
+                                  ultimoPagoAlumnoProvider(alumno.idAlumno),
+                                );
+                                ref.invalidate(
+                                  deudorAlumnoProvider(alumno.idAlumno),
+                                );
+                              });
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.all(AppRadius.md),
+                              ),
+                            ),
+                            child: Text(
+                              'Registrar Pago',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Estado de Cuenta Card
-                EstadoCuentaCard(
-                  ultimoPago: ultimoPago,
-                  deudor: deudor,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Rutinas Asignadas Card
-                RutinasAsignadasCard(rutinasAsync: rutinasAsync),
-                const SizedBox(height: AppSpacing.xl),
-
-                // Botones de Acción Inferior
-                const SizedBox(height: AppSpacing.md),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: OutlinedButton(
-                    key: const Key('detalle_registrar_pago_btn'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => PagoForm(alumno: alumno),
-                      ).then((_) {
-                        ref.invalidate(
-                          ultimoPagoAlumnoProvider(alumno.idAlumno),
-                        );
-                        ref.invalidate(
-                          deudorAlumnoProvider(alumno.idAlumno),
-                        );
-                      });
-                    },
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(
-                        color: AppColors.primary,
-                        width: 1.5,
-                      ),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.all(AppRadius.md),
-                      ),
-                    ),
-                    child: Text(
-                      'Registrar Pago',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
-      ),
           ],
         ),
       ),

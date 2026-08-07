@@ -244,7 +244,8 @@ class RoutineExerciseCard extends StatelessWidget {
                     context: btnContext,
                     builder: (_) => const DeleteConfirmDialog(
                       title: 'Eliminar ejercicio',
-                      message: '¿Estás seguro de que querés eliminar este ejercicio?',
+                      message:
+                          '¿Estás seguro de que querés eliminar este ejercicio?',
                     ),
                   );
                   if (confirmed != true) return;

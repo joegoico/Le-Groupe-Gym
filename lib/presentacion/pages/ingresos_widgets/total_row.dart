@@ -10,14 +10,15 @@ class TotalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final format = NumberFormat.currency(locale: 'es_AR', symbol: '\$', decimalDigits: 0);
+    final format = NumberFormat.currency(
+      locale: 'es_AR',
+      symbol: '\$',
+      decimalDigits: 0,
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          'TOTAL INGRESOS',
-          style: AppTextStyles.labelCaps,
-        ),
+        Text('TOTAL INGRESOS', style: AppTextStyles.labelCaps),
         Text(
           format.format(total),
           style: GoogleFonts.inter(

@@ -11,7 +11,6 @@ import 'package:le_groupe_gym/presentacion/pages/deudores_widgets/deudor_card.da
 import 'package:le_groupe_gym/providers/repository_providers.dart';
 import 'package:le_groupe_gym/presentacion/forms/pago_form.dart';
 import 'package:le_groupe_gym/presentacion/builder/widgets/logout_confirm_dialog.dart';
-import 'package:le_groupe_gym/presentacion/builder/widgets/delete_confirm_dialog.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/presentacion/builder/alumno_selector.dart';
 
@@ -66,7 +65,8 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
               );
               if (confirm == true) {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               }
             },
             onNavigate: (route) => context.go(route),
@@ -117,7 +117,7 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
       if (_alumnoFiltro != null && d.idDeudor != _alumnoFiltro!.idAlumno) {
         return false;
       }
-      
+
       if (_filtroSeleccionado == 'Vencido este mes') {
         return d.diasAdeudados < 30;
       } else if (_filtroSeleccionado == 'Más de 30 días') {
@@ -158,40 +158,47 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
-            children: [
-              'Todos',
-              'Vencido este mes',
-              'Más de 30 días',
-              'Más de 60 días'
-            ].map((filtro) {
-              final isSelected = _filtroSeleccionado == filtro;
-              return ChoiceChip(
-                label: Text(
-                  filtro,
-                  style: GoogleFonts.inter(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected ? Colors.black : AppColors.onSurfaceVariant,
-                  ),
-                ),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _filtroSeleccionado = filtro;
-                    });
-                  }
-                },
-                selectedColor: const Color(0xFFD0FD38),
-                backgroundColor: AppColors.surfaceContainerHigh,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected ? const Color(0xFFD0FD38) : Colors.white.withValues(alpha: 0.1),
-                  ),
-                ),
-                showCheckmark: false,
-              );
-            }).toList(),
+            children:
+                [
+                  'Todos',
+                  'Vencido este mes',
+                  'Más de 30 días',
+                  'Más de 60 días',
+                ].map((filtro) {
+                  final isSelected = _filtroSeleccionado == filtro;
+                  return ChoiceChip(
+                    label: Text(
+                      filtro,
+                      style: GoogleFonts.inter(
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
+                        color: isSelected
+                            ? Colors.black
+                            : AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        setState(() {
+                          _filtroSeleccionado = filtro;
+                        });
+                      }
+                    },
+                    selectedColor: const Color(0xFFD0FD38),
+                    backgroundColor: AppColors.surfaceContainerHigh,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected
+                            ? const Color(0xFFD0FD38)
+                            : Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    showCheckmark: false,
+                  );
+                }).toList(),
           ),
           const SizedBox(height: AppSpacing.lg),
           Expanded(
@@ -211,14 +218,16 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
                     setState(() => _isLoading = true);
                     try {
                       final alumnoRepo = ref.read(alumnoRepositoryProvider);
-                      final alumno = await alumnoRepo.getAlumnoById(deudor.idDeudor);
-                      
+                      final alumno = await alumnoRepo.getAlumnoById(
+                        deudor.idDeudor,
+                      );
+
                       if (!mounted) return;
                       setState(() => _isLoading = false);
-                      
+
                       if (alumno != null) {
                         showDialog(
-                          context: context, // Usamos el context del State
+                          context: context,
                           builder: (ctx) => PagoForm(alumno: alumno),
                         ).then((_) {
                           if (!mounted) return;
@@ -227,60 +236,17 @@ class _DeudoresPageState extends ConsumerState<DeudoresPage> {
                         });
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Error: No se encontró el alumno.')),
+                          const SnackBar(
+                            content: Text("Error: No se encontró el alumno."),
+                          ),
                         );
                       }
                     } catch (e) {
                       if (!mounted) return;
                       setState(() => _isLoading = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: $e')),
-                      );
-                    }
-                  },
-                  onEliminar: () async {
-                    final confirmar = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => DeleteConfirmDialog(
-                        title: 'Eliminar deudor',
-                        message: '¿Seguro que querés eliminar a ${deudor.nombreCompleto} de la lista de deudores? Esta acción no se puede deshacer.',
-                      ),
-                    );
-
-                    if (confirmar != true) return;
-
-                    setState(() => _isLoading = true);
-                    try {
-                      final repo = ref.read(deudorRepositoryProvider);
-                      await repo.eliminarDeudor(deudor.idDeudor);
-                      
-                      if (!mounted) return;
-                      setState(() => _isLoading = false);
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Deudor eliminado exitosamente.',
-                            style: GoogleFonts.inter(
-                              color: AppColors.successContent,
-                            ),
-                          ),
-                          backgroundColor: AppColors.successContainer,
-                          behavior: SnackBarBehavior.floating,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(AppRadius.md),
-                          ),
-                        ),
-                      );
-                      
-                      setState(() => _isLoading = true);
-                      _loadData();
-                    } catch (e) {
-                      if (!mounted) return;
-                      setState(() => _isLoading = false);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error al eliminar deudor: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text("Error: $e")));
                     }
                   },
                 );

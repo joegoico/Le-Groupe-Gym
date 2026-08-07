@@ -1,10 +1,10 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/deudor_model.dart';
 
 abstract class DeudorRepository {
   Future<List<Deudor>> getDeudores();
-  Future<void> eliminarDeudor(String idDeudor);
 }
 
 class SupabaseDeudorRepository implements DeudorRepository {
@@ -16,7 +16,7 @@ class SupabaseDeudorRepository implements DeudorRepository {
   Future<List<Deudor>> getDeudores() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Deudor')
@@ -28,20 +28,19 @@ class SupabaseDeudorRepository implements DeudorRepository {
           .map((json) => Deudor.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener deudores: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
-  @override
   Future<void> eliminarDeudor(String idDeudor) async {
     try {
       await supabaseClient.from('Deudor').delete().eq('id_deudor', idDeudor);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar deudor: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

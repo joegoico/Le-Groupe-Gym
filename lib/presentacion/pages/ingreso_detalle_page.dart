@@ -118,7 +118,7 @@ class _IngresoDetallePageState extends ConsumerState<IngresoDetallePage> {
         rangePickerBackgroundColor: AppColors.surfaceContainerHigh,
         rangePickerHeaderBackgroundColor: AppColors.surfaceContainerHigh,
         rangeSelectionOverlayColor: WidgetStateProperty.all(
-          AppColors.primary.withOpacity(0.15),
+          AppColors.primary.withValues(alpha: 0.15),
         ),
       ),
     ),

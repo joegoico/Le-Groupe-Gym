@@ -35,10 +35,7 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(AppRadius.lg),
-          side: BorderSide(
-            color: AppColors.surfaceContainerHighest,
-            width: 1,
-          ),
+          side: BorderSide(color: AppColors.surfaceContainerHighest, width: 1),
         ),
         contentPadding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
@@ -73,10 +70,7 @@ class _SolicitudesPanelState extends State<SolicitudesPanel> {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              '¿Eliminar solicitud?',
-              style: AppTextStyles.titleMd,
-            ),
+            Text('¿Eliminar solicitud?', style: AppTextStyles.titleMd),
           ],
         ),
         content: Column(

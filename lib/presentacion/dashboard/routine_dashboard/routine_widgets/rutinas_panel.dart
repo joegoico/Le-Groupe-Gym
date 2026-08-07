@@ -63,168 +63,169 @@ class RutinasPanel extends StatelessWidget {
           )
         else
           ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rutinas.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 6),
-              itemBuilder: (context, index) {
-                final item = rutinas[index];
-                return Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
-                    borderRadius: const BorderRadius.all(AppRadius.md),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      // ── Ícono ────────────────────────────────────
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainer,
-                          borderRadius: const BorderRadius.all(AppRadius.md),
-                        ),
-                        child: const Icon(
-                          Icons.fitness_center,
-                          color: AppColors.primary,
-                          size: 18,
-                        ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: rutinas.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 6),
+            itemBuilder: (context, index) {
+              final item = rutinas[index];
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerHigh,
+                  borderRadius: const BorderRadius.all(AppRadius.md),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    // ── Ícono ────────────────────────────────────
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainer,
+                        borderRadius: const BorderRadius.all(AppRadius.md),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      child: const Icon(
+                        Icons.fitness_center,
+                        color: AppColors.primary,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
 
-                      // ── Info ─────────────────────────────────────
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.rutina.nombre,
-                              style: AppTextStyles.subtittlesBold.copyWith(
-                                fontSize: 14,
-                                color: AppColors.onSurface,
-                              ),
-                              overflow: TextOverflow.ellipsis,
+                    // ── Info ─────────────────────────────────────
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.rutina.nombre,
+                            style: AppTextStyles.subtittlesBold.copyWith(
+                              fontSize: 14,
+                              color: AppColors.onSurface,
                             ),
-                            const SizedBox(height: 3),
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    item.alumno.nombreCompleto,
-                                    style: AppTextStyles.subtittlesBold
-                                        .copyWith(
-                                      fontSize: 12,
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  item.alumno.nombreCompleto,
+                                  style: AppTextStyles.subtittlesBold.copyWith(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w500,
                                   ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                if (item.rutina.fechaCreacion != null) ...[
-                                  Text(
-                                    ' · ',
-                                    style: AppTextStyles.subtittles.copyWith(
-                                      fontSize: 12,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                  Icon(
-                                    _dateIcon(item.rutina.fechaCreacion!),
-                                    size: 11,
+                              ),
+                              if (item.rutina.fechaCreacion != null) ...[
+                                Text(
+                                  ' · ',
+                                  style: AppTextStyles.subtittles.copyWith(
+                                    fontSize: 12,
                                     color: AppColors.onSurfaceVariant,
                                   ),
-                                  const SizedBox(width: 3),
-                                  Text(
-                                    _formatRelativeDate(
-                                      item.rutina.fechaCreacion!,
-                                    ),
-                                    style: AppTextStyles.labelCaps.copyWith(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w400,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
+                                ),
+                                Icon(
+                                  _dateIcon(item.rutina.fechaCreacion!),
+                                  size: 11,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  _formatRelativeDate(
+                                    item.rutina.fechaCreacion!,
                                   ),
-                                ],
+                                  style: AppTextStyles.labelCaps.copyWith(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
                               ],
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
+                    ),
 
-                      // ── Acciones ─────────────────────────────────
-                      const SizedBox(width: AppSpacing.sm),
-                      SizedBox(
-                        height: 30,
-                        child: ElevatedButton(
-                          onPressed: () => onVerDetalle(item.rutina),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: AppColors.onPrimary,
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                            ),
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.all(AppRadius.md),
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    // ── Acciones ─────────────────────────────────
+                    const SizedBox(width: AppSpacing.sm),
+                    SizedBox(
+                      height: 30,
+                      child: ElevatedButton(
+                        onPressed: () => onVerDetalle(item.rutina),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.onPrimary,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
                           ),
-                          child: Text(
-                            'Ver',
-                            style: AppTextStyles.buttonText.copyWith(
-                              fontSize: 11,
-                            ),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(AppRadius.md),
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Ver',
+                          style: AppTextStyles.buttonText.copyWith(
+                            fontSize: 11,
                           ),
                         ),
                       ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: IconButton(
+                        onPressed: onEditarRutina != null
+                            ? () => onEditarRutina!(item.rutina)
+                            : null,
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(Icons.edit_outlined, size: 15),
+                        color: AppColors.onSurfaceVariant,
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surfaceContainerHigh,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(AppRadius.md),
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (onEliminarRutina != null) ...[
                       const SizedBox(width: AppSpacing.xs),
                       SizedBox(
                         width: 30,
                         height: 30,
                         child: IconButton(
-                          onPressed: onEditarRutina != null
-                              ? () => onEditarRutina!(item.rutina)
-                              : null,
+                          onPressed: () => onEliminarRutina!(item.rutina),
                           padding: EdgeInsets.zero,
-                          icon: const Icon(Icons.edit_outlined, size: 15),
-                          color: AppColors.onSurfaceVariant,
+                          icon: const Icon(Icons.delete_outline, size: 15),
+                          color: AppColors.error,
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.surfaceContainerHigh,
+                            backgroundColor: AppColors.error.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: const RoundedRectangleBorder(
                               borderRadius: BorderRadius.all(AppRadius.md),
                             ),
                           ),
                         ),
                       ),
-                      if (onEliminarRutina != null) ...[
-                        const SizedBox(width: AppSpacing.xs),
-                        SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: IconButton(
-                            onPressed: () => onEliminarRutina!(item.rutina),
-                            padding: EdgeInsets.zero,
-                            icon: const Icon(Icons.delete_outline, size: 15),
-                            color: AppColors.error,
-                            style: IconButton.styleFrom(
-                              backgroundColor: AppColors.error.withValues(alpha: 0.1),
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.all(AppRadius.md),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
-                );
-              },
-            ),
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     );
   }

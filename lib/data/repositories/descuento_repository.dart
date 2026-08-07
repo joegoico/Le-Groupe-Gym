@@ -1,5 +1,6 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:le_groupe_gym/core/supabase_client.dart';
 import 'package:le_groupe_gym/data/models/descuento_model.dart';
 
 abstract class DescuentoRepository {
@@ -18,7 +19,7 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
   Future<List<Descuento>> getDescuentos() async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Descuentos')
@@ -29,9 +30,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
           .map((json) => Descuento.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener descuentos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -39,7 +40,7 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
   Future<String> createDescuento(Descuento descuento) async {
     try {
       final user = supabaseClient.auth.currentUser;
-      if (user == null) throw Exception('No hay sesión activa.');
+      if (user == null) throw const SessionFailure('No hay sesión activa.');
       final userId = user.id;
       final response = await supabaseClient
           .from('Descuentos')
@@ -52,9 +53,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
       if (e.message.contains('check_descuento_valor')) {
         throw Exception('El valor del descuento debe ser mayor a 0');
       }
-      throw Exception('Error al crear descuento: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -69,9 +70,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
       if (e.message.contains('check_descuento_valor')) {
         throw Exception('El valor del descuento debe ser mayor a 0');
       }
-      throw Exception('Error al actualizar descuento: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 
@@ -80,9 +81,9 @@ class SupabaseDescuentoRepository implements DescuentoRepository {
     try {
       await supabaseClient.from('Descuentos').delete().eq('id', id);
     } on PostgrestException catch (e) {
-      throw Exception('Error al eliminar descuento: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
 
 class MockSupabaseClient extends Mock implements SupabaseClient {}
+
 class MockGoTrueClient extends Mock implements GoTrueClient {}
 
 void main() {
@@ -15,20 +16,29 @@ void main() {
     setUp(() {
       mockSupabaseClient = MockSupabaseClient();
       mockGoTrueClient = MockGoTrueClient();
-      
+
       when(() => mockSupabaseClient.auth).thenReturn(mockGoTrueClient);
-      
+
       // Simulate no active session
       when(() => mockGoTrueClient.currentUser).thenReturn(null);
-      
+
       repository = SupabaseAlumnoRepository(supabaseClient: mockSupabaseClient);
     });
 
-    test('getAlumnos debe lanzar una excepción descriptiva si currentUser es null', () async {
-      expect(
-        () => repository.getAlumnos(),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('No hay sesión activa.'))),
-      );
-    });
+    test(
+      'getAlumnos debe lanzar una excepción descriptiva si currentUser es null',
+      () async {
+        expect(
+          () => repository.getAlumnos(),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('No hay sesión activa.'),
+            ),
+          ),
+        );
+      },
+    );
   });
 }

@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:le_groupe_gym/core/env.dart';
 
 class EmailService {
-
   Map<String, dynamic> buildPayload({
     required String pdfUrl,
     required String mailAlumno,
@@ -44,7 +43,9 @@ class EmailService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Error al enviar mail: ${response.body} con ${response.statusCode}');
+      throw Exception(
+        'Error al enviar mail: ${response.body} con ${response.statusCode}',
+      );
     }
   }
 }

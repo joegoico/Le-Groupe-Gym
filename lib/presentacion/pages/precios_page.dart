@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/app_failure.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -119,17 +120,23 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
     _guardarPrecioEnBackground(precio, esEdicion, previousPrecios);
   }
 
-  Future<void> _guardarPrecioEnBackground(Precio precio, bool esEdicion, List<Precio> previousPrecios) async {
+  Future<void> _guardarPrecioEnBackground(
+    Precio precio,
+    bool esEdicion,
+    List<Precio> previousPrecios,
+  ) async {
     try {
       if (esEdicion) {
         await ref.read(precioRepositoryProvider).updatePrecio(precio);
       } else {
         await ref.read(precioRepositoryProvider).createPrecio(precio);
       }
-      GlobalMessenger.showSuccessSnackbar(esEdicion ? 'Plan actualizado' : 'Plan creado');
+      GlobalMessenger.showSuccessSnackbar(
+        esEdicion ? 'Plan actualizado' : 'Plan creado',
+      );
     } catch (e) {
       if (mounted) setState(() => _precios = previousPrecios);
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el plan. Verifica tu conexión e intenta de nuevo.');
+      GlobalMessenger.showErrorSnackbar(e is AppFailure ? e.message : 'Error inesperado');
     }
   }
 
@@ -138,7 +145,8 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       context: context,
       builder: (_) => DeleteConfirmDialog(
         title: 'Eliminar plan',
-        message: '¿Seguro que querés eliminar el plan de ${precio.cantidadDias} días? Esta acción no se puede deshacer.',
+        message:
+            '¿Seguro que querés eliminar el plan de ${precio.cantidadDias} días? Esta acción no se puede deshacer.',
       ),
     );
 
@@ -152,7 +160,7 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       }
       GlobalMessenger.showSuccessSnackbar('Plan eliminado');
     } catch (e) {
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al eliminar el plan. Verifica tu conexión e intenta de nuevo.');
+      GlobalMessenger.showErrorSnackbar(e is AppFailure ? e.message : 'Error inesperado');
     }
   }
 
@@ -178,7 +186,7 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
 
   void _guardarDescuento(Descuento descuento, {required bool esEdicion}) {
     final previousDescuentos = List<Descuento>.from(_descuentos);
-    
+
     setState(() {
       if (esEdicion) {
         final index = _descuentos.indexWhere((d) => d.id == descuento.id);
@@ -191,7 +199,11 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
     _guardarDescuentoEnBackground(descuento, esEdicion, previousDescuentos);
   }
 
-  Future<void> _guardarDescuentoEnBackground(Descuento descuento, bool esEdicion, List<Descuento> previousDescuentos) async {
+  Future<void> _guardarDescuentoEnBackground(
+    Descuento descuento,
+    bool esEdicion,
+    List<Descuento> previousDescuentos,
+  ) async {
     try {
       final repo = ref.read(descuentoRepositoryProvider);
       if (esEdicion) {
@@ -199,10 +211,12 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       } else {
         await repo.createDescuento(descuento);
       }
-      GlobalMessenger.showSuccessSnackbar(esEdicion ? 'Descuento actualizado' : 'Descuento creado');
+      GlobalMessenger.showSuccessSnackbar(
+        esEdicion ? 'Descuento actualizado' : 'Descuento creado',
+      );
     } catch (e) {
       if (mounted) setState(() => _descuentos = previousDescuentos);
-      GlobalMessenger.showErrorSnackbar('Ocurrió un error inesperado al guardar el descuento. Verifica tu conexión e intenta de nuevo.');
+      GlobalMessenger.showErrorSnackbar(e is AppFailure ? e.message : 'Error inesperado');
     }
   }
 
@@ -211,7 +225,8 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
       context: context,
       builder: (_) => const DeleteConfirmDialog(
         title: 'Eliminar descuento',
-        message: '¿Seguro que querés eliminar este descuento? Esta acción no se puede deshacer.',
+        message:
+            '¿Seguro que querés eliminar este descuento? Esta acción no se puede deshacer.',
       ),
     );
     if (confirmar != true) return;
@@ -239,7 +254,8 @@ class _PreciosPageState extends ConsumerState<PreciosPage> {
               );
               if (confirm == true) {
                 await ref.read(authServiceProvider).signOut();
-                if (mounted) context.go('/login');
+                if (!context.mounted) return;
+                context.go('/login');
               }
             },
             onNavigate: (route) => context.go(route),

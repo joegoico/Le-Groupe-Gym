@@ -1,3 +1,4 @@
+import 'package:le_groupe_gym/core/database_error_translator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:le_groupe_gym/data/models/categoria_gasto_model.dart';
 
@@ -22,9 +23,9 @@ class SupabaseCategoriaGastoRepository implements CategoriaGastoRepository {
           .map((json) => CategoriaGasto.fromMap(json as Map<String, dynamic>))
           .toList();
     } on PostgrestException catch (e) {
-      throw Exception('Error al obtener categorías de gastos: ${e.message}');
+      throw DatabaseErrorTranslator.translate(e);
     } catch (e) {
-      throw Exception('Error inesperado: $e');
+      throw DatabaseErrorTranslator.translate(e);
     }
   }
 }

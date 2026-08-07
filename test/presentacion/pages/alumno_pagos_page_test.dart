@@ -17,7 +17,11 @@ class SlowReadPagoRepository extends MockPagoRepository {
   final Duration readDelay;
 
   @override
-  Future<List<Pago>> getPagosPorAlumno(String idAlumno, {int? anio, int? mes}) async {
+  Future<List<Pago>> getPagosPorAlumno(
+    String idAlumno, {
+    int? anio,
+    int? mes,
+  }) async {
     await Future.delayed(readDelay);
     return super.getPagosPorAlumno(idAlumno, anio: anio, mes: mes);
   }
@@ -49,12 +53,12 @@ void main() {
     Widget createWidgetUnderTest({PagoRepository? pagoRepository}) {
       return ProviderScope(
         overrides: [
-          pagoRepositoryProvider.overrideWithValue(pagoRepository ?? mockPagoRepository),
+          pagoRepositoryProvider.overrideWithValue(
+            pagoRepository ?? mockPagoRepository,
+          ),
           deudorRepositoryProvider.overrideWithValue(mockDeudorRepository),
         ],
-        child: MaterialApp(
-          home: AlumnoPagosPage(alumno: alumnoPrueba),
-        ),
+        child: MaterialApp(home: AlumnoPagosPage(alumno: alumnoPrueba)),
       );
     }
 
@@ -99,36 +103,43 @@ void main() {
       expect(find.text('Efectivo'), findsWidgets);
     });
 
-    testWidgets('debe remover el pago de la UI al primer intento aunque la recarga sea lenta', (tester) async {
-      final slowRepo = SlowReadPagoRepository(readDelay: const Duration(milliseconds: 300));
-      await slowRepo.insertarPago(
-        Pago(
-          idPago: 'p1',
-          idAlumno: '1234',
-          fechaDePago: DateTime.now(),
-          monto: 1500,
-          medioDePago: 'Efectivo',
-          cantidadDias: 3,
-        ),
-      );
+    testWidgets(
+      'debe remover el pago de la UI al primer intento aunque la recarga sea lenta',
+      (tester) async {
+        final slowRepo = SlowReadPagoRepository(
+          readDelay: const Duration(milliseconds: 300),
+        );
+        await slowRepo.insertarPago(
+          Pago(
+            idPago: 'p1',
+            idAlumno: '1234',
+            fechaDePago: DateTime.now(),
+            monto: 1500,
+            medioDePago: 'Efectivo',
+            cantidadDias: 3,
+          ),
+        );
 
-      await tester.pumpWidget(createWidgetUnderTest(pagoRepository: slowRepo));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createWidgetUnderTest(pagoRepository: slowRepo),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('\$1.500'), findsOneWidget);
+        expect(find.text('\$1.500'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.more_vert).first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Eliminar').first);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Eliminar').last);
-      await tester.pump(const Duration(milliseconds: 50));
+        await tester.tap(find.byIcon(Icons.more_vert).first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar').first);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Eliminar').last);
+        await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('\$1.500'), findsNothing);
-      expect(find.text('No hay pagos registrados este año'), findsOneWidget);
+        expect(find.text('\$1.500'), findsNothing);
+        expect(find.text('No hay pagos registrados este año'), findsOneWidget);
 
-      await tester.pump(const Duration(milliseconds: 350));
-      await tester.pumpAndSettle();
-    });
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
+      },
+    );
   });
 }

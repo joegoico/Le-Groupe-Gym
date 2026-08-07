@@ -4,8 +4,7 @@ import 'package:le_groupe_gym/data/models/routine_model.dart';
 class RoutineDashboardController extends ChangeNotifier {
   final List<Rutina> _routines;
 
-  RoutineDashboardController({required List<Rutina> routines})
-    : _routines = routines;
+  RoutineDashboardController({required this._routines});
 
   List<Rutina> get routines => List.from(_routines);
 }

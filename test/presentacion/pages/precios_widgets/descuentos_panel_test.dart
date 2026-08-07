@@ -104,9 +104,7 @@ void main() {
       // Arrange
       bool agregado = false;
       await tester.pumpWidget(
-        createWidgetUnderTest(
-          onAgregarDescuento: () => agregado = true,
-        ),
+        createWidgetUnderTest(onAgregarDescuento: () => agregado = true),
       );
 
       // Act
@@ -117,51 +115,49 @@ void main() {
       expect(agregado, isTrue);
     });
 
-    testWidgets(
-      'debe llamar onEliminarDescuento con el descuento correcto',
-      (tester) async {
-        // Arrange
-        Descuento? eliminado;
-        await tester.pumpWidget(
-          createWidgetUnderTest(
-            descuentos: [descuentoA, descuentoB],
-            onEliminarDescuento: (d) => eliminado = d,
-          ),
-        );
+    testWidgets('debe llamar onEliminarDescuento con el descuento correcto', (
+      tester,
+    ) async {
+      // Arrange
+      Descuento? eliminado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          descuentos: [descuentoA, descuentoB],
+          onEliminarDescuento: (d) => eliminado = d,
+        ),
+      );
 
-        // Act — tap en el primer botón eliminar (descuentoA)
-        await tester.tap(find.byIcon(Icons.delete_outline).first);
-        await tester.pump();
+      // Act — tap en el primer botón eliminar (descuentoA)
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pump();
 
-        // Assert
-        expect(eliminado, isNotNull);
-        expect(eliminado!.id, descuentoA.id);
-        expect(eliminado!.valor, descuentoA.valor);
-      },
-    );
+      // Assert
+      expect(eliminado, isNotNull);
+      expect(eliminado!.id, descuentoA.id);
+      expect(eliminado!.valor, descuentoA.valor);
+    });
 
-    testWidgets(
-      'debe llamar onEditarDescuento con el descuento correcto',
-      (tester) async {
-        // Arrange
-        Descuento? editado;
-        await tester.pumpWidget(
-          createWidgetUnderTest(
-            descuentos: [descuentoA, descuentoB],
-            onEditarDescuento: (d) => editado = d,
-          ),
-        );
+    testWidgets('debe llamar onEditarDescuento con el descuento correcto', (
+      tester,
+    ) async {
+      // Arrange
+      Descuento? editado;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          descuentos: [descuentoA, descuentoB],
+          onEditarDescuento: (d) => editado = d,
+        ),
+      );
 
-        // Act — tap en el primer botón editar (descuentoA)
-        await tester.tap(find.byIcon(Icons.edit_outlined).first);
-        await tester.pump();
+      // Act — tap en el primer botón editar (descuentoA)
+      await tester.tap(find.byIcon(Icons.edit_outlined).first);
+      await tester.pump();
 
-        // Assert
-        expect(editado, isNotNull);
-        expect(editado!.id, descuentoA.id);
-        expect(editado!.valor, descuentoA.valor);
-      },
-    );
+      // Assert
+      expect(editado, isNotNull);
+      expect(editado!.id, descuentoA.id);
+      expect(editado!.valor, descuentoA.valor);
+    });
 
     testWidgets(
       'debe llamar onEliminarDescuento del segundo item al presionar el segundo botón eliminar',

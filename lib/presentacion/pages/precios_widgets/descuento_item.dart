@@ -9,6 +9,7 @@ class DescuentoItem extends StatelessWidget {
   final VoidCallback onEditar;
 
   const DescuentoItem({
+    super.key,
     required this.descuento,
     required this.onEliminar,
     required this.onEditar,

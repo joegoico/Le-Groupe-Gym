@@ -254,35 +254,34 @@ void main() {
       },
     );
 
-    testWidgets(
-      'debe llamar onEliminarSolicitud al confirmar en el diálogo',
-      (tester) async {
-        // Arrange
-        tester.view.physicalSize = const Size(1280, 800);
-        tester.view.devicePixelRatio = 1.0;
-        SolicitudRutina? eliminada;
+    testWidgets('debe llamar onEliminarSolicitud al confirmar en el diálogo', (
+      tester,
+    ) async {
+      // Arrange
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1.0;
+      SolicitudRutina? eliminada;
 
-        await tester.pumpWidget(
-          createWidgetUnderTest(onEliminarSolicitud: (s) => eliminada = s),
-        );
+      await tester.pumpWidget(
+        createWidgetUnderTest(onEliminarSolicitud: (s) => eliminada = s),
+      );
 
-        await tester.tap(find.text('2 Rutinas Pendientes'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('2 Rutinas Pendientes'));
+      await tester.pumpAndSettle();
 
-        // Act — abrir diálogo y confirmar
-        await tester.tap(find.byIcon(Icons.delete_outline_outlined).first);
-        await tester.pumpAndSettle();
+      // Act — abrir diálogo y confirmar
+      await tester.tap(find.byIcon(Icons.delete_outline_outlined).first);
+      await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Eliminar'));
-        await tester.pumpAndSettle();
+      await tester.tap(find.text('Eliminar'));
+      await tester.pumpAndSettle();
 
-        // Assert — callback llamado con la solicitud correcta y el diálogo se cerró
-        expect(eliminada, isNotNull);
-        expect(eliminada!.idSolicitud, 1);
-        expect(find.text('¿Eliminar solicitud?'), findsNothing);
+      // Assert — callback llamado con la solicitud correcta y el diálogo se cerró
+      expect(eliminada, isNotNull);
+      expect(eliminada!.idSolicitud, 1);
+      expect(find.text('¿Eliminar solicitud?'), findsNothing);
 
-        addTearDown(tester.view.resetPhysicalSize);
-      },
-    );
+      addTearDown(tester.view.resetPhysicalSize);
+    });
   });
 }

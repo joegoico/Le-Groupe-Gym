@@ -153,12 +153,12 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       await tester.enterText(
-          find.byKey(const Key('solicitud_rutina_name_field')),
-          'Rutina Test',
+        find.byKey(const Key('solicitud_rutina_name_field')),
+        'Rutina Test',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
-      
+
       // Since the student has no payments (MockPagoRepository is empty), it shows the warning.
       // We must tap 'Continuar' to proceed.
       expect(find.text('Advertencia'), findsOneWidget);

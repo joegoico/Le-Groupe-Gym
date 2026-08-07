@@ -31,8 +31,9 @@ class _ActionIconState extends State<ActionIcon> {
         ? AppColors.error.withValues(alpha: 0.7)
         : AppColors.onSurfaceVariant;
 
-    final Color hoverColor =
-        widget.isDestructive ? AppColors.error : AppColors.onSurface;
+    final Color hoverColor = widget.isDestructive
+        ? AppColors.error
+        : AppColors.onSurface;
 
     final Color bgHover = widget.isDestructive
         ? AppColors.error.withValues(alpha: 0.12)

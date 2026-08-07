@@ -35,7 +35,7 @@ class RoutineDayAccordion extends StatelessWidget {
         final isActive = controller.activeDayIndex == dayIndex;
         return "${currentDia.nombre}_${currentDia.bloques.length}_${currentDia.bloques.fold(0, (sum, b) => sum + b.ejercicios.length)}_${isExpanded}_$isActive";
       },
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         if (dayIndex >= controller.dias.length) return const SizedBox.shrink();
         final currentDia = controller.dias[dayIndex];
         final isActiveDay = controller.activeDayIndex == dayIndex;
@@ -156,7 +156,8 @@ class RoutineDayAccordion extends StatelessWidget {
                                 context: btnContext,
                                 builder: (_) => const DeleteConfirmDialog(
                                   title: 'Eliminar día',
-                                  message: '¿Estás seguro de que querés eliminar este día?',
+                                  message:
+                                      '¿Estás seguro de que querés eliminar este día?',
                                 ),
                               );
                               if (confirmed != true) return;

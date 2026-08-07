@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 
-enum SnackbarType { warning, error, info }
+enum SnackbarType { success, warning, error, info }
 
 class AppSnackbar {
   /// Muestra un snackbar estilizado con variante semántica.
@@ -55,6 +55,14 @@ class AppSnackbar {
 
   static _SnackbarConfig _configFor(SnackbarType type) {
     switch (type) {
+      case SnackbarType.success:
+        return _SnackbarConfig(
+          icon: Icons.check_circle_outline_rounded,
+          iconColor: AppColors.successContent,
+          textColor: AppColors.successContent,
+          backgroundColor: AppColors.successContainer,
+          borderColor: AppColors.successContent.withValues(alpha: 0.35),
+        );
       case SnackbarType.warning:
         return _SnackbarConfig(
           icon: Icons.warning_amber_rounded,

@@ -141,7 +141,6 @@ class Sidebar extends StatelessWidget {
       ),
     );
   }
-
 }
 
 class _SidebarItemWidget extends StatefulWidget {
@@ -192,8 +191,8 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
             color: widget.isActive
                 ? AppColors.primary.withValues(alpha: 0.15)
                 : (_isHovered
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.transparent),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.transparent),
             borderRadius: const BorderRadius.all(AppRadius.md),
             border: widget.isActive
                 ? Border.all(
@@ -221,8 +220,9 @@ class _SidebarItemWidgetState extends State<_SidebarItemWidget> {
                     widget.item.label,
                     style: GoogleFonts.inter(
                       fontSize: 14,
-                      fontWeight:
-                          widget.isActive ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: widget.isActive
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: widget.isActive
                           ? AppColors.primary
                           : AppColors.onSurface,

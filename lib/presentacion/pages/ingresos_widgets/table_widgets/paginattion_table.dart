@@ -8,6 +8,7 @@ class PaginationTable extends StatelessWidget {
   final void Function(int) onPageChanged;
 
   const PaginationTable({
+    super.key,
     required this.currentPage,
     required this.totalPages,
     required this.onPageChanged,

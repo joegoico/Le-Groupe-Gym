@@ -10,21 +10,20 @@ class DeudorCard extends ConsumerWidget {
   final Deudor deudor;
   final VoidCallback onRegistrarPago;
   final VoidCallback? onEnviarMensaje;
-  final VoidCallback onEliminar;
 
   const DeudorCard({
     super.key,
     required this.deudor,
     required this.onRegistrarPago,
     this.onEnviarMensaje,
-    required this.onEliminar,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Definir color de severidad
-    final Color severityColor =
-        deudor.diasAdeudados >= 30 ? Colors.redAccent : Colors.orangeAccent;
+    final Color severityColor = deudor.diasAdeudados >= 30
+        ? Colors.redAccent
+        : Colors.orangeAccent;
 
     // Fetch último pago
     final ultimoPagoRepo = ref.watch(pagoRepositoryProvider);
@@ -54,7 +53,10 @@ class DeudorCard extends ConsumerWidget {
                           ? 'Plan de ${ultimoPago.cantidadDias} días'
                           : 'Sin plan reciente';
                       final fechaStr = ultimoPago != null
-                          ? DateFormat("d 'de' MMMM", "es").format(ultimoPago.fechaDePago)
+                          ? DateFormat(
+                              "d 'de' MMMM",
+                              "es",
+                            ).format(ultimoPago.fechaDePago)
                           : 'N/A';
 
                       return Column(
@@ -64,7 +66,9 @@ class DeudorCard extends ConsumerWidget {
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                                backgroundColor: AppColors.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 child: Text(
                                   deudor.nombre.isNotEmpty
                                       ? deudor.nombre[0].toUpperCase()
@@ -99,11 +103,6 @@ class DeudorCard extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.error),
-                                onPressed: onEliminar,
-                                tooltip: 'Eliminar deudor',
                               ),
                             ],
                           ),
@@ -140,7 +139,8 @@ class DeudorCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Text(
@@ -192,9 +192,13 @@ class DeudorCard extends ConsumerWidget {
                                     foregroundColor: Colors.black,
                                     elevation: 0,
                                     shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(AppRadius.md),
+                                      borderRadius: BorderRadius.all(
+                                        AppRadius.md,
+                                      ),
                                     ),
-                                    padding: const EdgeInsets.symmetric(vertical: 10),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
                                   ),
                                   child: Text(
                                     'Registrar Pago',

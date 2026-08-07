@@ -7,8 +7,8 @@ class SecureLocalStorage extends LocalStorage {
 
   SecureLocalStorage({
     this.storage = const FlutterSecureStorage(),
-    String storageKey = 'supabase_auth_token',
-  }) : _storageKey = storageKey;
+    this._storageKey = 'supabase_auth_token',
+  });
 
   @override
   Future<void> initialize() async {}

@@ -31,9 +31,7 @@ class CustomConfirmDialog extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.background,
             borderRadius: const BorderRadius.all(AppRadius.md),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.06),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -64,11 +62,7 @@ class CustomConfirmDialog extends StatelessWidget {
                         color: confirmColor.withValues(alpha: 0.20),
                         borderRadius: const BorderRadius.all(AppRadius.sm),
                       ),
-                      child: Icon(
-                        headerIcon,
-                        color: confirmColor,
-                        size: 18,
-                      ),
+                      child: Icon(headerIcon, color: confirmColor, size: 18),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
@@ -153,7 +147,9 @@ class CustomConfirmDialog extends StatelessWidget {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: confirmColor.withValues(alpha: 0.25),
+                                backgroundColor: confirmColor.withValues(
+                                  alpha: 0.25,
+                                ),
                                 foregroundColor: confirmColor,
                                 elevation: 0,
                                 side: BorderSide(

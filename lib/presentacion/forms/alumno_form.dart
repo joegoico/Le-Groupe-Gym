@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:le_groupe_gym/core/app_theme.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
+import 'package:le_groupe_gym/presentacion/builder/widgets/inline_error.dart';
 import 'package:uuid/uuid.dart';
 
 class AlumnoForm extends StatefulWidget {
@@ -28,6 +29,8 @@ class _AlumnoFormState extends State<AlumnoForm> {
   late final TextEditingController _nombreCtrl;
   late final TextEditingController _apellidoCtrl;
   late final TextEditingController _mailCtrl;
+  bool _isSaving = false;
+  String? _errorAlumno;
 
   bool get _esEdicion => widget.alumno != null;
 
@@ -37,6 +40,14 @@ class _AlumnoFormState extends State<AlumnoForm> {
     _nombreCtrl = TextEditingController(text: widget.alumno?.nombre ?? '');
     _apellidoCtrl = TextEditingController(text: widget.alumno?.apellido ?? '');
     _mailCtrl = TextEditingController(text: widget.alumno?.mail ?? '');
+    _nombreCtrl.addListener(_clearError);
+    _apellidoCtrl.addListener(_clearError);
+  }
+
+  void _clearError() {
+    if (mounted && _errorAlumno != null) {
+      setState(() => _errorAlumno = null);
+    }
   }
 
   @override
@@ -71,8 +82,8 @@ class _AlumnoFormState extends State<AlumnoForm> {
   // ── Submit ──────────────────────────────────────────────────────────────────
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    
+    if (!_formKey.currentState!.validate() || _isSaving) return;
+
     final id = _esEdicion ? widget.alumno!.idAlumno : const Uuid().v4();
     final alumno = Alumno(
       idAlumno: id,
@@ -81,7 +92,39 @@ class _AlumnoFormState extends State<AlumnoForm> {
       mail: _mailCtrl.text.trim().isEmpty ? null : _mailCtrl.text.trim(),
     );
 
-    widget.onGuardar(alumno);
+    setState(() {
+      _isSaving = true;
+      _errorAlumno = null;
+    });
+
+    try {
+      final alumnos = await widget.alumnoRepository.getAlumnos(limit: 1000);
+      final nombreNormalizado = alumno.nombre.toLowerCase();
+      final apellidoNormalizado = alumno.apellido.toLowerCase();
+      final yaExiste = alumnos.any(
+        (existente) =>
+            existente.idAlumno != alumno.idAlumno &&
+            existente.nombre.trim().toLowerCase() == nombreNormalizado &&
+            existente.apellido.trim().toLowerCase() == apellidoNormalizado,
+      );
+      if (yaExiste) {
+        setState(
+          () => _errorAlumno = 'Ya existe un alumno con ese nombre y apellido.',
+        );
+        return;
+      }
+
+      widget.onGuardar(alumno);
+    } catch (_) {
+      if (mounted) {
+        setState(
+          () => _errorAlumno =
+              'No se pudo verificar si el alumno ya existe. Intentá nuevamente.',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   // ── Build ───────────────────────────────────────────────────────────────────
@@ -138,7 +181,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
                 ),
                 IconButton(
                   visualDensity: VisualDensity.compact,
-                  onPressed: widget.onCancelar,
+                  onPressed: _isSaving ? null : widget.onCancelar,
                   icon: const Icon(
                     Icons.close,
                     color: AppColors.onSurfaceVariant,
@@ -165,7 +208,10 @@ class _AlumnoFormState extends State<AlumnoForm> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _FieldLabel('Nombre', icon: Icons.person_outline),
+                            const _FieldLabel(
+                              'Nombre',
+                              icon: Icons.person_outline,
+                            ),
                             const SizedBox(height: AppSpacing.xs),
                             SizedBox(
                               height: 44,
@@ -174,8 +220,12 @@ class _AlumnoFormState extends State<AlumnoForm> {
                                 controller: _nombreCtrl,
                                 validator: _validateNombre,
                                 textInputAction: TextInputAction.next,
-                                style: AppTextStyles.subtittles.copyWith(fontSize: 14),
-                                decoration: _inputDecoration(hintText: 'Ej. Juan'),
+                                style: AppTextStyles.subtittles.copyWith(
+                                  fontSize: 14,
+                                ),
+                                decoration: _inputDecoration(
+                                  hintText: 'Ej. Juan',
+                                ),
                               ),
                             ),
                           ],
@@ -186,7 +236,10 @@ class _AlumnoFormState extends State<AlumnoForm> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const _FieldLabel('Apellido', icon: Icons.badge_outlined),
+                            const _FieldLabel(
+                              'Apellido',
+                              icon: Icons.badge_outlined,
+                            ),
                             const SizedBox(height: AppSpacing.xs),
                             SizedBox(
                               height: 44,
@@ -195,8 +248,12 @@ class _AlumnoFormState extends State<AlumnoForm> {
                                 controller: _apellidoCtrl,
                                 validator: _validateApellido,
                                 textInputAction: TextInputAction.next,
-                                style: AppTextStyles.subtittles.copyWith(fontSize: 14),
-                                decoration: _inputDecoration(hintText: 'Ej. Pérez'),
+                                style: AppTextStyles.subtittles.copyWith(
+                                  fontSize: 14,
+                                ),
+                                decoration: _inputDecoration(
+                                  hintText: 'Ej. Pérez',
+                                ),
                               ),
                             ),
                           ],
@@ -229,7 +286,13 @@ class _AlumnoFormState extends State<AlumnoForm> {
                     ),
                   ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                  if (_errorAlumno != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    InlineError(
+                      key: const Key('error-alumno-duplicado'),
+                      mensaje: _errorAlumno!,
+                    ),
+                  ],
 
                   const SizedBox(height: AppSpacing.lg),
 
@@ -240,7 +303,7 @@ class _AlumnoFormState extends State<AlumnoForm> {
                         child: SizedBox(
                           height: 44,
                           child: OutlinedButton(
-                            onPressed: widget.onCancelar,
+                            onPressed: _isSaving ? null : widget.onCancelar,
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.onSurfaceVariant,
                               side: const BorderSide(
@@ -260,10 +323,21 @@ class _AlumnoFormState extends State<AlumnoForm> {
                           height: 44,
                           child: ElevatedButton.icon(
                             key: const Key('alumno_guardar_button'),
-                            onPressed: _submit,
-                            icon: const Icon(Icons.check, size: 16),
+                            onPressed: _isSaving ? null : _submit,
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.onPrimary,
+                                    ),
+                                  )
+                                : const Icon(Icons.check, size: 16),
                             label: Text(
-                              _esEdicion
+                              _isSaving
+                                  ? 'Guardando...'
+                                  : _esEdicion
                                   ? 'Guardar cambios'
                                   : 'Crear Alumno',
                               style: AppTextStyles.buttonText.copyWith(

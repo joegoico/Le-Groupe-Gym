@@ -1,8 +1,21 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:le_groupe_gym/data/models/alumno_model.dart';
 import 'package:le_groupe_gym/presentacion/forms/alumno_form.dart';
 import '../../mocks/mock_alumno_repository.dart';
+import 'package:le_groupe_gym/data/repositories/alumno_repository.dart';
+
+class _PendingAlumnoRepository extends MockAlumnoRepository {
+  final Completer<List<Alumno>> _alumnos = Completer<List<Alumno>>();
+
+  @override
+  Future<List<Alumno>> getAlumnos({int limit = 50, int offset = 0}) =>
+      _alumnos.future;
+
+  void completeWith(List<Alumno> alumnos) => _alumnos.complete(alumnos);
+}
 
 void main() {
   group('AlumnoForm Widget Tests', () {
@@ -14,13 +27,14 @@ void main() {
       Alumno? alumno,
       ValueChanged<Alumno>? onGuardar,
       VoidCallback? onCancelar,
+      AlumnoRepository? alumnoRepository,
     }) {
       return MaterialApp(
         home: Scaffold(
           body: SingleChildScrollView(
             child: AlumnoForm(
               alumno: alumno,
-              alumnoRepository: mockRepo,
+              alumnoRepository: alumnoRepository ?? mockRepo,
               onGuardar: onGuardar ?? (_) {},
               onCancelar: onCancelar ?? () {},
             ),
@@ -40,8 +54,6 @@ void main() {
       expect(find.byKey(const Key('alumno_apellido_field')), findsOneWidget);
       expect(find.byKey(const Key('alumno_mail_field')), findsOneWidget);
     });
-
-
 
     testWidgets('debe mostrar botones Cancelar y Guardar', (tester) async {
       await tester.pumpWidget(createWidgetUnderTest());
@@ -134,19 +146,77 @@ void main() {
 
       await tester.enterText(
         find.byKey(const Key('alumno_nombre_field')),
-        'Juan',
+        'Pablo',
       );
       await tester.enterText(
         find.byKey(const Key('alumno_apellido_field')),
-        'Pérez',
+        'Farias',
       );
       // mail vacío — no ingresamos nada
       await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(guardado, isNotNull);
       expect(guardado!.mail, isNull);
     });
+
+    testWidgets(
+      'muestra inline el error si ya existe un alumno, sin distinguir mayúsculas',
+      (tester) async {
+        var guardados = 0;
+        await tester.pumpWidget(
+          createWidgetUnderTest(onGuardar: (_) => guardados++),
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('alumno_nombre_field')),
+          'juan',
+        );
+        await tester.enterText(
+          find.byKey(const Key('alumno_apellido_field')),
+          'PÉREZ',
+        );
+        await tester.tap(find.byKey(const Key('alumno_guardar_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('error-alumno-duplicado')), findsOneWidget);
+        expect(
+          find.text('Ya existe un alumno con ese nombre y apellido.'),
+          findsOneWidget,
+        );
+        expect(guardados, isZero);
+      },
+    );
+
+    testWidgets(
+      'muestra Guardando y bloquea el botón mientras verifica duplicados',
+      (tester) async {
+        final repository = _PendingAlumnoRepository();
+        await tester.pumpWidget(
+          createWidgetUnderTest(alumnoRepository: repository),
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('alumno_nombre_field')),
+          'Sofía',
+        );
+        await tester.enterText(
+          find.byKey(const Key('alumno_apellido_field')),
+          'Navarro',
+        );
+        await tester.tap(find.byKey(const Key('alumno_guardar_button')));
+        await tester.pump();
+
+        expect(find.text('Guardando...'), findsOneWidget);
+        final button = tester.widget<ElevatedButton>(
+          find.byKey(const Key('alumno_guardar_button')),
+        );
+        expect(button.onPressed, isNull);
+
+        repository.completeWith([]);
+        await tester.pumpAndSettle();
+      },
+    );
 
     // ── Callbacks ─────────────────────────────────────────────────────────────
 
@@ -172,25 +242,24 @@ void main() {
 
       await tester.enterText(
         find.byKey(const Key('alumno_nombre_field')),
-        'María',
+        'Florencia',
       );
       await tester.enterText(
         find.byKey(const Key('alumno_apellido_field')),
-        'García',
+        'Luna',
       );
       await tester.enterText(
         find.byKey(const Key('alumno_mail_field')),
-        'maria@mail.com',
+        'florencia@mail.com',
       );
       await tester.tap(find.byKey(const Key('alumno_guardar_button')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(guardado, isNotNull);
-      expect(guardado!.nombre, 'María');
-      expect(guardado!.apellido, 'García');
-      expect(guardado!.mail, 'maria@mail.com');
+      expect(guardado!.nombre, 'Florencia');
+      expect(guardado!.apellido, 'Luna');
+      expect(guardado!.mail, 'florencia@mail.com');
     });
-
 
     // ── Modo edición ──────────────────────────────────────────────────────────
 

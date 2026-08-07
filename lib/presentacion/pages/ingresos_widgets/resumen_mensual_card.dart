@@ -21,10 +21,7 @@ class ResumenMensualCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLow,
         borderRadius: const BorderRadius.all(AppRadius.lg),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.outlineVariant, width: 1),
       ),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
@@ -40,10 +37,7 @@ class ResumenMensualCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
-          Text(
-            'Balance consolidado mensual',
-            style: AppTextStyles.subtittles,
-          ),
+          Text('Balance consolidado mensual', style: AppTextStyles.subtittles),
 
           const SizedBox(height: AppSpacing.lg),
 
@@ -54,7 +48,10 @@ class ResumenMensualCard extends StatelessWidget {
 
           // — Desglose —
           DesgloseRow(titulo: 'Efectivo', monto: resumen.totalEfectivo),
-          DesgloseRow(titulo: 'Transferencia', monto: resumen.totalTransferencia),
+          DesgloseRow(
+            titulo: 'Transferencia',
+            monto: resumen.totalTransferencia,
+          ),
 
           const SizedBox(height: AppSpacing.md),
 
